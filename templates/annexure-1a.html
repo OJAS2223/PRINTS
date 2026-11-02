@@ -1,0 +1,43 @@
+<div class="affidavit-paper">
+    {{STAMP_OVERLAY}}
+    <div>
+        <div style="text-align: center; font-weight: bold; font-size: 17px; text-decoration: underline; margin-bottom: 6px;">Annexure IA- For children</div>
+        <div style="text-align: center; font-weight: bold; font-size: 16px; text-decoration: underline; margin-bottom: 8px;">Affidavit for date of birth updation</div>
+        <div style="text-align: center; font-weight: bold; font-size: 13.5px; line-height: 1.4; margin-bottom: 18px;">
+            (Applicable for cases where the DoB is verified. To be printed on non-judicial<br>
+            stamp paper of minimum value of <span style="font-family: Arial, sans-serif;">₹10</span>)
+        </div>
+        <div style="text-align: justify; line-height: 1.7; margin-bottom: 12px;">
+            1. I, <span class="filled-val">{{parentName}}</span> {{rel}} <span class="filled-val">{{relativeName}}</span> resident of <span class="filled-val">{{address}}</span> holding ID number <span class="filled-val">{{parentIdNumber}}</span> do hereby solemnly affirm and declare as under:-
+        </div>
+        <ol style="list-style-type: lower-roman; padding-left: 34px; margin-bottom: 16px; text-align: justify;">
+            <li style="margin-bottom: 9px; padding-left: 6px;">That I am the resident of the above said address.</li>
+            <li style="margin-bottom: 9px; padding-left: 6px;">That I am parent/legal guardian of the <span class="filled-val">{{childName}}</span> holding ID number <span class="filled-val">{{childIdNumber}}</span>.</li>
+            <li style="margin-bottom: 9px; padding-left: 6px;">That correct date of birth of my child/ ward is <span class="filled-val">{{newDob}}</span>.</li>
+            <li style="margin-bottom: 9px; padding-left: 6px;">That the earlier recorded date of birth of my child/ward is <span class="filled-val">{{oldDob}}</span> based on <span class="filled-val">{{oldDoc}}</span> document submitted by me.</li>
+            <li style="margin-bottom: 9px; padding-left: 6px;">That I have <span class="filled-val">{{updateTimes}}</span> updated my child/ward date of birth.</li>
+            <li style="margin-bottom: 9px; padding-left: 6px;">That <span class="filled-val">{{newDoc}}</span> of my child/ward is being provided in support of DoB update request.</li>
+            <li style="margin-bottom: 9px; padding-left: 6px;">That I wish to get my child/ward date of birth updated as <span class="filled-val">{{newDob}}</span> for which I am submitting his/her <span class="filled-val">{{newDoc}}</span> as proof of date of birth.</li>
+            <li style="margin-bottom: 9px; padding-left: 6px;">That I further undertake that my child/ward shall not be eligible for any further updation of date of birth.</li>
+        </ol>
+        <div style="text-align: justify; line-height: 1.6; margin-bottom: 10px;">2. That I am the resident of the above said address.</div>
+        <div style="text-align: justify; line-height: 1.6; margin-bottom: 12px;">
+            3. I undertake that if the document submitted as proof of date of birth is found to be fraudulent/false/forged/non-genuine or my child/ward was not entitled for the said document, the ID number of my child/ward may be deactivated as per Regulation 28 of the (Enrolment and Update) Regulations, 2016 and I shall be liable to be prosecuted under provisions of the applicable law.
+        </div>
+        <div style="text-align: justify; line-height: 1.6; margin-bottom: 28px;">
+            4. I hereby declare that all the information mentioned above is true to the best of my knowledge. In case of any discrepancies, the undersigned will be held responsible.
+        </div>
+    </div>
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 22px; font-weight: bold;">
+            <div>Date: <span class="filled-val">{{date}}</span></div>
+            <div style="text-align: right;">
+                <div style="margin-bottom: 4px;" class="filled-val">{{parentName}}</div>
+                <div>Name &amp; Signature of Parent/Guardian of Minor (Deponent)</div>
+            </div>
+        </div>
+        <div style="text-align: center; font-weight: bold; font-size: 13.5px; line-height: 1.4;">
+            (This affidavit may be signed and attested in presence of a Judicial Magistrate or Executive<br>Magistrate/Notary Public)
+        </div>
+    </div>
+</div>

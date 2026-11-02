@@ -1,0 +1,159 @@
+<div class="affidavit-paper" style="font-family: 'Arial Unicode MS', Arial, sans-serif; padding: 24px 30px !important; background-color: #ffffff !important; color: #000000 !important;">
+    <style>
+        .affidavit-paper,
+        .affidavit-paper *,
+        .affidavit-paper table,
+        .affidavit-paper thead,
+        .affidavit-paper tbody,
+        .affidavit-paper tr,
+        .affidavit-paper tr:hover,
+        .affidavit-paper td,
+        .affidavit-paper td:hover,
+        .affidavit-paper th {
+            background-color: transparent !important;
+            color: #000000 !important;
+            border-color: #000000 !important;
+            -webkit-font-smoothing: antialiased !important;
+            text-rendering: geometricPrecision !important;
+            transition: none !important;
+        }
+        .affidavit-paper {
+            background-color: #ffffff !important;
+            padding: 18px 20px !important;
+            font-family: 'Arial Unicode MS', Arial, 'Noto Sans Devanagari', sans-serif !important;
+        }
+        .affidavit-paper font[color="blue"],
+        .affidavit-paper font[color="blue"] u {
+            color: #0000ff !important;
+        }
+        .affidavit-paper .stamp-overlay-layer {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            pointer-events: none !important;
+            z-index: 30 !important;
+            background: transparent !important;
+            mix-blend-mode: normal !important;
+        }
+        .affidavit-paper .stamp-overlay-layer img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+            object-position: top center !important;
+            background: transparent !important;
+            mix-blend-mode: normal !important;
+            display: block !important;
+        }
+    </style>
+    {{STAMP_OVERLAY}}
+    <div style="border: 2px solid #064e3b; border-radius: 10px; padding: 18px; height: 95%; box-sizing: border-box; position: relative; background: #ffffff;">
+        <div style="text-align: center; border-bottom: 2px solid #064e3b; padding-bottom: 10px; margin-bottom: 18px; background: linear-gradient(90deg, #ecfdf5 0%, #ffffff 50%, #ecfdf5 100%);">
+            <div style="font-size: 18px; font-weight: 900; color: #064e3b; letter-spacing: 0.5px;">भारत निर्वाचन आयोग • ELECTION COMMISSION OF INDIA</div>
+            <div style="font-size: 13px; font-weight: bold; color: #047857; margin-top: 2px;">ई-मतदाता पहचान पत्र (e-ELECTORS PHOTO IDENTITY CARD / e-EPIC)</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 22px; border: 1px dashed #64748b; padding: 14px; border-radius: 8px; background: #f8fafc;">
+            <!-- FRONT CARD -->
+            <div style="width: 48%; border: 2px solid #0f172a; border-radius: 8px; background: linear-gradient(135deg, #fffbeb 0%, #ffffff 55%, #ecfdf5 100%); padding: 10px; box-sizing: border-box; position: relative; min-height: 220px;">
+                <div style="text-align: center; border-bottom: 1.5px solid #0f172a; padding-bottom: 4px; margin-bottom: 8px;">
+                    <div style="font-size: 11px; font-weight: 900; color: #0f172a;">भारत निर्वाचन आयोग</div>
+                    <div style="font-size: 9.5px; font-weight: 800; color: #1e293b;">ELECTION COMMISSION OF INDIA</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 10px; font-weight: bold; color: #334155;">EPIC No:</span>
+                    <span style="font-family: monospace; font-size: 13px; font-weight: 900; background: #0f172a; color: #ffffff !important; padding: 1px 8px; border-radius: 4px; letter-spacing: 1px;">{{EPIC_NO}}</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: flex-start;">
+                    <div style="width: 78px; height: 96px; border: 1.5px solid #0f172a; background: #fff; padding: 1px; flex-shrink: 0;">
+                        <img src="{{PHOTO}}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'" />
+                    </div>
+                    <div style="font-size: 10.5px; line-height: 1.45; flex: 1;">
+                        <div><strong>नाम / Name:</strong><br><span style="font-weight: 900; color: #0f172a;">{{DISPLAY_NAME}}</span></div>
+                        <div style="margin-top: 4px;"><strong>{{REL_LABEL}}:</strong><br><span style="font-weight: 800;">{{FNAME}}</span></div>
+                        <div style="margin-top: 4px;"><strong>जन्मतिथि / DOB:</strong> <b>{{DOB}}</b></div>
+                        <div style="margin-top: 2px;"><strong>लिंग / Gender:</strong> <b>{{SEX}}</b></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BACK CARD -->
+            <div style="width: 48%; border: 2px solid #0f172a; border-radius: 8px; background: #ffffff; padding: 10px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px;">
+                <div>
+                    <div style="font-size: 10px; font-weight: 900; border-bottom: 1px solid #cbd5e1; padding-bottom: 3px; margin-bottom: 6px; color: #0f172a;">
+                        पता / Address:
+                    </div>
+                    <div style="font-size: 10.5px; line-height: 1.45; font-weight: bold; color: #1e293b; margin-bottom: 8px;">
+                        {{ADDRESS}}<br>
+                        तहसील / विधानसभा: {{TEHSIL}}, जिला: {{DISS}} (उत्तर प्रदेश)
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid #cbd5e1; padding-top: 6px;">
+                    <div style="width: 72px; height: 72px; border: 1px solid #cbd5e1; padding: 2px; background: #fff;">
+                        <img src="{{QR_URL}}" crossorigin="anonymous" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.style.display='none'" />
+                    </div>
+                    <div style="text-align: right; font-size: 9.5px; line-height: 1.35;">
+                        <div style="font-weight: 900; color: #0f172a; font-size: 11px;">{{SDM}}</div>
+                        <div style="font-weight: bold;">निर्वाचक रजिस्ट्रीकरण अधिकारी</div>
+                        <div>Electoral Registration Officer</div>
+                        <div>विधानसभा क्षेत्र: {{TEHSIL}} ({{DISS}})</div>
+                        <div>Download Date: <b>{{DATE}}</b></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="border: 1.5px solid #0f172a; border-radius: 8px; padding: 16px; background: #ffffff; margin-top: 12px;">
+            <div style="font-size: 14px; font-weight: 900; color: #064e3b; border-bottom: 1.5px solid #064e3b; padding-bottom: 6px; margin-bottom: 12px;">
+                मतदाता विवरण एवं सत्यापन पत्रक (Elector Verification Details)
+            </div>
+            <table class="cert-table" width="100%" cellspacing="0" cellpadding="6" style="font-size: 12.5px; border-collapse: collapse;">
+                <tbody>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td width="30%"><strong>EPIC संख्या (Voter ID No):</strong></td>
+                        <td width="70%" style="font-family: monospace; font-size: 14px; font-weight: 900;">{{EPIC_NO}}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td><strong>मतदाता का नाम (Elector Name):</strong></td>
+                        <td><b>{{DISPLAY_NAME}}</b></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td><strong>{{REL_LABEL}}:</strong></td>
+                        <td><b>{{FNAME}}</b></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td><strong>जन्मतिथि (Date of Birth):</strong></td>
+                        <td><b>{{DOB}}</b></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td><strong>लिंग (Gender):</strong></td>
+                        <td><b>{{SEX}}</b></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td><strong>निर्वाचन क्षेत्र / तहसील व जिला:</strong></td>
+                        <td><b>{{TEHSIL}}, {{DISS}} (UTTAR PRADESH)</b></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td><strong>पूर्ण पता (Complete Address):</strong></td>
+                        <td><b>{{ADDRESS}}</b></td>
+                    </tr>
+                    <tr>
+                        <td><strong>जारी दिनांक (Issue Date):</strong></td>
+                        <td><b>{{DATE}}</b></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top: 18px; padding: 10px 12px; background: #f0fdf4; border: 1px dashed #16a34a; border-radius: 6px; font-size: 11px; line-height: 1.5; color: #14532d;">
+                <strong>सूचना / Note:</strong> यह ई-इपिक (e-EPIC) मतदाता पहचान पत्र के रूप में पूर्णतः मान्य है। ऊपर दिए गए कार्ड भाग को काटा और लेमिनेट किया जा सकता है। क्यूआर कोड स्कैन करके मतदाता विवरण का सत्यापन किया जा सकता है।
+            </div>
+        </div>
+    </div>
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #475569; border-top: 1px solid #cbd5e1; padding-top: 6px;">
+            <span>e-EPIC Digital Print Service • {{EPIC_NO}}</span>
+            <span>Verified by ERO: {{SDM}} ({{TEHSIL}}, {{DISS}})</span>
+        </div>
+    </div>
+</div>
