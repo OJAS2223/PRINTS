@@ -1,5 +1,5 @@
 // Ojas Service Worker for Offline Caching and PWA Standalone Mode
-const CACHE_NAME = 'ojas-upeprint-cache-v4';
+const CACHE_NAME = 'ojas-upeprint-cache-v5';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
