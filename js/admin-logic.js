@@ -151,12 +151,16 @@ window.getStampDataUrlByName = function(fileName) {
 window.unlockAdminWorkspace = async function(user) {
     window.currentUserData = { uid: user.uid, email: user.email };
     sessionStorage.setItem('ojas_separate_admin_verified', 'true');
+    const emailEl = document.getElementById('secAdminEmail');
+    const passEl = document.getElementById('secAdminPass');
+    if (emailEl) emailEl.value = '';
+    if (passEl) passEl.value = '';
     const loginSec = document.getElementById('adminLoginSection');
     if (loginSec) loginSec.style.display = 'none';
     document.getElementById('loadingScreen').classList.add('hidden');
     document.getElementById('adminPanelContent').classList.remove('hidden');
     if (window.history && window.history.replaceState) {
-        try { window.history.replaceState(null, document.title, '/secret-admin'); } catch(e){}
+        try { window.history.replaceState(null, document.title, '/ovi'); } catch(e){}
     }
     await window.preloadAllHtmlTemplates();
     await window.preloadAutoMStamp();
@@ -170,35 +174,34 @@ window.unlockAdminWorkspace = async function(user) {
 
 window.handleSeparateAdminLogin = async function(event) {
     event.preventDefault();
-    const emailInp = document.getElementById('secAdminEmail').value.trim().toLowerCase();
-    const passInp = document.getElementById('secAdminPass').value.trim();
-    const pinInp = document.getElementById('secAdminPin').value.trim();
+    const emailEl = document.getElementById('secAdminEmail');
+    const passEl = document.getElementById('secAdminPass');
+    const emailInp = (emailEl?.value || '').trim().toLowerCase();
+    const passInp = (passEl?.value || '').trim();
     const errBox = document.getElementById('secAdminLoginError');
     const btn = document.getElementById('btnSecAdminLogin');
     errBox.style.display = 'none';
 
     if (emailInp !== ADMIN_EMAIL.toLowerCase()) {
-        errBox.innerText = 'Access Denied: केवल अधिकृत Super Admin Email ही मान्य है!';
+        errBox.innerText = 'Access Denied: Unauthorized Admin ID!';
         errBox.style.display = 'block';
-        return;
-    }
-    const expectedPin = window.ADMIN_SECRET_PIN || '1221';
-    if (pinInp !== expectedPin) {
-        errBox.innerText = 'Invalid Secret Security PIN! एडमिन पिन गलत है।';
-        errBox.style.display = 'block';
+        if (passEl) passEl.value = '';
         return;
     }
 
     const origHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying Admin...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying...';
     try {
         const cred = await window.fb.signInWithEmailAndPassword(auth, emailInp, passInp);
+        if (emailEl) emailEl.value = '';
+        if (passEl) passEl.value = '';
         sessionStorage.setItem('ojas_separate_admin_verified', 'true');
         await window.unlockAdminWorkspace(cred.user);
     } catch (e) {
-        errBox.innerText = 'अमान्य एडमिन पासवर्ड! कृपया सही पासवर्ड डालें।';
+        errBox.innerText = 'Invalid Admin ID or Password!';
         errBox.style.display = 'block';
+        if (passEl) passEl.value = '';
     } finally {
         btn.disabled = false;
         btn.innerHTML = origHtml;
@@ -206,11 +209,15 @@ window.handleSeparateAdminLogin = async function(event) {
 };
 
 onAuthStateChanged(auth, async (user) => {
+    const emailEl = document.getElementById('secAdminEmail');
+    const passEl = document.getElementById('secAdminPass');
+    if (emailEl) emailEl.value = '';
+    if (passEl) passEl.value = '';
+
     const isSeparateVerified = sessionStorage.getItem('ojas_separate_admin_verified') === 'true';
     if (user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && isSeparateVerified) {
         await window.unlockAdminWorkspace(user);
     } else {
-        // Show Dedicated Separate Admin Login Screen (even if logged into /portal!)
         document.getElementById('loadingScreen').classList.add('hidden');
         document.getElementById('adminPanelContent').classList.add('hidden');
         const loginSec = document.getElementById('adminLoginSection');
@@ -222,7 +229,7 @@ window.handleLogout = async function() {
     sessionStorage.removeItem("ojas_separate_admin_verified");
     sessionStorage.removeItem("ojas_portal_access");
     await signOut(auth);
-    window.location.replace("/secret-admin");
+    window.location.replace("/ovi");
 };
 window.copyUtrText = function(utr, btnEl) { navigator.clipboard.writeText(utr); const orig = btnEl.innerHTML; btnEl.innerHTML = '<i class="fa-solid fa-check text-green-600"></i> Copied'; setTimeout(() => { btnEl.innerHTML = orig; }, 1500); };
 window.getPortalLoginUrl = function() { return window.location.origin + window.location.pathname.replace('admin.html', 'portal.html'); };

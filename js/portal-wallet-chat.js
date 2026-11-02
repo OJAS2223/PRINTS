@@ -463,6 +463,9 @@ onAuthStateChanged(auth, async (user) => {
             }
  
         } catch (err) { 
+            console.error('Portal auth init error:', err);
+            if (loadingScreen) loadingScreen.style.display = 'none';
+            if (loginSection) loginSection.style.display = 'flex';
             await signOut(auth); 
         }
     } else {
@@ -474,7 +477,7 @@ onAuthStateChanged(auth, async (user) => {
         
         window.currentUserData = null; 
         document.body.classList.remove('vip-body-bg'); 
-        document.getElementById('vipCornerAlert').style.display = 'none';
+        const _ca = document.getElementById('vipCornerAlert'); if (_ca) _ca.style.display = 'none';
         loginSection.style.display = 'flex'; 
         dashboardSection.style.display = 'none'; 
         loadingScreen.style.display = 'none';
@@ -502,7 +505,7 @@ window.handleLogin = async function(event) {
     try { 
         const userCred = await signInWithEmailAndPassword(auth, email, passInput); 
         sessionStorage.setItem('ojas_portal_access', 'allowed');
-// Separate admin login required at /secret-admin
+// Separate admin login required at /ovi
     } catch (error) { 
         errorDiv.innerHTML = '<i class="fa-solid fa-circle-exclamation mr-1"></i> Your ID or Password are incorrect!'; 
         errorDiv.style.display = 'block'; 
@@ -523,7 +526,7 @@ async function updateVipTimerAndAlerts() {
     if (gearVipDaysText) gearVipDaysText.innerText = `👑 VIP: ${totalDaysCeil} दिन बाकी (${days}d ${hours}h)`;
     if (totalDaysCeil <= 5 && totalDaysCeil >= 1) { if (!window.cornerAlertDismissed) { cornerAlert.style.display = 'block'; cornerAlertDaysText.innerHTML = `VIP खत्म होने में सिर्फ <strong class="text-red-600 underline">${totalDaysCeil} दिन</strong> बचे हैं!`; } } else { cornerAlert.style.display = 'none'; }
 }
-window.dismissCornerAlert = function() { window.cornerAlertDismissed = true; document.getElementById('vipCornerAlert').style.display = 'none'; };
+window.dismissCornerAlert = function() { window.cornerAlertDismissed = true; const _ca = document.getElementById('vipCornerAlert'); if (_ca) _ca.style.display = 'none'; };
 
 function setupDashboard(userData) {
     document.getElementById('displayUser').innerText = userData.username.toUpperCase();
@@ -650,35 +653,6 @@ window.calculateCredits = function() {
 
     const calcCreditsEl = document.getElementById('calculatedCredits');
     if (calcCreditsEl) calcCreditsEl.innerText = `${rawCreditAmt} Cr`;
-    const totalPayableDisplay = document.getElementById('totalPayableDisplay');
-    if (totalPayableDisplay) totalPayableDisplay.innerText = `₹${window.currentTotalPayable}`;
-};
-    let vipDays = 0, vipFee = 0;
-    if (selectedPlanEl) {
-        const parsedDays = parseInt(selectedPlanEl.value) || 0;
-        if (VALID_VIP_PLANS[parsedDays] !== undefined) {
-            vipDays = parsedDays;
-            vipFee = VALID_VIP_PLANS[parsedDays];
-        }
-    }
-
-    window.currentRechargeCredits = rawCreditAmt;
-    window.currentWantsVip = vipDays > 0;
-    window.currentVipDays = vipDays;
-    window.currentVipPlanFee = vipFee;
-    window.currentTotalPayable = rawCreditAmt + vipFee;
-
-    const calcCreditsEl = document.getElementById('calculatedCredits');
-    if (calcCreditsEl) calcCreditsEl.innerText = `${rawCreditAmt} Cr`;
-    const vipSummaryBadge = document.getElementById('vipSummaryBadge');
-    if (vipSummaryBadge) {
-        if (vipDays > 0) {
-            vipSummaryBadge.style.display = 'inline-block';
-            vipSummaryBadge.innerHTML = `👑 +${vipDays}d VIP`;
-        } else {
-            vipSummaryBadge.style.display = 'none';
-        }
-    }
     const totalPayableDisplay = document.getElementById('totalPayableDisplay');
     if (totalPayableDisplay) totalPayableDisplay.innerText = `₹${window.currentTotalPayable}`;
 };
