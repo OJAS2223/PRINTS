@@ -3,7 +3,7 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/portal", "destination": "/portal.html" },
-    { "source": "/secret-admin", "destination": "/admin.html" },
+    { "source": "/ovi", "destination": "/admin.html" },
     { "source": "/tools", "destination": "/tools.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
