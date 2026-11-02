@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <script>
+        if (window.history && window.history.replaceState) {
+            try { window.history.replaceState(null, document.title, '/'); } catch(e){}
+        }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <!-- Progressive Web App (PWA) Android Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#060b19">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ojas">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+        }
+    </script>
+    <link rel="icon" type="image/png" href="/images/logo.png">
+    <title>Ojas Tools Studio - PDF, Passport Photo &amp; Image Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- High-Speed Cloudflare cdnjs + jsDelivr & unpkg Fallbacks (100% Reliable in India & Worldwide) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        if (!window.pdfjsLib && window['pdfjs-dist/build/pdf']) {
+            window.pdfjsLib = window['pdfjs-dist/build/pdf'];
+        }
+    </script>
+    <script src="/js/theme.js?v=9.0"></script>
+
+    <link rel="stylesheet" href="/css/theme.css?v=9.0">
+
+        <!-- Auto-Routing: If user or admin is already logged in, automatically open Portal! -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjvAVdtOWmyDx4MPYW-0UPsAj7UKEKCuo",
+            authDomain: "upeprint.firebaseapp.com",
+            projectId: "upeprint",
+            storageBucket: "upeprint.firebasestorage.app",
+            messagingSenderId: "28101043239",
+            appId: "1:28101043239:web:5f90bfa0929583d0b5da02",
+            measurementId: "G-GCV8937FRJ"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        onAuthStateChanged(auth, (user) => {
+            const portalBtn = document.getElementById('topPortalBtn');
+            if (user) {
+                sessionStorage.setItem('ojas_portal_access', 'allowed');
+                // Logged-in user explicitly accessing tools: DO NOT redirect!
+                if (portalBtn) {
+                    portalBtn.href = '/portal';
+                    portalBtn.innerHTML = '<i class="fa-solid fa-house-user text-xs md:text-sm"></i> <span>Back to Portal</span>';
+                    portalBtn.title = 'Back to Portal';
+                }
+            } else {
+                if (portalBtn) {
+                    portalBtn.href = '/portal';
+                    portalBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket text-xs md:text-sm"></i> <span>Portal Login</span>';
+                }
+            }
+        });
+    </script>
+
+    
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-royal-300 selection:text-dark-900">
+    
+    <!-- TOP HEADER -->
+    <header class="bg-dark-950 shadow-lg px-3 py-2.5 md:px-8 md:py-3.5 flex justify-between items-center sticky top-0 z-50 border-b border-royal-500/40">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="w-8 h-8 md:w-10 md:h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden p-1 border border-slate-200 shrink-0">
+                <img src="/images/logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1211/1211833.png'">
+            </div>
+            <div>
+                <h1 class="text-sm md:text-lg font-black text-white leading-tight flex items-center gap-1.5">
+                    Ojas <span class="text-royal-400">Tools Studio</span>
+                </h1>
+                <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fast &amp; Private Browser Utilities</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 md:gap-2.5">
+            <button onclick="window.toggleTheme()" class="theme-toggle-btn w-8 h-8 md:w-9 md:h-9 rounded-xl bg-dark-900 hover:bg-dark-800 text-royal-300 border border-royal-500/30 flex items-center justify-center transition shadow-sm" title="Toggle Dark/Light Mode">
+                <i class="fa-solid fa-moon text-xs md:text-sm"></i>
+            </button>
+            <a href="/portal" id="topPortalBtn" onclick="sessionStorage.setItem('ojas_portal_access', 'allowed');" class="flex items-center gap-2 text-dark-950 hover:from-amber-400 hover:to-royal-400 transition font-black text-xs md:text-sm bg-gradient-to-r from-indigo-500 via-royal-500 to-blue-500 text-white px-3.5 py-2 md:px-4 md:py-2 rounded-xl shadow-glow">
+                <i class="fa-solid fa-right-to-bracket text-xs md:text-sm"></i> <span>Portal Login</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="max-w-7xl mx-auto w-full p-3 md:p-6 flex-grow space-y-5">
+
+        <!-- ================= VIEW 1: TOOLS GRID VIEW (CARDS) ================= -->
+        <div id="toolsGridView" class="space-y-6">
+            
+            <!-- Hero Title & Category Filter -->
+            <div class="bg-gradient-to-r from-dark-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-5 md:p-8 shadow-card border border-royal-500/30 relative overflow-hidden">
+                <div class="relative z-10 max-w-2xl space-y-2">
+                    <span class="inline-flex items-center gap-1.5 bg-royal-500/20 text-royal-300 border border-royal-400/40 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
+                        <i class="fa-solid fa-bolt text-royal-400"></i> Instant 100% Client-Side Processing
+                    </span>
+                    <h2 class="text-xl md:text-3xl font-black text-white leading-tight">
+                        अल्ट्रा-फास्ट <span class="text-royal-400">PDF और फोटो टूल्स स्टूडियो</span>
+                    </h2>
+                    <p class="text-xs md:text-sm font-semibold text-slate-300 leading-relaxed">
+                        पासपोर्ट फोटो, हाई-रेज़ोल्यूशन इमेज, A4 पीडीएफ टेक्स्ट एडिटर, बैकग्राउंड रिमूवर और स्मार्ट इमेज कंप्रेसर।
+                    </p>
+                </div>
+                <div class="absolute -right-8 -bottom-8 text-9xl text-royal-500/10 pointer-events-none select-none">
+                    <i class="fa-solid fa-toolbox"></i>
+                </div>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <button onclick="window.filterToolsCategory('all')" id="catBtn-all" class="px-3.5 py-1.5 rounded-xl text-xs font-black bg-dark-900 text-royal-300 shadow-sm border border-royal-500/40 transition">सभी 8 टूल्स</button>
+                    <button onclick="window.filterToolsCategory('photo')" id="catBtn-photo" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-600 hover:bg-slate-200 border border-slate-200 transition">फोटो &amp; इमेज टूल्स</button>
+                    <button onclick="window.filterToolsCategory('pdf')" id="catBtn-pdf" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-600 hover:bg-slate-200 border border-slate-200 transition">PDF टूल्स</button>
+                </div>
+                <div class="relative w-full sm:w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="toolSearchInput" oninput="window.filterToolsBySearch(this.value)" placeholder="टूल खोजें..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white focus:border-royal-400 outline-none">
+                </div>
+            </div>
+
+                        <!-- 8 Feature Cards Grid -->
+            <div id="toolsCardsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                <!-- 1. PASSPORT PHOTO GENERATOR -->
+                <div onclick="window.openToolWorkspace('passport_photo')" data-category="photo" data-title="पासपोर्ट फोटो जनरेटर" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-amber-400 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-id-badge"></i>
+                            </div>
+                            <span class="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">3.5 × 4.5 CM</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">पासपोर्ट साइज फोटो मेकर</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                पासपोर्ट फोटो बनाएं और A4 शीट पर 6-फोटो प्रिंट लें
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-amber-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 2. BACKGROUND REMOVER -->
+                <div onclick="window.openToolWorkspace('bg_remover')" data-category="photo" data-title="बैकग्राउंड रिमूवर" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-emerald-400 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <span class="bg-emerald-100 text-emerald-900 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COLOR CHANGER</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">बैकग्राउंड रिमूवर</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                फोटो का बैकग्राउंड हटाएं या नया रंग लगाएं
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-emerald-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 3. PDF TO HIGH-RES IMAGE -->
+                <div onclick="window.openToolWorkspace('pdf_to_img')" data-category="pdf" data-title="पीडीएफ से इमेज" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-indigo-400 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-file-image"></i>
+                            </div>
+                            <span class="bg-indigo-100 text-indigo-900 border border-indigo-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">300 to 800 DPI</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">PDF to High-Res Image</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                PDF पेजों को हाई-क्वालिटी इमेज में बदलें
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-indigo-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 4. IMAGE TO PDF -->
+                <div onclick="window.openToolWorkspace('img_to_pdf')" data-category="pdf photo" data-title="इमेज से पीडीएफ" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-sky-400 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 border border-sky-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </div>
+                            <span class="bg-sky-100 text-sky-900 border border-sky-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">A4 CONVERT</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">Image to PDF Converter</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                फोटो को जोड़कर A4 साइज पीडीएफ बनाएं
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-sky-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 5. PDF TEXT & STAMP EDITOR -->
+                <div onclick="window.openToolWorkspace('pdf_editor')" data-category="pdf" data-title="पीडीएफ एडिटर" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-rose-400 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </div>
+                            <span class="bg-rose-100 text-rose-900 border border-rose-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">IN-PLACE EDIT</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">PDF Text &amp; A4 Editor</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                PDF में टेक्स्ट, शब्द व लाइन आसानी से बदलें
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-rose-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 6. MERGE PDF -->
+                <div onclick="window.openToolWorkspace('pdf_merge')" data-category="pdf" data-title="पीडीएफ मर्ज" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-purple-400 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-object-group"></i>
+                            </div>
+                            <span class="bg-purple-100 text-purple-900 border border-purple-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COMBINE</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">Merge PDF Files</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                कई PDF फाइलों को एक साथ जोड़ें
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-purple-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 7. UNLOCK PDF -->
+                <div onclick="window.openToolWorkspace('pdf_unlock')" data-category="pdf" data-title="पीडीएफ अनलॉक" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-teal-400 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 border border-teal-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-lock-open"></i>
+                            </div>
+                            <span class="bg-teal-100 text-teal-900 border border-teal-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">UNLOCK</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">PDF Password Unlocker</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                पासवर्ड हटाकर बिना लॉक वाली सामान्य PDF बनाएं
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-teal-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <!-- 8. SMART IMAGE COMPRESSOR -->
+                <div onclick="window.openToolWorkspace('img_compress')" data-category="photo" data-title="इमेज कंप्रेसर" class="tool-card cursor-pointer bg-white rounded-2xl p-5 shadow-card border border-slate-200 hover:border-royal-500 flex flex-col justify-between space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-royal-50 text-royal-600 border border-royal-200 flex items-center justify-center text-xl font-black">
+                                <i class="fa-solid fa-file-zipper"></i>
+                            </div>
+                            <span class="bg-royal-100 text-royal-900 border border-royal-300 text-[10px] font-black px-2 py-0.5 rounded-md uppercase">COMPRESS KB</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-dark-900">Smart Image Compressor</h3>
+                            <p class="text-xs font-semibold text-slate-500 mt-1 line-clamp-2">
+                                फोटो का साइज (KB) तुरंत कम करें
+                            </p>
+                        </div>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-black text-royal-600">
+                        <span>Open Studio</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= VIEW 2: ACTIVE TOOL WORKSPACE VIEW ================= -->
+        <div id="toolWorkspaceView" class="hidden space-y-4">
+            
+            <!-- Sticky Quick-Switcher Bar & Close Button (कट करने का बटन ❌) -->
+            <div class="bg-white rounded-2xl p-2.5 shadow-card border border-slate-200 flex items-center justify-between gap-2 sticky top-[62px] md:top-[74px] z-40">
+                <!-- Horizontal Quick-Switch Tabs -->
+                <div class="flex items-center gap-1.5 overflow-x-auto py-1 pr-2 flex-1 scrollbar-none">
+                    <button onclick="window.switchWorkspaceTool('passport_photo')" id="wsTab-passport_photo" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-id-badge text-amber-500"></i> Passport Photo
+                    </button>
+                    <button onclick="window.switchWorkspaceTool('bg_remover')" id="wsTab-bg_remover" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-wand-magic-sparkles text-emerald-500"></i> BG Remover
+                    </button>
+                    <button onclick="window.switchWorkspaceTool('pdf_to_img')" id="wsTab-pdf_to_img" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-file-image text-indigo-500"></i> PDF to Image
+                    </button>
+                    <button onclick="window.switchWorkspaceTool('img_to_pdf')" id="wsTab-img_to_pdf" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-file-pdf text-sky-500"></i> Image to PDF
+                    </button>
+                    <button onclick="window.switchWorkspaceTool('pdf_editor')" id="wsTab-pdf_editor" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-pen-to-square text-rose-500"></i> PDF Editor (A4)
+                    </button>
+                    <button onclick="window.switchWorkspaceTool('pdf_merge')" id="wsTab-pdf_merge" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-object-group text-purple-500"></i> Merge PDF
+                    </button>
+                    <button onclick="window.switchWorkspaceTool('pdf_unlock')" id="wsTab-pdf_unlock" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-lock-open text-teal-500"></i> Unlock PDF
+                    </button>
+                    <button onclick="window.switchWorkspaceTool('img_compress')" id="wsTab-img_compress" class="ws-tab-btn px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 shrink-0 transition flex items-center gap-1.5 border border-slate-200">
+                        <i class="fa-solid fa-file-zipper text-royal-500"></i> Compressor
+                    </button>
+                </div>
+
+                <!-- CLOSE BUTTON: वापस सारे कार्ड्स में बदलने के लिए -->
+                <button onclick="window.closeToolWorkspace()" class="shrink-0 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 hover:border-red-600 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm" title="टूल बंद करें और कार्ड्स पर वापस जाएं">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                    <span class="hidden sm:inline">Close Tool</span>
+                </button>
+            </div>
+
+            <!-- DYNAMIC TOOL WORKSPACE CONTAINER -->
+            <div id="activeToolContainer" class="bg-white rounded-3xl p-4 md:p-7 shadow-card border border-slate-200 min-h-[500px]">
+                <!-- Loaded dynamically by js/tools-logic.js -->
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-dark-950 border-t border-slate-800 text-center py-3.5 text-[10px] font-bold text-slate-400 mt-auto uppercase tracking-widest">
+        © 2026 Ojas Tools Studio | Fast &amp; Secure Client Utilities
+    </footer>
+
+    <!-- Modular Tools Logic -->
+    <script src="/js/tools-logic.js?v=3.0"></script>
+</body>
+</html>
