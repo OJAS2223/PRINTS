@@ -1,0 +1,18 @@
+{
+  "name": "Ojas Print Service & e-Services Studio",
+  "short_name": "Ojas Portal",
+  "description": "Ojas Print Service Portal & Free HD Tools Studio",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060b19",
+  "theme_color": "#10b981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/logo.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
