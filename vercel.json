@@ -1,10 +1,14 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/admin", "destination": "/", "permanent": false },
+    { "source": "/admin.html", "destination": "/", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/portal", "destination": "/portal.html" },
-    { "source": "/ovi", "destination": "/admin.html" },
-    { "source": "/tools", "destination": "/tools.html" },
+    { "source": "/portal", "destination": "/pages/portal.html" },
+    { "source": "/ovi", "destination": "/pages/admin.html" },
+    { "source": "/tools", "destination": "/pages/tools.html" },
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
