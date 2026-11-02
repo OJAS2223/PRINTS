@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <!-- Progressive Web App (PWA) Android Support -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#060b19">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Ojas">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+        }
+    </script>
+    <link rel="icon" type="image/png" href="/images/logo.png">
+        <title>Super Admin - Ojas Portal</title>
+    <!-- Stealth Shield & URL Masking -->
+    <script>
+        if (window.history && window.history.replaceState) {
+            try { window.history.replaceState(null, document.title, '/secret-admin'); } catch(e){}
+        }
+    </script>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf.js for Direct Single-Page A4 PDF Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <script src="/js/theme.js?v=9.0"></script>
+
+    <link rel="stylesheet" href="/css/theme.css?v=9.0">
+
+        
+
+    <!-- Modular Admin Logic -->
+    <script type="module" src="/js/admin-logic.js?v=5.2"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-royal-300 selection:text-dark-900">
+    
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-dark-950 z-[100] flex flex-col items-center justify-center">
+        <img src="/images/logo.png" alt="Ojas Logo" class="w-16 h-16 md:w-20 md:h-20 mb-4 object-contain animate-pulse" onerror="this.style.display='none'">
+        <h2 class="text-base font-black text-white tracking-widest uppercase">Super Admin Panel</h2>
+        <p class="text-xs text-royal-300 font-bold mt-1 animate-pulse">Loading Workspace...</p>
+    </div>
+
+        <!-- SEPARATE DEDICATED SUPER ADMIN LOGIN SCREEN (/secret-admin) -->
+    <div id="adminLoginSection" style="display: none;" class="fixed inset-0 bg-dark-950 z-[95] flex items-center justify-center p-4">
+        <div class="bg-white text-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl border-t-4 border-royal-500 w-full max-w-sm space-y-5">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-dark-950 text-royal-400 border border-royal-500/40 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-glow text-2xl">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h1 class="text-xl font-black text-dark-900">Super Admin Access</h1>
+                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Isolated Admin Security Gateway</p>
+            </div>
+            <form id="separateAdminLoginForm" onsubmit="window.handleSeparateAdminLogin(event)" class="space-y-3.5">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Admin Email ID</label>
+                    <input type="email" id="secAdminEmail" placeholder="hkosiun1221@gmail.com" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-slate-50 text-xs font-bold focus:border-royal-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Admin Password</label>
+                    <input type="password" id="secAdminPass" placeholder="Enter Admin Password" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-slate-50 text-xs font-bold focus:border-royal-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-black text-royal-600 uppercase mb-1"><i class="fa-solid fa-key mr-1"></i>Secret Security PIN</label>
+                    <input type="password" id="secAdminPin" placeholder="Enter Secret Admin PIN (1221)" required class="w-full px-4 py-3 border-2 border-royal-300 rounded-xl outline-none bg-royal-50/30 text-xs font-black tracking-widest focus:border-royal-500">
+                </div>
+                <button type="submit" id="btnSecAdminLogin" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-glow transition text-xs uppercase tracking-wider">
+                    <i class="fa-solid fa-unlock-keyhole mr-1"></i> Unlock Super Admin
+                </button>
+            </form>
+            <div id="secAdminLoginError" style="display: none;" class="text-center text-xs font-bold text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200"></div>
+        </div>
+    </div>
+
+    <!-- FULL SCREEN PDF & HTML VIEWER MODAL (WITH SHARE BUTTON) -->
+    <div id="pdfViewerModal" class="fixed inset-0 z-[100] hidden bg-dark-950/85 backdrop-blur-md flex items-center justify-center p-2 md:p-6">
+        <div class="bg-white w-full max-w-7xl h-full flex flex-col rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="flex flex-wrap justify-between items-center p-3.5 md:p-4 border-b border-slate-200 bg-slate-50 gap-2">
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                    <div class="w-8 h-8 bg-royal-100 text-royal-600 rounded-xl flex items-center justify-center shrink-0 text-sm border border-royal-200"><i class="fa-solid fa-file-pdf"></i></div>
+                    <h3 id="pdfViewerTitle" class="font-black text-slate-800 text-xs md:text-sm truncate">Document Preview</h3>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                    <div id="modalStampToggleLabel" class="hidden inline-flex items-center gap-2 bg-amber-100 text-amber-950 border border-amber-400 px-3 py-1.5 rounded-xl text-xs font-black select-none shadow-sm">
+                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" id="modalStampCheckbox" onchange="window.toggleModalStampPreview(this.checked)" class="w-4 h-4 accent-amber-600 rounded cursor-pointer">
+                            <span><i class="fa-solid fa-stamp text-amber-700 mr-1"></i> Stamp:</span>
+                        </label>
+                        <select id="modalStampCitySelect" onchange="window.changeModalStampCity(this.value)" class="p-1 border border-amber-300 rounded-lg text-xs font-black bg-white text-slate-800 outline-none cursor-pointer">
+                            <option value="baraut">Baraut (बड़ौत)</option>
+                            <option value="baghpat">Baghpat (बागपत)</option>
+                            <option value="kairana">Kairana (कैराना)</option>
+                            <option value="shamli">Shamli (शामली)</option>
+                            <option value="ghaziabad">Ghaziabad (गाजियाबाद)</option>
+                            <option value="muzaffarnagar">Muzaffarnagar (मुजफ्फरनगर)</option>
+                            <option value="saharanpur">Saharanpur (सहारनपुर)</option>
+                            <option value="meerut">Meerut (मेरठ)</option>
+                        </select>
+                    </div>
+                    <button id="modalShareBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-xl text-xs font-black transition shadow-sm gap-1.5" style="display: none;">
+                        <i class="fa-solid fa-share-nodes"></i> Share
+                    </button>
+                    <button id="modalPrintBtn" class="bg-amber-500 hover:bg-amber-600 text-dark-950 px-4 py-2 rounded-xl text-xs font-black transition shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Print
+                    </button>
+                    <button id="modalDownloadBtn" class="bg-dark-900 hover:bg-black text-royal-300 px-4 py-2 rounded-xl text-xs font-bold transition shadow-glow flex items-center gap-1.5">
+                        <i class="fa-solid fa-download"></i> Download PDF
+                    </button>
+                    <button onclick="window.closePdfViewer()" class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-200 text-slate-600 hover:bg-red-500 hover:text-white transition"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div class="flex-grow bg-slate-200 relative overflow-y-auto">
+                <div id="pdfLoadingSpinner" class="absolute inset-0 flex flex-col items-center justify-center text-royal-600 bg-slate-100">
+                    <i class="fa-solid fa-spinner fa-spin text-3xl mb-2"></i>
+                    <p class="text-xs font-bold text-slate-600">Loading Preview...</p>
+                </div>
+                <iframe id="pdfIframe" class="w-full h-full relative z-10 border-none" onload="document.getElementById('pdfLoadingSpinner').style.display='none'" src=""></iframe>
+                <div id="htmlDocPreviewContainer" style="display: none;" class="w-full min-h-full p-2 md:p-6 justify-center items-start relative z-20 bg-slate-200 overflow-x-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPACT TOP HEADER -->
+    <header class="bg-dark-950 shadow-lg px-2 py-2 md:px-8 md:py-3.5 flex justify-between items-center sticky top-0 z-40 border-b border-royal-500/40">
+        <div class="flex items-center gap-2 md:gap-3">
+            <div class="w-8 h-8 md:w-10 md:h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden p-1 border border-slate-200 shrink-0">
+                <img src="/images/logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1211/1211833.png'">
+            </div>
+            <div>
+                <h2 class="text-[13px] md:text-lg font-black text-white leading-tight">Admin <span class="text-royal-400">Harish Kumar</span></h2>
+                <p class="text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ojas Portal Control Center</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-1.5 md:gap-2.5">
+            <button onclick="window.toggleTheme()" class="theme-toggle-btn w-7 h-7 md:w-9 md:h-9 rounded-lg md:rounded-xl bg-dark-900 hover:bg-dark-800 text-royal-300 border border-royal-500/30 flex items-center justify-center transition shadow-sm" title="Toggle Dark/Light Mode">
+                <i class="fa-solid fa-moon text-xs md:text-sm"></i>
+            </button>
+            <a href="/portal" class="flex items-center gap-1.5 text-royal-300 hover:bg-royal-500 hover:text-dark-950 transition font-black text-[10px] md:text-xs bg-dark-900 border border-royal-500/30 px-2.5 py-1.5 md:px-3.5 md:py-2.5 rounded-lg md:rounded-xl shadow-sm">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="hidden sm:inline">Open User Portal</span>
+            </a>
+            <button onclick="window.handleLogout()" class="bg-red-500/15 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 px-2.5 py-1.5 md:px-3.5 md:py-2.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition flex items-center gap-1.5">
+                <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Logout</span>
+            </button>
+        </div>
+    </header>
+
+    <main id="adminPanelContent" class="max-w-7xl mx-auto w-full p-2.5 md:p-6 flex-grow hidden space-y-5">
+        
+        <!-- 6-TAB NAVIGATION BAR -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 bg-white p-2 rounded-2xl shadow-card border border-slate-200/80 sticky top-[60px] md:top-[74px] z-30">
+            <button onclick="window.switchAdminMainTab('payments')" id="tab-payments">
+                <i class="fa-solid fa-wallet text-amber-500"></i>
+                <span>Payments</span>
+                <span id="navPendingBadge" style="display: none;" class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full">0</span>
+            </button>
+            <button onclick="window.switchAdminMainTab('users')" id="tab-users">
+                <i class="fa-solid fa-user-shield text-indigo-500"></i>
+                <span>Users &amp; Access</span>
+            </button>
+            <button onclick="window.switchAdminMainTab('create_user')" id="tab-create_user">
+                <i class="fa-solid fa-user-plus text-emerald-500"></i>
+                <span>Create User</span>
+            </button>
+            <button onclick="window.switchAdminMainTab('support')" id="tab-support">
+                <i class="fa-solid fa-comments text-green-500"></i>
+                <span>Support Chat</span>
+                <span id="navSupportBadge" style="display: none;" class="bg-red-600 text-white text-[10px] font-black px-1.5 py-0.2 rounded-full animate-pulse">0</span>
+            </button>
+            <button onclick="window.switchAdminMainTab('history')" id="tab-history">
+                <i class="fa-solid fa-folder-tree text-royal-500"></i>
+                <span>Doc Records</span>
+            </button>
+            <button onclick="window.switchAdminMainTab('controls')" id="tab-controls">
+                <i class="fa-solid fa-sliders text-rose-500"></i>
+                <span>Portal Control</span>
+            </button>
+        </div>
+
+        <!-- ================= TAB 1: PAYMENTS ================= -->
+        <div id="section-payments" class="space-y-4">
+            <div class="grid grid-cols-3 gap-2.5 md:gap-4">
+                <div onclick="window.setPaymentFilter('Pending')" class="cursor-pointer bg-amber-50 border border-amber-200 p-3.5 md:p-4 rounded-2xl shadow-sm hover:border-amber-400 transition">
+                    <span class="text-[10px] font-black text-amber-800 uppercase block">⏳ Pending / Tickets</span>
+                    <span id="statPendingAmt" class="text-lg md:text-2xl font-black text-amber-600 block mt-0.5">₹0</span>
+                    <span id="statPendingCount" class="text-[10px] font-bold text-amber-700">0 Requests</span>
+                </div>
+                <div onclick="window.setPaymentFilter('Approved')" class="cursor-pointer bg-green-50 border border-green-200 p-3.5 md:p-4 rounded-2xl shadow-sm hover:border-green-400 transition">
+                    <span class="text-[10px] font-black text-green-800 uppercase block">✅ Approved</span>
+                    <span id="statApprovedAmt" class="text-lg md:text-2xl font-black text-green-700 block mt-0.5">₹0</span>
+                    <span id="statApprovedCount" class="text-[10px] font-bold text-green-700">0 Txns</span>
+                </div>
+                <div onclick="window.setPaymentFilter('Rejected')" class="cursor-pointer bg-red-50 border border-red-200 p-3.5 md:p-4 rounded-2xl shadow-sm hover:border-red-400 transition">
+                    <span class="text-[10px] font-black text-red-800 uppercase block">❌ Rejected / Cancelled</span>
+                    <span id="statRejectedAmt" class="text-lg md:text-2xl font-black text-red-600 block mt-0.5">₹0</span>
+                    <span id="statRejectedCount" class="text-[10px] font-bold text-red-700">0 Txns</span>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-4 shadow-card border border-slate-200 space-y-3">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <button id="filterPill-Pending" onclick="window.setPaymentFilter('Pending')" class="px-3 py-2.5 rounded-xl text-xs font-black bg-dark-900 text-royal-300 shadow-sm transition flex items-center justify-center gap-1.5 border border-royal-500/40">
+                        <span>Pending</span>
+                        <span id="pillCountPending" class="bg-amber-400 text-dark-950 px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+                    </button>
+                    <button id="filterPill-Approved" onclick="window.setPaymentFilter('Approved')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5 border border-slate-200">
+                        <span>Approved</span>
+                        <span id="pillCountApproved" class="bg-green-200 text-green-900 px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+                    </button>
+                    <button id="filterPill-Rejected" onclick="window.setPaymentFilter('Rejected')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5 border border-slate-200">
+                        <span>Rejected</span>
+                        <span id="pillCountRejected" class="bg-red-200 text-red-900 px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+                    </button>
+                    <button id="filterPill-ALL" onclick="window.setPaymentFilter('ALL')" class="px-3 py-2.5 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center justify-center gap-1.5 border border-slate-200">
+                        <span>All History</span>
+                        <span id="pillCountAll" class="bg-slate-300 text-slate-800 px-1.5 py-0.2 rounded-full text-[10px]">0</span>
+                    </button>
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="paymentSearchInput" oninput="window.renderPaymentsByFilter()" placeholder="UTR नंबर, यूज़र Email या अमाउंट से खोजें..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white focus:border-royal-400 outline-none">
+                    </div>
+                    <button onclick="window.loadAllPayments()" class="bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 px-4 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-rotate-right"></i> <span class="hidden sm:inline">Refresh</span>
+                    </button>
+                </div>
+            </div>
+            
+                        <div id="adminPaymentsCardsContainer" class="overflow-x-auto bg-white rounded-2xl shadow-card border border-slate-200">
+                <table class="w-full text-left border-collapse min-w-[780px]">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                        <tr>
+                            <th class="p-3">तारीख &amp; समय</th>
+                            <th class="p-3">यूज़र (Email / ID)</th>
+                            <th class="p-3">पेमेंट राशि</th>
+                            <th class="p-3">क्रेडिट्स / प्लान</th>
+                            <th class="p-3">UTR / Mode</th>
+                            <th class="p-3 text-center">स्टेटस</th>
+                            <th class="p-3 text-right">एक्शन</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminPaymentsTableBody" class="text-xs text-slate-700 divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= TAB 2: MANAGE USERS & ACCESS (WITH DELETE USER BUTTON) ================= -->
+        <div id="section-users" class="space-y-4 hidden">
+            <!-- Top User Selector Bar -->
+            <div class="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-lg border border-indigo-200 font-black shrink-0">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base md:text-lg font-black text-dark-900">User Access, Credits &amp; Security</h3>
+                        <p class="text-[11px] font-semibold text-slate-400">ड्रॉपडाउन से किसी भी यूज़र को चुनें और उसकी सभी सेटिंग्स कंट्रोल करें</p>
+                    </div>
+                </div>
+                <div class="w-full md:w-96">
+                    <select id="userSelectDropdown" onchange="window.handleUserSelection()" class="w-full p-3.5 border-2 border-indigo-200 rounded-xl text-xs md:text-sm bg-indigo-50/40 font-black text-dark-900 outline-none focus:border-indigo-500 focus:bg-white transition cursor-pointer">
+                        <option value="">-- Loading Users... --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="adminMsg" class="hidden"></div>
+
+            <!-- 2-Column Control Grid for Selected User -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- LEFT COLUMN: Profile Status, Services Stealth Control, Share & DELETE USER -->
+                <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <span class="text-xs font-black uppercase tracking-wider text-slate-400"><i class="fa-solid fa-id-badge text-royal-500 mr-1.5"></i>User Overview &amp; Service Access</span>
+                        </div>
+
+                        <!-- Live Balance & VIP Badge Card -->
+                        <div class="p-4 bg-gradient-to-r from-dark-950 via-dark-900 to-slate-900 text-white rounded-2xl flex justify-between items-center border border-royal-500/40 shadow-sm">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase block">Available Balance</span>
+                                <div class="flex items-baseline gap-1 mt-0.5">
+                                    <span class="text-3xl font-black text-royal-400" id="currentUserCreditsDisplay">--</span>
+                                    <span class="text-xs font-bold text-slate-300">Credits</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Membership Status</span>
+                                <div id="selectedUserVipBadge" class="text-xs font-bold text-slate-300">--</div>
+                            </div>
+                        </div>
+
+                        <!-- PER-USER SERVICE STEALTH SWITCHES -->
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                            <div class="flex items-center gap-2 mb-1 border-b border-slate-200 pb-2">
+                                <i class="fa-solid fa-eye text-royal-500"></i>
+                                <div class="text-xs font-black text-dark-900">Service Visibility (Per User Stealth)</div>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                                <!-- Domicile -->
+                                <label class="flex items-center justify-between cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-slate-700">Domicile</span>
+                                    <input type="checkbox" id="userDomicileToggle" onchange="window.toggleUserAccess('allowDomicile', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <!-- Caste -->
+                                <label class="flex items-center justify-between cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-slate-700">Caste</span>
+                                    <input type="checkbox" id="userCasteToggle" onchange="window.toggleUserAccess('allowCaste', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <!-- e-Voter ID -->
+                                <label class="flex items-center justify-between cursor-pointer bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-emerald-900">e-Voter ID</span>
+                                    <input type="checkbox" id="userEvoterToggle" onchange="window.toggleUserAccess('allowEvoter', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <!-- DOB Birth Certificate (50 Credits) -->
+                                <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-300 shadow-sm" title="DOB Birth Certificate (50 Credits)">
+                                    <span class="text-[10px] font-black text-amber-900">DOB (₹50)</span>
+                                    <input type="checkbox" id="userMinorToggle" onchange="window.toggleUserAccess('allowMinor', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <!-- DOB Delhi -->
+                                <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-amber-900">DOB Delhi</span>
+                                    <input type="checkbox" id="userDobDelhiToggle" onchange="window.toggleUserAccess('allowDobDelhi', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <!-- Passport Services -->
+                                <label class="flex items-center justify-between cursor-pointer bg-sky-50 p-2.5 rounded-xl border border-sky-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-sky-900">Passport</span>
+                                    <input type="checkbox" id="userPassportToggle" onchange="window.toggleUserAccess('allowPassport', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <!-- All Annexures -->
+                                <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-amber-900">Annexures</span>
+                                    <input type="checkbox" id="userAnnexuresToggle" onchange="window.toggleUserAccess('allowAnnexures', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- WhatsApp Phone & 1-Click Credentials Share -->
+                        <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3">
+                            <label class="block text-[10px] font-black text-emerald-900 uppercase tracking-wider">
+                                <i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> User WhatsApp &amp; Instant Login Share
+                            </label>
+                            <div class="flex gap-2">
+                                <input type="text" id="selectedUserPhoneInput" placeholder="यूज़र का 10-अंकों का WhatsApp नंबर" class="flex-1 p-2.5 border border-emerald-300 rounded-xl text-xs font-bold bg-white outline-none focus:border-emerald-600">
+                                <button type="button" onclick="window.saveSelectedUserPhone()" class="bg-dark-900 hover:bg-black text-white font-black px-4 py-2.5 rounded-xl text-xs shrink-0 transition">
+                                    Save No.
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 pt-1">
+                                <button type="button" onclick="window.shareSelectedUserCredentials('whatsapp')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                    <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
+                                </button>
+                                <button type="button" onclick="window.shareSelectedUserCredentials('email')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm transition">
+                                    <i class="fa-solid fa-envelope"></i> Email
+                                </button>
+                                <button type="button" onclick="window.shareSelectedUserCredentials('copy')" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-black py-2.5 px-2 rounded-xl text-xs flex items-center justify-center gap-1.5 transition">
+                                    <i class="fa-regular fa-copy"></i> Copy ID/Pass
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DELETE USER ACCOUNT BUTTON -->
+                    <div class="pt-2 border-t border-slate-100">
+                        <button type="button" id="btnDeleteUserAccount" onclick="window.deleteSelectedUserAccount()" class="w-full bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border-2 border-red-200 hover:border-red-600 font-black py-3 px-4 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-user-slash"></i> Delete Selected User Account Permanently
+                        </button>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: Password Reset, VIP Validity Stacker & Credit Wallet Adjuster -->
+                <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 flex flex-col justify-between">
+                    
+                    <!-- 1. Password Reset Box -->
+                    <div class="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-200 space-y-2.5">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[11px] font-black text-indigo-950 uppercase"><i class="fa-solid fa-key text-indigo-600 mr-1.5"></i>Password Control</span>
+                            <span class="text-[11px] font-bold text-indigo-800">Saved Pass: <strong id="selectedUserSavedPass" class="font-mono bg-white px-2 py-0.5 rounded-lg border border-indigo-200 text-dark-900">--</strong></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="adminNewResetPass" placeholder="नया पासवर्ड लिखें (Min 6 अक्षर)" class="flex-1 p-2.5 border border-indigo-300 rounded-xl text-xs font-bold bg-white outline-none focus:border-indigo-600">
+                            <button type="button" id="btnAdminSetPass" onclick="window.adminSetNewUserPassword()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-4 py-2.5 rounded-xl text-xs transition shrink-0 shadow-sm">
+                                Set New Pass
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Portal Service Credit Rates Overview -->
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
+                            <label class="text-[11px] font-black text-slate-700 uppercase"><i class="fa-solid fa-tags text-royal-600 mr-1.5"></i>Standard Service Credit Rates</label>
+                            <span class="text-[10px] font-bold text-royal-700">All Normal Users</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-[11px] font-bold text-slate-700 pt-1">
+                            <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>Domicile / Caste:</span><strong class="text-emerald-700">₹10 (10 Cr)</strong></div>
+                            <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>e-Voter / Delhi DOB:</span><strong class="text-emerald-700">₹10 (10 Cr)</strong></div>
+                            <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>Passport Service:</span><strong class="text-sky-700">₹30 (30 Cr)</strong></div>
+                            <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>DOB Minor:</span><strong class="text-amber-700">₹50 (50 Cr)</strong></div>
+                            <div class="col-span-2 bg-indigo-50 p-2.5 rounded-xl border border-indigo-200 text-indigo-950 flex flex-wrap justify-between gap-1">
+                                <span>Annexure: <strong>₹10</strong></span>
+                                <span>+Stamp: <strong>₹20 (Total ₹30)</strong></span>
+                                <span>+Cert: <strong>₹20 (Total ₹50)</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Add / Subtract Credits & Gift Note -->
+                    <div class="p-4 bg-royal-50/50 rounded-2xl border border-royal-200 space-y-2.5">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-[11px] font-black text-royal-900 uppercase"><i class="fa-solid fa-coins text-royal-500 mr-1.5"></i>Add or Deduct Credits</label>
+                            <span class="text-[10px] font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full"><i class="fa-solid fa-gift mr-1"></i>Gift History Enabled</span>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                                <i class="fa-solid fa-gift text-purple-600 mr-1"></i> Gift / Transaction Note (गिफ्ट कारण, e.g. दिवाली गिफ्ट 🪔)
+                            </label>
+                            <input type="text" id="adminCreditGiftNote" placeholder="वैकल्पिक कारण/नोट लिखें (e.g. Diwali Gift 🪔 / Bonus)" class="w-full p-2.5 border border-purple-200 rounded-xl text-xs font-bold bg-white outline-none focus:border-purple-500">
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="number" id="creditAdjustmentAmount" placeholder="Enter Credits (e.g. 100)" min="1" class="flex-1 p-3 border border-royal-300 rounded-xl text-sm font-black bg-white outline-none focus:border-royal-500">
+                            <button id="btnAdd" type="button" onclick="window.adjustCredits('add')" class="bg-green-600 hover:bg-green-700 text-white font-black px-5 py-3 rounded-xl text-xs transition shadow-sm">+ Add</button>
+                            <button id="btnSub" type="button" onclick="window.adjustCredits('sub')" class="bg-red-500 hover:bg-red-600 text-white font-black px-5 py-3 rounded-xl text-xs transition shadow-sm">- Sub</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TARGETED PER-USER LIVE BANNER CARD -->
+            <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center text-lg border border-amber-200 font-black shrink-0">
+                            <i class="fa-solid fa-bullhorn"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-dark-900">Targeted User Banner (इस यूज़र के लिए पर्सनल बैनर)</h3>
+                            <p class="text-[11px] font-semibold text-slate-400">यह बैनर सिर्फ चुने गए यूज़र के डैशबोर्ड पर "डियर [User]" नाम के साथ दिखेगा (बाकी यूज़र्स को नहीं दिखेगा)</p>
+                        </div>
+                    </div>
+                    <label class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer select-none transition shadow-sm">
+                        <input type="checkbox" id="chkUserBannerEnabled" onchange="window.updateUserBannerPreview()" class="w-4 h-4 accent-amber-600 rounded cursor-pointer">
+                        <span><i class="fa-solid fa-eye text-amber-600 mr-1"></i> Show to this User</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Badge Tag (बैज नाम)</label>
+                        <input type="text" id="inpUserBannerBadge" value="NOTICE" oninput="window.updateUserBannerPreview()" placeholder="e.g. NOTICE, ALERT, OFFER" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-black uppercase bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Heading / Title (वैकल्पिक शीर्षक)</label>
+                        <input type="text" id="inpUserBannerTitle" oninput="window.updateUserBannerPreview()" placeholder="e.g. आवश्यक सूचना / Important Notice" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">
+                        Personal Message for User (यूज़र के लिए खास संदेश)
+                    </label>
+                    <textarea id="inpUserBannerMessage" rows="2" oninput="window.updateUserBannerPreview()" placeholder="यहाँ संदेश लिखें..." class="w-full p-3 border border-slate-200 rounded-xl text-xs font-semibold bg-slate-50 focus:bg-white outline-none resize-none"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Button Text (वैकल्पिक बटन टेक्स्ट)</label>
+                        <input type="text" id="inpUserBannerBtnText" oninput="window.updateUserBannerPreview()" placeholder="e.g. View Offer / Click Here" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Button Link (वैकल्पिक लिंक)</label>
+                        <input type="text" id="inpUserBannerBtnLink" oninput="window.updateUserBannerPreview()" placeholder="https://..." class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                </div>
+
+                <!-- LIVE PREVIEW BOX -->
+                <div class="space-y-1.5 pt-1">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                        <i class="fa-solid fa-desktop mr-1"></i> Live Preview (यूज़र के स्क्रीन पर ऐसा दिखेगा)
+                    </label>
+                    <div id="userBannerPreviewBox" class="p-3 rounded-2xl bg-slate-50 border border-dashed border-slate-300">
+                        <span class="text-xs text-slate-400 font-bold">कृपया पहले कोई यूज़र चुनें</span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="window.clearSelectedUserBanner()" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 px-4 py-2.5 rounded-xl text-xs font-black transition">
+                        <i class="fa-solid fa-trash mr-1"></i> Remove Banner
+                    </button>
+                    <button type="button" id="btnSaveUserBanner" onclick="window.saveSelectedUserBanner(event)" class="bg-dark-900 hover:bg-black text-royal-300 px-6 py-2.5 rounded-xl text-xs font-black transition shadow-glow flex items-center gap-1.5">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save Personal Banner
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 3: CREATE NEW USER (DEDICATED SEPARATE TAB) ================= -->
+        <div id="section-create_user" class="hidden">
+            <div class="max-w-xl mx-auto bg-white rounded-3xl p-5 md:p-8 shadow-card border border-slate-200 space-y-5">
+                <div class="flex items-center gap-3.5 border-b border-slate-100 pb-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-400 to-green-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-md shrink-0">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-dark-900">Register New Portal User</h3>
+                        <p class="text-xs font-bold text-emerald-600">Auto Domain: <span class="underline">@print.com</span> • Normal Portal Account (All Services Enabled)</p>
+                    </div>
+                </div>
+
+                <form id="adminCreateUserForm" onsubmit="window.createNewUserByAdmin(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">User ID (@print.com)</label>
+                            <input type="text" id="newAdminUserEmail" placeholder="e.g. rahul या rahul@print.com" required class="w-full p-3.5 border border-slate-300 rounded-xl text-sm bg-slate-50 font-bold outline-none focus:bg-white focus:border-royal-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">Set Password</label>
+                            <input type="text" id="newAdminUserPass" placeholder="कम से कम 6 अक्षर" required minlength="6" class="w-full p-3.5 border border-slate-300 rounded-xl text-sm bg-slate-50 font-bold outline-none focus:bg-white focus:border-royal-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">User WhatsApp Number (Optional - तुरंत डिटेल भेजने के लिए)</label>
+                        <input type="tel" id="newAdminUserPhone" placeholder="10-Digit Mobile / WhatsApp Number" class="w-full p-3.5 border border-slate-300 rounded-xl text-sm bg-slate-50 font-bold outline-none focus:bg-white focus:border-royal-500">
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+                        <label class="block text-[11px] font-black text-green-800 uppercase mb-1.5">Welcome Credits (शुरुआती क्रेडिट बैलेंस)</label>
+                        <input type="number" id="newAdminUserCredits" value="30" required class="w-full p-3 border border-green-300 rounded-xl text-sm bg-white font-black text-green-900 outline-none">
+                    </div>
+
+                    <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-4 rounded-2xl text-sm shadow-glow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-user-check"></i> Create User Account (@print.com)
+                    </button>
+                </form>
+
+                <div id="adminCreateMsg" class="hidden"></div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 4: LIVE 2-WAY SUPPORT CHAT ================= -->
+        <div id="section-support" class="space-y-4 hidden">
+            <!-- Top Bar: Start Chat with Any User -->
+            <div class="bg-white rounded-2xl p-4 shadow-card border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-green-500/15 text-green-600 flex items-center justify-center border border-green-300 font-black text-lg">
+                        <i class="fa-solid fa-headset"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm md:text-base font-black text-dark-900">Live Support Messenger &amp; Password Tickets</h3>
+                        <p class="text-[11px] font-semibold text-slate-400">यूज़र के साथ रियल-टाइम चैट करें या 1-Click में पासवर्ड रीसेट करके भेजें</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <select id="newChatUserSelect" class="flex-1 sm:w-64 p-2.5 border border-slate-300 rounded-xl text-xs bg-slate-50 font-bold outline-none focus:border-royal-500">
+                        <option value="">-- किसी यूज़र के साथ नई चैट खोलें --</option>
+                    </select>
+                    <button type="button" onclick="window.startNewChatWithSelectedUser()" class="bg-dark-900 hover:bg-black text-royal-300 font-black px-4 py-2.5 rounded-xl text-xs shrink-0 transition shadow-sm">
+                        <i class="fa-solid fa-comment-medical mr-1"></i> Start Chat
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messenger Split View -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+                <!-- Left Sidebar: Conversation List -->
+                <div class="lg:col-span-4 bg-white rounded-2xl p-3.5 shadow-card border border-slate-200 flex flex-col h-[580px]">
+                    <div class="relative mb-3">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="supportSearchInput" oninput="window.renderSupportChatSidebar()" placeholder="यूज़र ID या मोबाइल नंबर खोजें..." class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div id="supportChatThreadsList" class="space-y-2 flex-1 overflow-y-auto pr-1"></div>
+                </div>
+
+                <!-- Right Main Chat Window -->
+                <div class="lg:col-span-8 bg-white rounded-2xl shadow-card border border-slate-200 overflow-hidden flex flex-col h-[580px]">
+                    <div id="chatWindowEmptyState" class="flex-1 flex flex-col items-center justify-center p-10 text-center text-slate-400 bg-slate-50/50">
+                        <div class="w-16 h-16 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-3xl mb-3 text-royal-500">
+                            <i class="fa-regular fa-comments"></i>
+                        </div>
+                        <h4 class="text-sm font-black text-slate-700">बाईं तरफ की लिस्ट से किसी यूज़र चैट पर क्लिक करें</h4>
+                        <p class="text-xs font-semibold text-slate-400 mt-1 max-w-sm">Forgot Password टिकट, UTR पेमेंट टिकट और यूज़र के लाइव सपोर्ट मैसेज यहाँ दिखेंगे।</p>
+                    </div>
+
+                    <div id="chatWindowActiveBox" class="hidden flex-1 flex flex-col justify-between h-full">
+                        <div class="bg-dark-950 text-white p-3.5 border-b border-slate-800 space-y-2.5">
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-9 h-9 rounded-xl bg-royal-500/20 border border-royal-400/40 text-royal-300 flex items-center justify-center font-black text-sm">
+                                        <i class="fa-solid fa-user"></i>
+                                    </div>
+                                    <div>
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h4 id="chatHeaderUserTitle" class="text-sm font-black text-white">User</h4>
+                                            <span id="chatHeaderSavedPassBadge" class="text-[10px] bg-dark-800 px-2 py-0.5 rounded-md border border-slate-700 text-slate-300"></span>
+                                        </div>
+                                        <p id="chatHeaderUserPhone" class="text-[11px] font-bold text-emerald-400"></p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <button type="button" onclick="window.alsoOpenChatUserWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-[11px] font-black transition flex items-center gap-1 shadow-sm">
+                                        <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                                    </button>
+                                    <button type="button" onclick="window.deleteCurrentSupportChat()" class="bg-red-500/20 hover:bg-red-600 text-red-400 hover:text-white px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition" title="Delete Chat">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 bg-dark-900 px-3 py-2 rounded-xl border border-slate-800">
+                                <span class="text-[10px] font-black text-royal-400 uppercase shrink-0"><i class="fa-solid fa-key mr-1"></i>Quick Pass Reset:</span>
+                                <input type="text" id="chatQuickNewPassInput" placeholder="नया पासवर्ड टाइप करें (Min 6 chars)" class="flex-1 bg-dark-950 text-white px-3 py-1.5 rounded-lg text-xs font-bold border border-slate-700 outline-none focus:border-royal-400">
+                                <button type="button" id="btnChatQuickResetPass" onclick="window.resetPassAndSendInChat()" class="bg-royal-500 hover:bg-royal-400 text-dark-950 font-black px-3 py-1.5 rounded-lg text-[11px] shrink-0 transition shadow-sm">
+                                    Set &amp; Send
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="chatMessagesScrollBox" class="flex-1 p-4 overflow-y-auto space-y-3 bg-slate-100/80"></div>
+
+                        <div class="p-3 bg-white border-t border-slate-200 space-y-2">
+                            <div class="flex flex-wrap items-center gap-1.5">
+                                <span class="text-[10px] font-black text-slate-400 uppercase mr-1">Quick Replies:</span>
+                                <button type="button" onclick="window.insertQuickChatReply('id_pass')" class="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-full text-[10px] font-black transition">
+                                    <i class="fa-solid fa-id-card mr-1"></i>Send ID &amp; Pass
+                                </button>
+                                <button type="button" onclick="window.insertQuickChatReply('payment_ok')" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-1 rounded-full text-[10px] font-black transition">
+                                    <i class="fa-solid fa-check-circle mr-1"></i>Payment Approved
+                                </button>
+                                <button type="button" onclick="window.insertQuickChatReply('fixed')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 px-2.5 py-1 rounded-full text-[10px] font-black transition">
+                                    <i class="fa-solid fa-thumbs-up mr-1"></i>Issue Resolved
+                                </button>
+                            </div>
+
+                            <form onsubmit="window.sendAdminChatReply(event)" class="flex gap-2 items-end">
+                                <textarea id="adminChatReplyInput" rows="2" placeholder="यहाँ अपना रिप्लाई लिखें..." class="flex-1 p-2.5 border border-slate-300 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white focus:border-royal-500 outline-none resize-none"></textarea>
+                                <button type="submit" id="btnSendAdminChatReply" class="bg-dark-900 hover:bg-black text-royal-300 font-black px-5 py-3.5 rounded-xl text-xs shadow-glow transition flex items-center justify-center gap-1.5 shrink-0">
+                                    <span>Send</span> <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 5: DOCUMENT RECORDS ================= -->
+        <div id="section-history" class="space-y-4 hidden">
+            <div class="bg-white rounded-2xl p-4 shadow-card border border-slate-200 space-y-3">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base md:text-lg font-black text-dark-900">Generated Documents</h3>
+                            <span id="activeStampsBadge" class="text-[10px] font-black bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-full">Checking Stamps...</span>
+                        </div>
+                        <p id="historyCount" class="text-xs font-bold text-royal-600">Total Files: 0</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="window.loadAdminHistory()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button id="bulkDeleteBtn" onclick="window.bulkDeleteFilteredHistory()" class="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash-can"></i> Delete Shown
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-slate-100">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Search by Name / File (नाम से खोजें)</label>
+                        <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <input type="text" id="adminHistorySearchInput" oninput="window.renderAdminHistory()" placeholder="नाम या फ़ाइल से खोजें..." class="w-full bg-transparent border-0 text-xs font-bold outline-none">
+                            <button type="button" onclick="document.getElementById('adminHistorySearchInput').value=''; window.renderAdminHistory();" class="text-slate-400 hover:text-red-500 px-1 text-xs" title="Clear"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Filter by User</label>
+                        <select id="filterUser" onchange="window.renderAdminHistory()" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold outline-none">
+                            <option value="ALL">All Users</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Filter by Type</label>
+                        <select id="filterType" onchange="window.renderAdminHistory()" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold outline-none">
+                            <option value="ALL">All Documents</option>
+                            <option value="Domicile">Domicile</option>
+                            <option value="Caste">Caste Certificate</option>
+                            <option value="e-Voter ID">e-Voter ID</option>
+                            <option value="Minor">DOB (Birth Certificate - ₹50)</option>
+                            <option value="DOB Delhi">DOB Delhi</option>
+                            <option value="Passport">Passport Services</option>
+                            <option value="Annexure 1">Annexure 1</option>
+                            <option value="Annexure 1A">Annexure 1A</option>
+                            <option value="Annexure 3">Annexure 3</option>
+                            <option value="Annexure 3A">Annexure 3A</option>
+                            <option value="Annexure B">Annexure B</option>
+                            <option value="Annexure C">Annexure C</option>
+                            <option value="Annexure D">Annexure D</option>
+                            <option value="Annexure E">Annexure E</option>
+                            <option value="Annexure F">Annexure F</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Filter by Date (तारीख से खोजें)</label>
+                        <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs">
+                            <input type="date" id="filterDate" onchange="window.renderAdminHistory()" class="w-full bg-transparent border-0 text-xs font-bold outline-none cursor-pointer">
+                            <button type="button" onclick="document.getElementById('filterDate').value=''; window.renderAdminHistory();" class="text-slate-400 hover:text-red-500 px-1 text-xs" title="Clear Date"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adminHistoryListContainer" class="space-y-2.5"></div>
+            
+            <!-- 20-Record Pagination & Infinite Scroll Sentinel -->
+            <div id="adminHistoryPaginationBox" class="pt-2 pb-4 text-center">
+                <button type="button" id="btnLoadMoreHistory" onclick="window.loadNextAdminHistoryBatch()" class="bg-dark-900 hover:bg-black text-royal-300 font-black px-6 py-2.5 rounded-xl text-xs shadow-sm transition flex items-center gap-2 mx-auto">
+                    <i class="fa-solid fa-angles-down"></i> <span>और 20 रिकॉर्ड्स लोड करें (Load More)</span>
+                </button>
+                <div id="adminHistoryScrollSentinel" class="h-6"></div>
+            </div>
+        </div>
+
+        <!-- ================= TAB 6: PORTAL CONTROL ================= -->
+        <div id="section-controls" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
+            <!-- Global Stealth Control Card -->
+            <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 flex flex-col justify-between">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center text-lg border border-rose-200">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-black text-dark-900">Global Service Stealth</h3>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">सभी यूज़र्स के लिए सर्विस On/Off</p>
+                            </div>
+                        </div>
+                        <span id="stealthStatusBadge" class="bg-green-100 text-green-800 border border-green-300 px-2.5 py-1 rounded-full text-[10px] font-black uppercase">Loading...</span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-house-chimney text-royal-500"></i>
+                                <div>
+                                    <div class="text-xs font-black text-dark-900">Domicile Certificate (मूल निवास)</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी के लिए दिखाएं</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="chkShowDomicile" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-users text-royal-500"></i>
+                                <div>
+                                    <div class="text-xs font-black text-dark-900">Caste Certificate (जाति प्रमाण पत्र)</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी के लिए दिखाएं</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="chkShowCaste" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-id-card-clip text-royal-500"></i>
+                                <div>
+                                    <div class="text-xs font-black text-dark-900">e-Voter ID Card (ई-वोटर कार्ड • ₹10)</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="chkShowEvoter" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-cake-candles text-amber-500"></i>
+                                <div>
+                                    <div class="text-xs font-black text-dark-900">DOB Certificate (जन्म प्रमाण पत्र • ₹50)</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="chkShowMinor" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-baby text-royal-500"></i>
+                                <div>
+                                    <div class="text-xs font-black text-dark-900">DOB Delhi (दिल्ली जन्म प्रमाण पत्र • ₹10)</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="chkShowDobMinor" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-passport text-sky-500"></i>
+                                <div>
+                                    <div class="text-xs font-black text-dark-900">Passport Services (पासपोर्ट सर्विस • ₹30)</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="chkShowPassport" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer">
+                        </label>
+
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5">
+                                <i class="fa-solid fa-file-signature text-amber-500"></i>
+                                <div>
+                                    <div class="text-xs font-black text-dark-900">All Official Annexures (₹10 + ₹20 Stamp + ₹20 Cert = ₹50)</div>
+                                    <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div>
+                                </div>
+                            </div>
+                            <input type="checkbox" id="chkShowAnnexures" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button type="button" onclick="window.quickToggleAllCerts(false)" class="bg-red-600 hover:bg-red-700 text-white font-black py-2.5 px-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-eye-slash"></i> सभी छुपाएं
+                    </button>
+                    <button type="button" onclick="window.quickToggleAllCerts(true)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-eye"></i> सभी दिखाएं
+                    </button>
+                </div>
+            </div>
+
+            <!-- Live Update Banner Card -->
+            <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4">
+                <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
+                    <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-lg border border-indigo-200">
+                        <i class="fa-solid fa-bullhorn"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-dark-900">Live Update Banner &amp; Support No.</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">पोर्टल के ऊपर सूचना बैनर दिखाएं</p>
+                    </div>
+                </div>
+
+                <form onsubmit="window.savePortalSettings(event)" class="space-y-3">
+                    <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                        <label class="block text-[10px] font-black text-emerald-900 uppercase mb-1">
+                            <i class="fa-brands fa-whatsapp mr-1"></i> Portal Support WhatsApp Number
+                        </label>
+                        <input type="text" id="inpSupportWhatsapp" value="919306437623" placeholder="e.g. 919306437623" class="w-full p-2.5 border border-emerald-300 rounded-xl text-xs font-black bg-white outline-none">
+                    </div>
+
+                    <!-- BANNER 1 (PRIMARY) -->
+                    <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-amber-900"><i class="fa-solid fa-bullhorn text-amber-600 mr-1"></i> Banner 1 (Primary Update)</span>
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                <span class="text-[10px] font-bold text-amber-800">Show</span>
+                                <input type="checkbox" id="chkBannerEnabled" class="w-4 h-4 accent-amber-600 rounded cursor-pointer">
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Badge Tag</label>
+                                <input type="text" id="inpBannerBadge" placeholder="UPDATE" class="w-full p-2 border border-slate-200 rounded-xl text-xs font-black uppercase bg-white">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Heading</label>
+                                <input type="text" id="inpBannerTitle" placeholder="e.g. आवश्यक सूचना" class="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Message</label>
+                            <textarea id="inpBannerMessage" rows="2" placeholder="यहाँ अपना अपडेट लिखें..." class="w-full p-2 border border-slate-200 rounded-xl text-xs font-semibold bg-white"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Button Text</label>
+                                <input type="text" id="inpBannerBtnText" placeholder="e.g. Join Group" class="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Button Link</label>
+                                <input type="text" id="inpBannerBtnLink" placeholder="https://..." class="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BANNER 2 (SECONDARY) -->
+                    <div class="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-2.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-black text-emerald-900"><i class="fa-solid fa-bell text-emerald-600 mr-1"></i> Banner 2 (Secondary Notice)</span>
+                            <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                <span class="text-[10px] font-bold text-emerald-800">Show</span>
+                                <input type="checkbox" id="chkBanner2Enabled" class="w-4 h-4 accent-emerald-600 rounded cursor-pointer">
+                            </label>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Badge Tag</label>
+                                <input type="text" id="inpBanner2Badge" placeholder="NOTICE" class="w-full p-2 border border-slate-200 rounded-xl text-xs font-black uppercase bg-white">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Heading</label>
+                                <input type="text" id="inpBanner2Title" placeholder="e.g. विशेष ऑफर" class="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Message</label>
+                            <textarea id="inpBanner2Message" rows="2" placeholder="यहाँ बैनर 2 का संदेश लिखें..." class="w-full p-2 border border-slate-200 rounded-xl text-xs font-semibold bg-white"></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Button Text</label>
+                                <input type="text" id="inpBanner2BtnText" placeholder="e.g. View Offer" class="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-[9px] font-bold text-slate-500 uppercase mb-1">Button Link</label>
+                                <input type="text" id="inpBanner2BtnLink" placeholder="https://..." class="w-full p-2 border border-slate-200 rounded-xl text-xs font-bold bg-white">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="portalConfigMsg" class="hidden"></div>
+
+                    <button type="submit" id="btnSavePortalConfig" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl text-xs md:text-sm shadow-glow transition">
+                        <i class="fa-solid fa-floppy-disk mr-1"></i> Save Portal &amp; Banner Settings
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+</body>
+</html>
