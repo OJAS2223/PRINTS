@@ -16,15 +16,15 @@
   "rewrites": [
     {
       "source": "/portal",
-      "destination": "/pages/portal.html"
+      "destination": "/portal.html"
     },
     {
       "source": "/ovi",
-      "destination": "/pages/admin.html"
+      "destination": "/ovi.html"
     },
     {
       "source": "/tools",
-      "destination": "/pages/tools.html"
+      "destination": "/tools.html"
     },
     {
       "source": "/api/(.*)",

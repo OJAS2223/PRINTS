@@ -49,6 +49,17 @@
         <h2 class="text-xl font-black text-white tracking-widest uppercase">Ojas Print Service</h2>
         <p class="text-xs text-royal-300 mt-1 font-bold animate-pulse">Checking Security...</p>
     </div>
+    <script>
+        setTimeout(function() {
+            var ls = document.getElementById('loadingScreen');
+            var loginSec = document.getElementById('loginSection');
+            var dashSec = document.getElementById('dashboardSection');
+            if (ls && ls.style.display !== 'none' && (!dashSec || dashSec.style.display === 'none')) {
+                ls.style.display = 'none';
+                if (loginSec) loginSec.style.display = 'flex';
+            }
+        }, 2500);
+    </script>
 
     
 
@@ -95,9 +106,9 @@
                 <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Secure Portal Login</p>
             </div>
             <form id="loginForm" onsubmit="window.handleLogin(event)" class="space-y-4">
-                <input type="text" id="loginUsername" placeholder="User ID (e.g. user@print.com)" required class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-royal-500 outline-none bg-slate-50 text-sm font-semibold">
+                <input type="text" id="loginUsername" autocomplete="off" placeholder="User ID (e.g. user@print.com)" required class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-royal-500 outline-none bg-slate-50 text-sm font-semibold">
                 <div class="space-y-1.5">
-                    <input type="password" id="loginPassword" placeholder="Password" required class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-royal-500 outline-none bg-slate-50 text-sm font-semibold">
+                    <input type="password" id="loginPassword" autocomplete="new-password" placeholder="Password" required class="w-full px-4 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-royal-500 outline-none bg-slate-50 text-sm font-semibold">
                     <div class="flex justify-end">
                         <button type="button" onclick="window.openForgotPasswordModal()" class="text-[11px] font-bold text-royal-600 hover:text-royal-900 transition">
                             <i class="fa-solid fa-key mr-1"></i>Forgot Password?
