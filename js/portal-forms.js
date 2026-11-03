@@ -115,13 +115,17 @@ window.submitForm = async function(event, serviceType) {
         if (dataObj.VLE === 'OTHER' && dataObj.VLE_CUSTOM) dataObj.VLE = dataObj.VLE_CUSTOM.trim();
         if (dataObj.PB === 'OTHER' && dataObj.PB_CUSTOM) dataObj.PB = dataObj.PB_CUSTOM.trim();
 
-        // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE & e-VOTER ID ===
-        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID') {
+        // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE, e-VOTER ID & DOB DELHI (MCD) ===
+        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor') {
             let processedData = {};
             let fileIdKey = '';
             if (serviceType === 'e-Voter ID') {
                 processedData = window.processEvoterData(dataObj);
                 fileIdKey = 'LOCAL_HTML_EVOTER';
+            } else if (serviceType === 'DOB Delhi' || serviceType === 'DOB Minor') {
+                processedData = window.processDobDelhiData(dataObj);
+                fileIdKey = 'LOCAL_HTML_DOB_DELHI';
+                serviceType = 'DOB Delhi';
             } else {
                 if (isEditMode && window.currentEditingAnnexure?.formData) {
                     dataObj.RN = window.currentEditingAnnexure.formData.RN;
@@ -273,6 +277,8 @@ window.ANNEXURE_SERVICE_TO_TAB = {
     'Domicile': 'domicile',
     'Caste': 'caste',
     'e-Voter ID': 'evoter',
+    'DOB Delhi': 'dob_delhi',
+    'DOB Minor': 'dob_delhi',
     'Annexure 1': 'annexure1',
     'Annexure 1A': 'annexure1a',
     'Annexure 3': 'annexure3',
@@ -936,15 +942,15 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
         isFormRendered = true;
     }
 
-    // DOB CERTIFICATE DELHI
+    // DOB CERTIFICATE DELHI (MCD Form No. 5 - Instant Local HTML Generation)
     else if (serviceName === 'dob_delhi' || serviceName === 'dob_minor') {
-        const dobDelhiBtnText = 'Generate DOB Delhi Certificate (10 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
+        const dobDelhiBtnText = 'Generate MCD Delhi Birth Certificate (10 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
 
         container.innerHTML = `
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
                 <div>
-                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-cake-candles text-royal-500 mr-1.5"></i> Date of Birth Certificate (DOB Delhi • 10 Credits)</h3>
-                    <p class="text-[11px] font-bold text-slate-500">COMING SOON</p>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-cake-candles text-royal-500 mr-1.5"></i> MCD Delhi Birth Certificate (दिल्ली जन्म प्रमाण पत्र • Form No. 5)</h3>
+                    <p class="text-[11px] font-bold text-slate-500">Municipal Corporation of Delhi (MCD) जन्म प्रमाण पत्र तुरंत जनरेट करें • शुल्क: 10 Credits (₹10)</p>
                 </div>
                 ${statusTagHtml}
             </div>
@@ -952,24 +958,92 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                 ${getWatermarkHtml('dob_delhi')}
                 <form onsubmit="window.submitForm(event, 'DOB Delhi')" class="space-y-3.5 relative z-10">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name</label><input type="text" name="NAME" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
-                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Sex / Gender</label><select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select></div>
-                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth</label><input type="date" name="DOB" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none relative z-10"></div>
-                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father Name</label><input type="text" name="FNAME" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
-                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mother Name</label><input type="text" name="MNAME" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
-                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Pin Code</label><input type="text" name="PIN" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
-                        <div class="md:col-span-2 relative z-10">
+                        <!-- 1. Registration No -->
+                        <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="text-[11px] font-bold text-slate-500 uppercase">ADDRESS ( 'Delhi' लिखने की आवश्यकता नहीं है)</label>
-                                <span id="dobDelhiAddressCharCount" class="text-[10px] font-bold text-slate-400">7 / 38 Characters</span>
+                                <label class="text-[11px] font-bold text-royal-700 uppercase">Registration No (पंजीकरण संख्या) <span class="text-red-500">*</span></label>
+                                <button type="button" onclick="document.getElementById('inpMcdRegNo').value = window.generateMcdRegNo();" class="text-[10px] bg-royal-100 hover:bg-royal-200 text-royal-900 font-black px-2 py-0.5 rounded border border-royal-300 transition"><i class="fa-solid fa-shuffle mr-1"></i>Auto Generate</button>
                             </div>
-                            <input type="text" id="dobDelhiAddressInput" name="ADDRESS" value="VILL - " oninput="window.handleDob18AddressInput(this)" onblur="this.value = window.cleanDob18AddressString(this.value); window.handleDob18AddressInput(this);" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase">
+                            <input type="text" id="inpMcdRegNo" name="REG_NO" placeholder="e.g. MCDOLIR-2219-007395634" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-black tracking-wider bg-royal-50/40 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+
+                        <!-- 2. Full Name -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Child / Person Name (नाम / Name) <span class="text-red-500">*</span></label>
+                            <input type="text" name="NAME" placeholder="e.g. SAHIL ASHRAF" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+
+                        <!-- 3. Gender -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Gender (लिंग / Gender) <span class="text-red-500">*</span></label>
+                            <select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                <option value="MALE">MALE</option>
+                                <option value="FEMALE">FEMALE</option>
+                                <option value="TRANSGENDER">TRANSGENDER</option>
+                            </select>
+                        </div>
+
+                        <!-- 4. Date of Birth -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (जन्म की तिथि) <span class="text-red-500">*</span></label>
+                            <input type="date" id="inpMcdDob" name="DOB" onchange="const dorEl = document.getElementById('inpMcdDor'); if(dorEl && !dorEl.value) dorEl.value = this.value;" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+
+                        <!-- 5. Mother Name -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Name of Mother (माता का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="MNAME" placeholder="e.g. FOUZIA TEMURI" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+
+                        <!-- 6. Father Name -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Name of Father (पिता का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="FNAME" placeholder="e.g. MAHMOOD ASHRAF" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+
+                        <!-- 7. Date of Registration -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Registration (पंजीकरण की तिथि) <span class="text-red-500">*</span></label>
+                            <input type="date" id="inpMcdDor" name="DOR" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+
+                        <!-- 8. Date of Issue -->
+                        <div>
+                            <label class="block text-[11px] font-bold text-royal-700 uppercase mb-1">Date of Issue (जारी करने की तिथि) <span class="text-red-500">*</span></label>
+                            <input type="date" name="DOI" value="${todayISO}" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-bold bg-royal-50/40 focus:bg-white outline-none relative z-10">
+                        </div>
+
+                        <!-- 9. Place of Birth -->
+                        <div class="md:col-span-2">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-bold text-slate-500 uppercase">Place of Birth (जन्म का स्थान) <span class="text-red-500">*</span></label>
+                                <button type="button" onclick="const pa = document.getElementById('inpMcdPresAddr'); if(pa && pa.value) document.getElementById('inpMcdPob').value = pa.value;" class="text-[10px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-2 py-0.5 rounded transition">Same as Address</button>
+                            </div>
+                            <input type="text" id="inpMcdPob" name="POB" placeholder="e.g. 2529,KAMRA BANGASH SIR SAYED AHMED ROAD CHANDNI MAHAL DELHI-110006" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+
+                        <!-- 10. Present Address (Auto-syncs with Permanent Address) -->
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Present / Address at the time of Birth (वर्तमान / जन्म के समय पता) <span class="text-red-500">*</span></label>
+                            <input type="text" id="inpMcdPresAddr" name="PRES_ADDR" oninput="const permEl = document.getElementById('inpMcdPermAddr'); if(permEl) permEl.value = this.value.toUpperCase(); const pobEl = document.getElementById('inpMcdPob'); if(pobEl && !pobEl.value) pobEl.value = this.value.toUpperCase();" placeholder="e.g. 2529,TIRAHA BEHRAM KHAN DARYA GANJ DELHI-110002" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+
+                        <!-- 11. Permanent Address -->
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Permanent Address (स्थाई पता - Auto Synced) <span class="text-red-500">*</span></label>
+                            <input type="text" id="inpMcdPermAddr" name="PERM_ADDR" placeholder="e.g. 2529,TIRAHA BEHRAM KHAN DARYA GANJ DELHI-110002" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
                         </div>
                     </div>
                     <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base relative z-10">${dobDelhiBtnText}</button>
                 </form>
             </div>
         `;
+        if (!window.currentEditingAnnexure) {
+            const regInp = document.getElementById('inpMcdRegNo');
+            if (regInp && !regInp.value && typeof window.generateMcdRegNo === 'function') {
+                regInp.value = window.generateMcdRegNo();
+            }
+        }
         isFormRendered = true;
     }
 

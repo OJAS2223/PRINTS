@@ -9,6 +9,7 @@ window.TEMPLATE_FILES_MAP = {
     'LOCAL_HTML_CASTE': 'caste.html',
     'LOCAL_HTML_DOMICILE': 'domicile.html',
     'LOCAL_HTML_EVOTER': 'evoter.html',
+    'LOCAL_HTML_DOB_DELHI': 'dob-delhi.html',
     'LOCAL_HTML_ANNEXURE_1': 'annexure-1.html',
     'LOCAL_HTML_ANNEXURE_1A': 'annexure-1a.html',
     'LOCAL_HTML_ANNEXURE_3': 'annexure-3.html',
@@ -168,6 +169,116 @@ window.processCasteOrDomicileData = function(rawFormObj, serviceType) {
     return processed;
 };
 
+// ================= MCD DOB DELHI (BIRTH.HTML) PROCESSOR & LIVE SYNC =================
+window.generateMcdRegNo = function() {
+    const rand7 = Math.floor(1000000 + Math.random() * 9000000);
+    return `MCDOLIR-2219-00${rand7}`;
+};
+
+window.processDobDelhiData = function(rawFormObj) {
+    const regNo = (rawFormObj.REG_NO || '').toString().trim().toUpperCase() || window.generateMcdRegNo();
+    const name = (rawFormObj.NAME || '').toString().trim().toUpperCase();
+    const sex = (rawFormObj.SEX || 'MALE').toString().trim().toUpperCase();
+    const fname = (rawFormObj.FNAME || '').toString().trim().toUpperCase();
+    const mname = (rawFormObj.MNAME || '').toString().trim().toUpperCase();
+    const zone = (rawFormObj.ZONE || 'CITY S.P. ZONE').toString().trim().toUpperCase();
+
+    const formatToDMY = (dStr) => {
+        if (!dStr) return '';
+        const s = String(dStr).trim();
+        if (s.includes('-')) {
+            const p = s.split('-');
+            if (p.length === 3 && p[0].length === 4) return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        return s;
+    };
+
+    const now = new Date();
+    const todayDMY = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+    const dob = formatToDMY(rawFormObj.DOB) || todayDMY;
+    const dor = formatToDMY(rawFormObj.DOR) || dob;
+    const doi = formatToDMY(rawFormObj.DOI) || todayDMY;
+
+    const presAddr = (rawFormObj.PRES_ADDR || rawFormObj.ADDRESS || '').toString().trim().toUpperCase();
+    const permAddr = (rawFormObj.PERM_ADDR || presAddr).toString().trim().toUpperCase();
+    const pob = (rawFormObj.POB === 'SAME_AS_ADDR' || !rawFormObj.POB)
+        ? presAddr
+        : (rawFormObj.POB === 'OTHER' && rawFormObj.POB_CUSTOM ? rawFormObj.POB_CUSTOM.trim().toUpperCase() : rawFormObj.POB.toString().trim().toUpperCase());
+
+    const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
+    const qrPayload = customQr || `https://mcdonline.nic.in/verify?regNo=${encodeURIComponent(regNo)}&name=${encodeURIComponent(name)}&gender=${encodeURIComponent(sex)}&dob=${encodeURIComponent(dob)}&pob=${encodeURIComponent(pob)}&dor=${encodeURIComponent(dor)}&mother=${encodeURIComponent(mname)}&father=${encodeURIComponent(fname)}&doi=${encodeURIComponent(doi)}`;
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
+
+    return {
+        SERVICE_TYPE: 'DOB Delhi',
+        REG_NO: regNo,
+        ZONE: zone,
+        NAME: name,
+        SEX: sex,
+        DOB: dob,
+        POB: pob,
+        DOR: dor,
+        MNAME: mname,
+        FNAME: fname,
+        PRES_ADDR: presAddr,
+        PERM_ADDR: permAddr,
+        ADDRESS: presAddr,
+        DOI: doi,
+        CUSTOM_QR: customQr,
+        QR_URL: qrUrl
+    };
+};
+
+window.syncMcdPreviewFields = function(sourceType, newVal) {
+    const container = document.getElementById('htmlDocPreviewContainer');
+    if (!container) return;
+    const topReg = container.querySelector('#valTopRegNo');
+    const botReg = container.querySelector('#valRegNo');
+    const presEl = container.querySelector('#valPresAddr');
+    const permEl = container.querySelector('#valPermAddr');
+
+    if (sourceType === 'topReg' && botReg && botReg.innerText.trim() !== String(newVal || '').trim()) {
+        botReg.innerText = String(newVal || '').trim();
+    } else if (sourceType === 'botReg' && topReg && topReg.innerText.trim() !== String(newVal || '').trim()) {
+        topReg.innerText = String(newVal || '').trim();
+    } else if (sourceType === 'presAddr' && permEl && permEl.innerText !== newVal) {
+        permEl.innerText = newVal;
+    } else if (sourceType === 'permAddr' && presEl && presEl.innerText !== newVal) {
+        presEl.innerText = newVal;
+    }
+
+    const regNo = (botReg?.innerText || topReg?.innerText || '').trim();
+    const name = (container.querySelector('#valName')?.innerText || '').trim();
+    const sex = (container.querySelector('#valGender')?.innerText || '').trim();
+    const dob = (container.querySelector('#valDob')?.innerText || '').trim();
+    const pob = (container.querySelector('#valPob')?.innerText || '').replace(/\s+/g, ' ').trim();
+    const dor = (container.querySelector('#valDor')?.innerText || '').trim();
+    const mname = (container.querySelector('#valMother')?.innerText || '').trim();
+    const fname = (container.querySelector('#valFather')?.innerText || '').trim();
+    const presAddr = (presEl?.innerText || '').trim();
+    const permAddr = (permEl?.innerText || '').trim();
+    const doi = (container.querySelector('#valDoi')?.innerText || '').trim();
+
+    const qrPayload = `https://mcdonline.nic.in/verify?regNo=${encodeURIComponent(regNo)}&name=${encodeURIComponent(name)}&gender=${encodeURIComponent(sex)}&dob=${encodeURIComponent(dob)}&pob=${encodeURIComponent(pob)}&dor=${encodeURIComponent(dor)}&mother=${encodeURIComponent(mname)}&father=${encodeURIComponent(fname)}&doi=${encodeURIComponent(doi)}`;
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
+
+    const qrImg = container.querySelector('#qrCodeImg');
+    if (qrImg) qrImg.src = qrUrl;
+
+    // Update currentModalContext record in memory so Print & Download PDF use the live-edited values
+    const ctx = window.currentModalContext;
+    if (ctx && ctx.historyIndex >= 0) {
+        const rec = (window.historyData && window.historyData[ctx.historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[ctx.historyIndex]);
+        if (rec && rec.formData) {
+            Object.assign(rec.formData, {
+                REG_NO: regNo, NAME: name, SEX: sex, DOB: dob, POB: pob,
+                DOR: dor, MNAME: mname, FNAME: fname, PRES_ADDR: presAddr,
+                PERM_ADDR: permAddr, DOI: doi, QR_URL: qrUrl
+            });
+        }
+    }
+};
+
 // ================= e-VOTER ID PROCESSOR =================
 window.generateRandomEpicNo = function() {
     const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -269,7 +380,7 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
 
     const rawTemplate = window.loadedTemplatesCache[fileId];
     if (rawTemplate) {
-        let compiled = rawTemplate.replace('class="affidavit-paper"', `class="affidavit-paper ${shadowClass}"`);
+        let compiled = rawTemplate.replace('class="affidavit-paper', `class="affidavit-paper ${shadowClass}`);
         compiled = compiled.replace(/\{\{STAMP_OVERLAY\}\}/g, stampOverlayHtml);
         compiled = compiled.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (m, key) => {
             return (d[key] !== undefined && d[key] !== null) ? d[key] : '';

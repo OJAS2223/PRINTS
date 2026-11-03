@@ -1109,13 +1109,13 @@ window.switchService = async function(serviceName) {
     
     if (serviceName === 'history') { 
         const cfg = window.portalConfigState; 
-        const isVipUser = window.currentUserData && window.currentUserData.isVip; 
-        const canShowEvoter = window.canCurrentUserSeeService('evoter'); 
-        const domOpt = cfg.showDomicile ? `<option value="Domicile">मूल निवास</option>` : ''; 
-        const casOpt = cfg.showCaste ? `<option value="Caste">जाति प्रमाण पत्र</option>` : ''; 
-        const dobOpt = (isVipUser && canShowEvoter) ? `<option value="e-Voter ID">e-Voter ID</option>` : ''; 
-        const minorOpt = window.canCurrentUserSeeService('minor') ? `<option value="Minor">माइनर (Minor)</option>` : '';
-        const vipFilterOptions = isVipUser ? `${dobOpt}${minorOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>` : (minorOpt ? `${minorOpt}` : ''); 
+        const domOpt = cfg.showDomicile !== false ? `<option value="Domicile">मूल निवास (Domicile)</option>` : ''; 
+        const casOpt = cfg.showCaste !== false ? `<option value="Caste">जाति प्रमाण पत्र (Caste)</option>` : ''; 
+        const evoterOpt = window.canCurrentUserSeeService('evoter') ? `<option value="e-Voter ID">e-Voter ID</option>` : ''; 
+        const dobDelhiOpt = window.canCurrentUserSeeService('dob_delhi') ? `<option value="DOB Delhi">DOB Delhi (MCD)</option>` : '';
+        const passportOpt = window.canCurrentUserSeeService('passport') ? `<option value="Passport">Passport</option>` : '';
+        const minorOpt = window.canCurrentUserSeeService('minor') ? `<option value="Minor">DOB (Minor)</option>` : '';
+        const vipFilterOptions = `${evoterOpt}${dobDelhiOpt}${passportOpt}${minorOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>`; 
         
         container.innerHTML = `<div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 pb-3 mb-4">
             <div>
