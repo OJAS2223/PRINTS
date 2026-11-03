@@ -45,14 +45,14 @@ html.dark ::-webkit-scrollbar-thumb { background: #334155; }
     -webkit-font-smoothing: antialiased !important;
 }
 
-.affidavit-paper > div:last-child {
+.affidavit-paper:not(.mcd-cert-paper) > div:last-child {
     position: absolute !important;
     bottom: 46px !important;
     left: 62px !important;
     right: 62px !important;
 }
 
-.affidavit-paper > div:not(.stamp-overlay-layer):not(:last-child) {
+.affidavit-paper:not(.mcd-cert-paper) > div:not(.stamp-overlay-layer):not(:last-child) {
     position: relative !important;
     z-index: 10 !important;
     background-color: transparent !important;
@@ -87,8 +87,8 @@ html.dark ::-webkit-scrollbar-thumb { background: #334155; }
     display: block !important;
 }
 
-.affidavit-paper,
-.affidavit-paper *,
+.affidavit-paper:not(.mcd-cert-paper),
+.affidavit-paper:not(.mcd-cert-paper) *,
 .affidavit-paper table,
 .affidavit-paper thead,
 .affidavit-paper tbody,
