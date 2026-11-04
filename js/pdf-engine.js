@@ -533,7 +533,8 @@ Father Name: ${d.FNAME || ''}
 Verified URL: ${verifyUrl}`;
 
     // अब QR कोड में URL की जगह यह पूरा टेक्स्ट एन्कोड होकर जाएगा
-    d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrTextPayload);
+    d.QR_URL = "https://quickchart.io/chart?cht=qr&margin=0&chl=" + encodeURIComponent(qrTextPayload);
+       
 }
 
     const rawTemplate = window.loadedTemplatesCache[fileId];
