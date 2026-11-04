@@ -243,22 +243,20 @@
       justify-content: center !important;
       z-index: 3 !important;
     }
-    .mcd-cert-paper {
+    .mcd-cert-paper .qr-code-box img {
       width: 100% !important;
       height: 100% !important;
       object-fit: fill !important;
     }
-    .qr-code-box img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: fill !important;
-    }
-    .mcd-cert-paper .qr-code-box {
+    
+ .mcd-cert-paper .qr-code-box {
     background: transparent !important;
 }
+
 .mcd-cert-paper .qr-code-box img {
     background: transparent !important;
     background-color: transparent !important;
+    mix-blend-mode: multiply !important; /* यह सफ़ेद बैकग्राउंड को पीछे के कागज़/वाटरमार्क के साथ ट्रांसपेरेंट कर देगा */
 }
     .mcd-cert-paper .footer-hi {
       position: absolute !important;
