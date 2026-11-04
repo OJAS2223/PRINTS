@@ -1,6 +1,5 @@
 // ============================================================================
 // FILE: js/pdf-engine.js
-// (Template Loader, Auto m.png Stamp, Caste/Domicile/e-Voter Processor & 3x HD PDF Generator)
 // ============================================================================
 
 import "./config.js?v=9.0";
@@ -49,7 +48,6 @@ window.preloadAllHtmlTemplates = async function() {
 };
 window.preloadAllHtmlTemplates();
 
-// ================= AUTOMATIC m.png STAMP ENGINE FOR CASTE & DOMICILE =================
 window.autoMStampDataUrl = '';
 window.preloadAutoMStamp = function() {
     if (window.autoMStampDataUrl) return Promise.resolve(window.autoMStampDataUrl);
@@ -167,11 +165,10 @@ window.processCasteOrDomicileData = function(rawFormObj, serviceType) {
         ? `आवेदन क्र० - ${processed.RN}, प्रमाणपत्र क्र० - 0${processed.AM}, नाम - ${processed.DISPLAY_NAME} , जाति - ${processed.CAST}, तहसील - ${processed.TEHSIL}, जिला - ${processed.DISS}, ${processed.SDM}`
         : `आवेदन क्र० - ${processed.RN}, प्रमाणपत्र क्र० - 0${processed.AM}, नाम - ${processed.DISPLAY_NAME} , तहसील - ${processed.TEHSIL}, जिला - ${processed.DISS}, ${processed.SDM}`;
 
-    processed.QR_URL = "https://quickchart.io/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(qrDataText);
+    processed.QR_URL = "https://quickchart.io/chart?cht=qr&chs=300x300&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrDataText);
     return processed;
 };
 
-// ================= MCD DOB DELHI (BIRTH.HTML) PROCESSOR & LIVE SYNC =================
 window.generateMcdRegNo = function() {
     const rand7 = Math.floor(1000000 + Math.random() * 9000000);
     return `MCDOLIR-2219-00${rand7}`;
@@ -214,8 +211,17 @@ window.processDobDelhiData = function(rawFormObj, docId = '') {
         : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
 
     const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
-    const qrPayload = customQr || verifyUrl;
-    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
+    
+    // Yahan saari details aur verifyUrl ko mila kar multi-line text payload banaya gaya hai
+    const qrTextPayload = customQr || 
+`Name Of The Child - ${name}
+Registration No - ${regNo}
+Registration Date - ${dor}
+DOB. - ${dob}
+Father Name: ${fname}
+Verified URL: ${verifyUrl}`;
+
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
 
     return {
         SERVICE_TYPE: 'DOB Delhi',
@@ -273,13 +279,21 @@ window.syncMcdPreviewFields = function(sourceType, newVal) {
     const recForQr = (ctxForQr && ctxForQr.historyIndex >= 0) ? ((window.historyData && window.historyData[ctxForQr.historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[ctxForQr.historyIndex])) : null;
     const docIdForQr = recForQr?.id || recForQr?.formData?.DOC_ID || '';
     const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
-    const qrPayload = docIdForQr ? `${baseUrl}/verify/${encodeURIComponent(docIdForQr)}` : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
-    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
+    const verifyUrl = docIdForQr ? `${baseUrl}/verify/${encodeURIComponent(docIdForQr)}` : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
+    
+    const qrTextPayload = 
+`Name Of The Child - ${name}
+Registration No - ${regNo}
+Registration Date - ${dor}
+DOB. - ${dob}
+Father Name: ${fname}
+Verified URL: ${verifyUrl}`;
+
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
 
     const qrImg = container.querySelector('#qrCodeImg');
     if (qrImg) qrImg.src = qrUrl;
 
-    // Update currentModalContext record in memory so Print & Download PDF use the live-edited values
     const ctx = window.currentModalContext;
     if (ctx && ctx.historyIndex >= 0) {
         const rec = (window.historyData && window.historyData[ctx.historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[ctx.historyIndex]);
@@ -293,7 +307,6 @@ window.syncMcdPreviewFields = function(sourceType, newVal) {
     }
 };
 
-// ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹50) PROCESSORS =================
 window.generateGazetteNo = function() {
     const year = new Date().getFullYear();
     const rand5 = Math.floor(10000 + Math.random() * 90000);
@@ -325,7 +338,7 @@ window.processGazetteData = function(rawFormObj) {
     const reason = (rawFormObj.REASON || 'AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER').toString().trim().toUpperCase();
 
     const qrText = `GAZETTE OF INDIA | No: ${gazetteNo} | Old Name: ${oldName} | New Name: ${newName} | ${relType}: ${fname} | DOB: ${dob} | Issue Date: ${issueDate}`;
-    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(qrText);
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrText);
 
     return {
         SERVICE_TYPE: 'Gazette Notification',
@@ -388,7 +401,7 @@ window.processDobPrintData = function(rawFormObj) {
     const remarks = (rawFormObj.REMARKS || 'NONE').toString().trim().toUpperCase();
 
     const qrText = `CRS BIRTH CERTIFICATE | Reg No: ${brnNo} | Name: ${name} | Sex: ${sex} | DOB: ${dob} | Mother: ${mname} | Father: ${fname} | Unit: ${hospitalUnit}`;
-    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(qrText);
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrText);
 
     return {
         SERVICE_TYPE: 'DOB Print',
@@ -419,7 +432,6 @@ window.processDobPrintData = function(rawFormObj) {
     };
 };
 
-// ================= e-VOTER ID PROCESSOR =================
 window.generateRandomEpicNo = function() {
     const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const prefix = letters.charAt(Math.floor(Math.random()*letters.length)) + letters.charAt(Math.floor(Math.random()*letters.length)) + letters.charAt(Math.floor(Math.random()*letters.length));
@@ -474,7 +486,7 @@ window.processEvoterData = function(rawFormObj) {
     };
 
     const qrText = `e-EPIC: ${processed.EPIC_NO} | Name: ${processed.NAME} | Father/Husband: ${processed.FNAME} | DOB: ${processed.DOB} | Gender: ${processed.SEX} | AC/Tehsil: ${processed.TEHSIL}, ${processed.DISS}`;
-    processed.QR_URL = "https://quickchart.io/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(qrText);
+    processed.QR_URL = "https://quickchart.io/chart?cht=qr&chs=300x300&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrText);
     return processed;
 };
 
@@ -506,7 +518,7 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
     let finalStampSrc = stampSrc;
 
     if (isCasteOrDomicile) {
-        effectiveWithStamp = true; // ALWAYS AUTOMATICALLY STAMPED WITH m.png
+        effectiveWithStamp = true;
         finalStampSrc = window.autoMStampDataUrl || '/images/m.png';
     } else if (effectiveWithStamp && !finalStampSrc) {
         finalStampSrc = (typeof window.pickRandomAvailableStamp === 'function' ? window.pickRandomAvailableStamp() : '/images/stamp.png');
@@ -518,13 +530,12 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
         </div>
     ` : '';
 
-if (fileId === 'LOCAL_HTML_DOB_DELHI' && d && d.DOC_ID && !d.CUSTOM_QR) {
-    const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
-    const verifyUrl = `${baseUrl}/verify/${encodeURIComponent(d.DOC_ID)}`;
-    d.VERIFY_URL = verifyUrl;
-
-    // QR कोड के लिए पूरा टेक्स्ट फॉर्मेट तैयार किया गया है
-    const qrTextPayload = 
+    if (fileId === 'LOCAL_HTML_DOB_DELHI' && d && d.DOC_ID && !d.CUSTOM_QR) {
+        const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
+        const verifyUrl = `${baseUrl}/verify/${encodeURIComponent(d.DOC_ID)}`;
+        d.VERIFY_URL = verifyUrl;
+        
+        const qrTextPayload = 
 `Name Of The Child - ${d.NAME || ''}
 Registration No - ${d.REG_NO || ''}
 Registration Date - ${d.DOR || ''}
@@ -532,9 +543,9 @@ DOB. - ${d.DOB || ''}
 Father Name: ${d.FNAME || ''}
 Verified URL: ${verifyUrl}`;
 
-    // यहाँ 'chs=340x340' (साइज़) और 'bgcolor=transparent' (पारदर्शी बैकग्राउंड) जोड़ दिया गया है
-   d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&light=transparent&chl=" + encodeURIComponent(qrTextPayload);
-}
+        d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
+    }
+
     const rawTemplate = window.loadedTemplatesCache[fileId];
     if (rawTemplate) {
         let compiled = rawTemplate.replace('class="affidavit-paper', `class="affidavit-paper ${shadowClass}`);
