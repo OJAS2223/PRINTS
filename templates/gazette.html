@@ -1,0 +1,88 @@
+<div class="affidavit-paper" style="font-family: 'Times New Roman', Times, serif; padding: 36px 52px !important; background-color: #ffffff !important; color: #000000 !important;">
+    {{STAMP_OVERLAY}}
+    <div style="border: 2px solid #000000; padding: 24px 28px; height: 96%; box-sizing: border-box; position: relative;">
+        <!-- Top Official Gazette Header -->
+        <div style="text-align: center; border-bottom: 2px double #000000; padding-bottom: 12px; margin-bottom: 14px;">
+            <img src="/images/stamp.png" onerror="this.onerror=null;this.src='images/stamp.png';" style="width: 44px; height: 60px; object-fit: contain; margin: 0 auto 4px auto; display: block;" alt="Emblem" />
+            <div style="font-size: 20px; font-weight: 900; letter-spacing: 0.5px;">भारत का राजपत्र</div>
+            <div style="font-size: 21px; font-weight: 900; letter-spacing: 1px;">THE GAZETTE OF INDIA</div>
+            <div style="font-size: 12px; font-weight: bold; margin-top: 4px;">प्राधिकार से प्रकाशित • PUBLISHED BY AUTHORITY</div>
+            <div style="font-size: 11.5px; font-weight: bold; margin-top: 2px;">भाग IV—विज्ञापन और विविध सूचनाएं (PART IV—Advertisements and Notices)</div>
+        </div>
+
+        <!-- Gazette Notification Number & Date Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #000000; padding-bottom: 8px; margin-bottom: 18px; font-size: 12.5px; font-weight: bold;">
+            <div>अधिसूचना सं. / Gazette No: <b>{{GAZETTE_NO}}</b></div>
+            <div>नई दिल्ली / New Delhi, दिनांक / Date: <b>{{ISSUE_DATE}}</b></div>
+        </div>
+
+        <!-- Main Title -->
+        <div style="text-align: center; font-size: 15px; font-weight: 900; text-decoration: underline; margin-bottom: 16px; text-transform: uppercase;">
+            PUBLIC NOTICE — CHANGE OF NAME / DETAILS ({{CHANGE_TYPE}})
+        </div>
+
+        <!-- Body Paragraph (English) -->
+        <p style="text-align: justify; font-size: 14px; line-height: 1.75; margin-bottom: 16px;">
+            It is hereby notified for general information that I, hitherto known as <span class="filled-val">{{OLD_NAME}}</span>, {{REL_TYPE}} <span class="filled-val">{{FNAME}}</span>, Date of Birth <span class="filled-val">{{DOB}}</span>, residing at <span class="filled-val">{{ADDRESS}}</span>, have changed my name / particulars and shall hereafter be known as <span class="filled-val">{{NEW_NAME}}</span> for all future official, educational, and legal purposes.
+        </p>
+
+        <!-- Body Paragraph (Hindi) -->
+        <p style="text-align: justify; font-size: 13.5px; line-height: 1.75; margin-bottom: 20px;">
+            सर्वसाधारण को सूचित किया जाता है कि मैं, पूर्व नाम <span class="filled-val">{{OLD_NAME}}</span> ({{REL_TYPE}} <span class="filled-val">{{FNAME}}</span>), जन्मतिथि <span class="filled-val">{{DOB}}</span>, निवासी <span class="filled-val">{{ADDRESS}}</span> ने अपना नाम / विवरण बदलकर <span class="filled-val">{{NEW_NAME}}</span> रख लिया है तथा भविष्य में सभी सरकारी व गैर-सरकारी कार्यों में मुझे इसी नए नाम से जाना जाए।
+        </p>
+
+        <!-- Summary Verification Table -->
+        <table width="100%" cellspacing="0" cellpadding="7" style="border-collapse: collapse; border: 1.5px solid #000000; font-size: 12.5px; margin-bottom: 22px;">
+            <tbody>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td width="35%" style="border-right: 1px solid #000000;"><b>Gazette Notification No:</b></td>
+                    <td width="65%" style="font-family: monospace; font-size: 13.5px; font-weight: 900;">{{GAZETTE_NO}}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>Old Name / Previous Details:</b></td>
+                    <td><b>{{OLD_NAME}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>New Name / Updated Details:</b></td>
+                    <td><b>{{NEW_NAME}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>Father / Husband Name ({{REL_TYPE}}):</b></td>
+                    <td><b>{{FNAME}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>Date of Birth (DOB):</b></td>
+                    <td><b>{{DOB}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>Permanent Address:</b></td>
+                    <td><b>{{ADDRESS}}</b></td>
+                </tr>
+                <tr>
+                    <td style="border-right: 1px solid #000000;"><b>Supporting Affidavit / Reason:</b></td>
+                    <td><b>{{REASON}}</b></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- QR & Signature Block -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 26px;">
+            <div style="text-align: center;">
+                <img src="{{QR_URL}}" crossorigin="anonymous" style="width: 105px; height: 105px; border: 1px solid #000; padding: 3px;" onerror="this.style.display='none'" />
+                <div style="font-size: 10px; font-weight: bold; margin-top: 3px;">Scan to Verify Gazette</div>
+            </div>
+            <div style="text-align: right; font-size: 12.5px; line-height: 1.5;">
+                <div style="margin-bottom: 24px;">हस्ताक्षर आवेदक / Signature of Applicant: ______________________</div>
+                <div><b>पुराना नाम (Old Name):</b> {{OLD_NAME}}</div>
+                <div><b>नया नाम (New Name):</b> {{NEW_NAME}}</div>
+                <div style="margin-top: 8px; font-size: 11px;">Controller of Publications, Department of Publication</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div style="display: flex; justify-content: space-between; font-size: 10.5px; border-top: 1px solid #000; padding-top: 4px; font-weight: bold;">
+            <span>E-Gazette Notification ID: {{GAZETTE_NO}}</span>
+            <span>Published Date: {{ISSUE_DATE}}</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,80 @@
+<div class="affidavit-paper" style="font-family: 'Times New Roman', Times, serif; padding: 28px 38px !important; background-color: #ffffff !important; color: #000000 !important;">
+    {{STAMP_OVERLAY}}
+    <div style="border: 3px double #1e3a8a; padding: 20px 24px; height: 96%; box-sizing: border-box; position: relative;">
+        <!-- Top Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 14px;">
+            <div style="width: 76px; height: 76px; display: flex; align-items: center; justify-content: center;">
+                <img src="/images/sealofup.jpg" onerror="this.onerror=null;this.src='images/sealofup.jpg';" style="width: 72px; height: 72px; object-fit: contain;" alt="State Logo" />
+            </div>
+            <div style="text-align: center; flex: 1; padding: 0 10px;">
+                <img src="/images/stamp.png" onerror="this.onerror=null;this.src='images/stamp.png';" style="width: 34px; height: 48px; object-fit: contain; margin: 0 auto 2px auto; display: block;" alt="Emblem" />
+                <div style="font-size: 14px; font-weight: 900;">{{STATE_GOVT_HI}}</div>
+                <div style="font-size: 13px; font-weight: 900;">{{STATE_GOVT_EN}}</div>
+                <div style="font-size: 11.5px; font-weight: bold; margin-top: 2px;">चिकित्सा एवं स्वास्थ्य विभाग / DEPARTMENT OF MEDICAL AND HEALTH</div>
+                <div style="font-size: 12.5px; font-weight: 900; color: #065f46; margin-top: 3px;">{{HOSPITAL_UNIT}}</div>
+                <div style="font-size: 15px; font-weight: 900; text-decoration: underline; margin-top: 4px;">जन्म प्रमाण-पत्र / BIRTH CERTIFICATE</div>
+            </div>
+            <div style="width: 76px; height: 76px; display: flex; align-items: center; justify-content: center;">
+                <img src="/images/crs.png" onerror="this.onerror=null;this.src='images/crs.png';" style="width: 72px; height: 72px; object-fit: contain;" alt="CRS Logo" />
+            </div>
+        </div>
+
+        <!-- Certification Statement -->
+        <div style="font-size: 11.5px; line-height: 1.45; text-align: justify; margin-bottom: 14px; font-weight: bold;">
+            (जन्म और मृत्यु रजिस्ट्रीकरण अधिनियम, 1969 की धारा 12/17 तथा जन्म और मृत्यु रजिस्ट्रीकरण नियम के अंतर्गत जारी किया गया / Issued under Section 12/17 of the Registration of Births &amp; Deaths Act, 1969)<br/>
+            यह प्रमाणित किया जाता है कि निम्नलिखित सूचना जन्म के मूल अभिलेख से ली गई है जो कि <span style="text-decoration: underline;">{{HOSPITAL_UNIT}}</span> तहसील <span style="text-decoration: underline;">{{TEHSIL}}</span> जिला <span style="text-decoration: underline;">{{DISTRICT}}</span> राज्य/संघ प्रदेश <span style="text-decoration: underline;">{{STATE_NAME}}</span> के रजिस्टर में दर्ज है।
+        </div>
+
+        <!-- Two Column Details Table -->
+        <table width="100%" cellspacing="0" cellpadding="6" style="border-collapse: collapse; font-size: 12px; border: 1.5px solid #000000; margin-bottom: 18px;">
+            <tbody>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td width="50%" style="border-right: 1px solid #000000;"><b>नाम / NAME:</b> <span style="font-weight: 900; font-size: 13px;">{{NAME}}</span></td>
+                    <td width="50%"><b>लिंग / SEX:</b> <b>{{SEX}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>जन्म तिथि / DATE OF BIRTH:</b><br/><b>{{DOB}}</b> ({{DOB_WORDS}})</td>
+                    <td><b>जन्म स्थान / PLACE OF BIRTH:</b><br/><b>{{POB}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>माता का नाम / NAME OF MOTHER:</b><br/><b>{{MNAME}}</b></td>
+                    <td><b>पिता का नाम / NAME OF FATHER:</b><br/><b>{{FNAME}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>माता का आईडी नं. / MOTHER ID:</b><br/><b>{{MA}}</b></td>
+                    <td><b>पिता का आईडी नं. / FATHER ID:</b><br/><b>{{FA}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>बच्चे के जन्म के समय माता-पिता का पता /<br/>ADDRESS OF PARENTS AT THE TIME OF BIRTH:</b><br/><b>{{ADDRESS}}</b></td>
+                    <td><b>माता-पिता का स्थायी पता /<br/>PERMANENT ADDRESS OF PARENTS:</b><br/><b>{{PERM_ADDRESS}}</b></td>
+                </tr>
+                <tr style="border-bottom: 1px solid #000000;">
+                    <td style="border-right: 1px solid #000000;"><b>पंजीकरण संख्या / REGISTRATION NUMBER:</b><br/><b style="font-size: 13px;">{{BRN_NO}}</b></td>
+                    <td><b>पंजीकरण तारीख / DATE OF REGISTRATION:</b><br/><b>{{REG_DATE}}</b></td>
+                </tr>
+                <tr>
+                    <td style="border-right: 1px solid #000000;"><b>टिप्पणी / REMARKS (IF ANY):</b><br/><b>{{REMARKS}}</b></td>
+                    <td><b>जारी करने की तिथि / DATE OF ISSUE:</b><br/><b>{{ISSUE_DATE}}</b></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Bottom QR and Registrar Signature -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 22px;">
+            <div>
+                <img src="{{QR_URL}}" crossorigin="anonymous" style="width: 112px; height: 112px; border: 1px solid #000; padding: 3px;" onerror="this.style.display='none'" />
+                <div style="font-size: 10px; font-weight: bold; margin-top: 4px;">Updated on: {{ISSUE_DATE}}</div>
+            </div>
+            <div style="text-align: center; font-size: 12px; line-height: 1.45;">
+                <div style="font-weight: 900; margin-bottom: 4px;">जारी करने वाले प्राधिकारी के हस्ताक्षर /<br/>SIGNATURE OF ISSUING AUTHORITY</div>
+                <div style="font-weight: bold; color: #1e3a8a;">रजिस्ट्रार (जन्म एवं मृत्यु) / REGISTRAR (BIRTH &amp; DEATH)</div>
+                <div style="font-weight: bold;">{{HOSPITAL_UNIT}}</div>
+            </div>
+        </div>
+    </div>
+    <div>
+        <div style="text-align: center; font-size: 10.5px; font-weight: bold; border-top: 1px solid #000; padding-top: 4px;">
+            "प्रत्येक जन्म एवं मृत्यु का पंजीकरण सुनिश्चित करें" • ENSURE REGISTRATION OF EVERY BIRTH AND DEATH
+        </div>
+    </div>
+</div>

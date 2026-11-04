@@ -149,7 +149,7 @@
       color: #000000 !important;
       z-index: 3 !important;
       user-select: text !important;
-      cursor: text !important;
+      cursor: default !important;
     }
     .mcd-cert-paper .act-para {
       position: absolute !important;
@@ -208,7 +208,7 @@
       color: #000000 !important;
       z-index: 3 !important;
       user-select: text !important;
-      cursor: text !important;
+      cursor: default !important;
     }
     .mcd-cert-paper .r-name-lbl { top: 263.8pt !important; }
     .mcd-cert-paper .r-name-val { top: 264.6pt !important; }
@@ -308,10 +308,10 @@
     <img id="mcdLogoImg" src="/images/logo.svg" onerror="this.onerror=null;this.src='images/logo.svg';" alt="MCD Logo" />
   </div>
 
-  <!-- मध्य हेडर (अशोक स्तंभ: stamp.png + फिक्स शीर्षक) -->
+  <!-- मध्य हेडर (अशोक स्तंभ: s.png + फिक्स शीर्षक) -->
   <div class="header-center">
     <div class="emblem-box">
-      <img id="emblemImg" src="/images/stamp.png" onerror="this.onerror=null;this.src='images/s.png';" alt="सत्यमेव जयते" />
+      <img id="emblemImg" src="/images/s.png" onerror="this.onerror=null;this.src='images/s.png';" alt="सत्यमेव जयते" />
     </div>
 
     <div class="hdr-form">फॉर्म संख्या / Form No. 5</div>
@@ -328,7 +328,7 @@
   </div>
 
   <!-- सर्टिफिकेट / रजिस्ट्रेशन नंबर (दाईं तरफ हेडर के नीचे - EDITABLE & AUTO-SYNCED) -->
-  <div class="top-reg-no" id="valTopRegNo" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('topReg', this.innerText)">{{REG_NO}}</div>
+  <div class="top-reg-no" id="valTopRegNo">{{REG_NO}}</div>
 
   <!-- एक्ट एवं प्रमाणन विवरण (FIXED) -->
   <div class="act-para">
@@ -343,50 +343,50 @@
 
   <!-- 1. Name -->
   <div class="field-label name-label r-name-lbl"><span class="hi">नाम</span> &nbsp;/ Name</div>
-  <div class="field-value r-name-val" id="valName" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{NAME}}</div>
+  <div class="field-value r-name-val" id="valName">{{NAME}}</div>
 
   <!-- 2. Gender -->
   <div class="field-label r-gender-lbl"><span class="hi">लिंग</span> &nbsp;/ Gender</div>
-  <div class="field-value r-gender-val" id="valGender" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{SEX}}</div>
+  <div class="field-value r-gender-val" id="valGender">{{SEX}}</div>
 
   <!-- 3. Date Of Birth -->
   <div class="field-label r-dob-lbl"><span class="hi">जन्म की तिथि</span> &nbsp;/ Date Of Birth</div>
-  <div class="field-value r-dob-val" id="valDob" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{DOB}}</div>
+  <div class="field-value r-dob-val" id="valDob">{{DOB}}</div>
 
   <!-- 4. Place Of Birth -->
   <div class="field-label r-pob-lbl"><span class="hi">जन्म का स्थान</span> &nbsp;/ Place Of Birth</div>
-  <div class="field-value r-pob-val" id="valPob" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{POB}}</div>
+  <div class="field-value r-pob-val" id="valPob">{{POB}}</div>
 
   <!-- 5. Date Of Registration -->
   <div class="field-label r-dor-lbl"><span class="hi">पंजीकरण की तिथि</span> / Date Of Registration</div>
-  <div class="field-value r-dor-val" id="valDor" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{DOR}}</div>
+  <div class="field-value r-dor-val" id="valDor">{{DOR}}</div>
 
   <!-- 6. Registration No (AUTO-SYNCED WITH TOP CERTIFICATE NO) -->
   <div class="field-label r-regno-lbl"><span class="hi">पंजीकरण संख्या</span> / Registration No</div>
-  <div class="field-value r-regno-val" id="valRegNo" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('botReg', this.innerText)">{{REG_NO}}</div>
+  <div class="field-value r-regno-val" id="valRegNo">{{REG_NO}}</div>
 
   <!-- 7. Name of Mother -->
   <div class="field-label r-mother-lbl"><span class="hi">माता का नाम</span> / Name of Mother</div>
-  <div class="field-value r-mother-val" id="valMother" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{MNAME}}</div>
+  <div class="field-value r-mother-val" id="valMother">{{MNAME}}</div>
 
   <!-- 8. Name of Father -->
   <div class="field-label r-father-lbl"><span class="hi">पिता का नाम</span> / Name of Father</div>
-  <div class="field-value r-father-val" id="valFather" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{FNAME}}</div>
+  <div class="field-value r-father-val" id="valFather">{{FNAME}}</div>
 
   <!-- 9. Present / Address at the time of Birth -->
   <div class="field-label r-presaddr-lbl">
     <span class="hi">वर्तमान &nbsp;/ जन्म के समय पता</span><br/>
     Present / Address at the time of Birth)
   </div>
-  <div class="field-value r-presaddr-val" id="valPresAddr" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('presAddr', this.innerText)">{{PRES_ADDR}}</div>
+  <div class="field-value r-presaddr-val" id="valPresAddr">{{PRES_ADDR}}</div>
 
   <!-- 10. Permanent Address -->
   <div class="field-label r-permaddr-lbl"><span class="hi">स्थाई पता</span> / Permanent Address</div>
-  <div class="field-value r-permaddr-val" id="valPermAddr" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('permAddr', this.innerText)">{{PERM_ADDR}}</div>
+  <div class="field-value r-permaddr-val" id="valPermAddr">{{PERM_ADDR}}</div>
 
   <!-- 11. Date of Issue -->
   <div class="field-label r-doi-lbl"><span class="hi">जारी करने की तिथि</span> / Date of Issue</div>
-  <div class="field-value r-doi-val" id="valDoi" contenteditable="true" spellcheck="false" oninput="if(window.syncMcdPreviewFields) window.syncMcdPreviewFields('other')">{{DOI}}</div>
+  <div class="field-value r-doi-val" id="valDoi">{{DOI}}</div>
 
   <!-- डायनेमिक QR कोड सेक्शन -->
   <div class="qr-code-box" id="qrContainer">
