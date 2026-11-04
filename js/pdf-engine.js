@@ -518,7 +518,7 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
         </div>
     ` : '';
 
-   if (fileId === 'LOCAL_HTML_DOB_DELHI' && d && d.DOC_ID && !d.CUSTOM_QR) {
+if (fileId === 'LOCAL_HTML_DOB_DELHI' && d && d.DOC_ID && !d.CUSTOM_QR) {
     const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
     const verifyUrl = `${baseUrl}/verify/${encodeURIComponent(d.DOC_ID)}`;
     d.VERIFY_URL = verifyUrl;
@@ -532,11 +532,9 @@ DOB. - ${d.DOB || ''}
 Father Name: ${d.FNAME || ''}
 Verified URL: ${verifyUrl}`;
 
-    // अब QR कोड में URL की जगह यह पूरा टेक्स्ट एन्कोड होकर जाएगा
-    d.QR_URL = "https://quickchart.io/chart?cht=qr&margin=0&chl=" + encodeURIComponent(qrTextPayload);
-       
+    // यहाँ 'chs=340x340' (साइज़) और 'bgcolor=transparent' (पारदर्शी बैकग्राउंड) जोड़ दिया गया है
+    d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&bgcolor=transparent&chl=" + encodeURIComponent(qrTextPayload);
 }
-
     const rawTemplate = window.loadedTemplatesCache[fileId];
     if (rawTemplate) {
         let compiled = rawTemplate.replace('class="affidavit-paper', `class="affidavit-paper ${shadowClass}`);
