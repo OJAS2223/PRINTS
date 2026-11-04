@@ -1,0 +1,3068 @@
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+
+
+
+	
+		
+	
+	
+
+
+<html>
+<head>
+<base href="https://mcdonline.nic.in/rbdndmc/" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Citizen - Portal</title>
+<meta name="description" content="">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="all,follow">
+<!-- Original PDF Fonts: Caladea & Noto Serif Devanagari + html2pdf.js -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caladea:wght@400;700&family=Noto+Serif+Devanagari:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.6.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- Bootstrap CSS-->
+<link rel="stylesheet" href="static/css/bootstrap.min.css">
+<!-- Font Awesome CSS-->
+<link rel="stylesheet" href="static/css/font-awesome.min.css">
+<!-- Bootstrap Select-->
+<link rel="stylesheet" href="static/css/style.default.css">
+
+<!-- Custom stylesheet - for your changes-->
+<link rel="stylesheet" type="text/css" href="static/css/datatables.min.css"/>
+<link rel="stylesheet" href="static/css/Masterstyle.css">
+<link rel="stylesheet" href="static/css/custom.css">
+<!-- <link href="static/css/jquery.dataTables.min.css" rel="stylesheet"
+	id="bootstrap-css"> -->
+	<!-- Dashboard design -->
+<link rel="stylesheet" href="static/css/citizendashboard.css">
+	<link rel="stylesheet" href="static/css/buildingCss.css" >
+<link href="static/css/select2.min.css" rel="stylesheet" />
+<link href="static/css/bootstrap-datetimepicker.css" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="static/css/daterangepicker.css" />
+<link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"> 
+<style>
+.iffyTip {
+    overflow:hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+}
+.hideText2{
+  max-width:200px;
+}
+
+.red-tooltip + .tooltip > .tooltip-inner {background-color: #f00;}
+.red-tooltip + .tooltip > .tooltip-arrow { border-bottom-color:#f00; }
+</style>
+
+<script type="text/javascript">
+var defaultTabIndex = -1;
+</script>
+</head>
+<!-- <body oncopy="return false" oncut="return false" onpaste="return false" ondragstart="return false;" ondrop="return false;"> -->
+<body>
+<div id="main_body" style="display: none;">
+<div class="maindivhight main active">
+
+        <div class="header-top">
+            <div class="container-fluid  pad-30">
+                <div class="row">
+                  <div class="col-lg-1 col-md-1 col-sm-3 col-xs-3 ">
+                       <div class="toggleicons_header">
+<i class="fa fa-bars fa-2x Show" aria-hidden="true" style="display:none;"></i>
+<i class="fa fa-close fa-2x Hide" aria-hidden="true" ></i>
+</div>  
+</div>
+                    <div class="col-lg-4 hidden-sm hidden-xs">
+                        <div class="col-lg-7">
+                       
+                        <div class="btn-group font-sizing " role="group" aria-label="...">
+                            <button class="btn btn-default" id="fontdecrease"
+                                title="Decrease Website's font size">A-</button>
+                            <button class="btn btn-default selected" id="fontdefault"
+                                title="Normal  Website's font size">A</button>
+                            <button class="btn btn-default" id="fontincrease"
+                                title="Increase Website's font size">A+</button>
+                        </div>
+                        <div class="btn-group font-contrast " role="group" aria-label="...">
+                            <button class="btn btn-default standard" id="stdView" title="Standard View">A</button>
+                            <button class="btn btn-default high-contrast-view" id="highContrastView"
+                                title="High Contrast View">A</button>
+                          
+                        </div>
+                          </div>
+                            <!-- <div class="col-lg-5">
+                             <div id='google_translate_element'> </div>
+                            </div> -->
+                          
+
+                    </div>
+                    
+                  
+             <div class="col-lg-5 col-md-5 col-sm-12 col-xs-12 hidden-sm hidden-xs ">
+       
+ <marquee class="mar1" onmouseover="this.stop();" onmouseout="this.start();" direction="left">
+							
+						<a onclick="showTextFlashDetail('077b1388-a2b2-4e19-8209-994239669011')" data-toggle="modal" data-target="#showTextFlash">
+					We are committed to serving you better by upgrading the portal with efficient functionalities on regular intervals. Therefore, a maintenance window has been reserved from 11 PM to 12 AM for necessary improvisations. For Inconvenience, is regretted.
+					 </a>
+								
+								<img src="static/images/new-star.gif">  							
+								
+							
+							</marquee>
+              </div> 
+            
+                  <div class="col-lg-2 col-md-2 col-sm-9 col-xs-9 ">
+            	
+            </div>
+             
+                   
+                </div>
+            </div>
+        </div>
+
+ 
+
+  <!--   <div class="hidden-header"></div> -->
+
+
+
+
+
+
+
+
+
+
+
+
+  <!--   <section class="bar background-white "> -->
+
+	<div>	
+		<!-- Navbar Start-->
+		
+
+
+
+
+
+
+
+
+<!-- add Modal-->
+<div class="modal fade" id="largeModal" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        
+      		<!-- <div class="modal-header">
+	          <button type="button" class="close" data-dismiss="modal">&times;</button>
+	          <h4 class="bootbox-body" >HEALTH</h4>
+	        </div> -->
+			<div id="lgModalBodyID" class="modal-body">
+			
+			</div>
+			<div class="modal-footer">
+	          <button type="button" class="btn btn-danger " data-dismiss="modal">Close</button>
+	        </div>
+    </div>
+  </div>
+</div>
+<!-- small modal -->
+<div class="modal fade" id="smallModal" role="dialog">
+	<div class="modal-dialog modal-lg modalsm">
+		<div class="modal-content">
+			<!-- <div id="smModalHeaderID" class="modal-header">
+				
+			</div> -->
+			<div id="smModalBodyID" class="modal-body">
+				
+			</div>
+			<!-- <div  id="smModalFooterID" class="modal-footer">
+				
+			</div> -->
+		</div>
+	</div>
+</div>
+
+
+<!-- small modal -->
+<div class="modal fade  model-Pointer-Disable" id="mediumModal" role="dialog">
+    <div class="modal-dialog modal-lg " >
+      <div class="modal-content">
+       <!--  <div id="mdModalHeaderID" class="modal-header">
+				
+		</div> -->
+		<div id="mdModalBodyID" class="modal-body" >
+				
+		</div>
+		<!-- <div  id="mdModalFooterID" class="modal-footer">
+			
+		</div> -->
+      </div>
+    </div>
+  </div>
+  
+<!-- small modal end-->
+<!-- lode spinner -->
+	<div class="loader-spinner-overlay"  id="overlay" style="display:none;">
+				<div class="spanner show">
+					<div class="loader">
+						<b></b><b></b><b></b><b></b><b></b>
+					</div>
+					<p class="loaderstyle">Processing Your Request Please wait </p>
+				</div>
+			</div>
+			<div class="loader-spinner-overlay"  id="submitsubmitOverlay" style="display:none;">
+				<div class="spanner show">
+					<div class="loader">
+						<b></b><b></b><b></b><b></b><b></b>
+					</div>
+					<p class="loaderstyle">Validating your information. Thank you for your patience.</p>
+				</div>
+			</div>
+<!--lode spinner end  -->
+<!-- on load loader start -->
+<div class="onLoadLoader">
+	<div class="spanner show">
+		<div class="loader">
+			<b></b><b></b><b></b><b></b><b></b>
+		</div>
+	</div>
+</div>
+<!-- on load loader end -->
+
+
+  <div class="modal-md modal fade model-Pointer-Disable" id="myModal_status" role="dialog" >
+    <div class="modal-dialog">
+      <div class="modal-content">
+      <div>
+        <div class="modal-header compectheader" id="elementToChange">          
+          <h4 class="modal-title compecttitle"><span id="modelheading_success"></span></h4>
+        </div>
+        <div class="modal-body">
+          <form role="form">
+          <div class="row">
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+		     	<h5 class="modalmsg mb-4 text-center" id="message_header"><i class="fa fa-check-circle" id="status_circle"></i><span id="messagebody_status"> </span></h5>
+             <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 "id="enrollment_user" style="display: none;">
+				<div class="alert-primary alertMsz text-center" role="alert">
+					<i class="fa fa-exclamation-triangle" aria-hidden="true"></i><span id="messagerecord">No Record Found !!</span>  <a href="web/citizen/registration" class=""> Click here For New Enrollment</a>
+				</div>
+				</div>
+             
+             </div>
+			</div>
+          </form>
+        </div>
+        </div>
+        <div class="modal-footer text-center">
+        <input type="hidden" id="requestbtnfor">
+          <button type="button" class="btn btn-default btnCom" title="Close the Modal Popup" id="successbtnnew" style="display: none">Continue</button>
+          <button type="button" class="btn btn-default btnCom" title="Generate Certificate" id="successbtnForHos" onclick="getCertificateForHos()">Generate Certificate</button>
+          <button type="button" class="btn btn-danger" data-dismiss="modal" title="Close the Modal Popup" id="closebtn">Close</button>
+        </div>
+      </div>      
+    </div>
+  </div>
+  
+<!-- rbd instruction details model -->
+<div class="modal fade" id="instructionDeatilsModal" role="dialog">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+    <div>
+      		<div class="modal-header compectheader">
+	          <h4 class="modal-title compecttitle" >Instruction Details</h4>
+	        </div> 
+			<div id="instrModalBodyID" class="modal-body">
+			
+			</div>
+	</div>
+			<div class="modal-footer">
+	          <button type="button" class="btn btn-danger " data-dismiss="modal">Close</button>
+	        </div>
+    </div>
+  </div>
+</div>
+<!-- rbd Confirmation message model -->
+<div class="modal-md modal fade model-Pointer-Disable" id="rbdErrorModal" role="dialog">
+	<div class="modal-dialog modal-lg modalsm">
+		<div class="modal-content">
+		<div>
+			 <div id="errorModalHeaderID" class="modal-header compectheader">
+				 <h4 class="modal-title compecttitle" id="errorModalHeadID">Error Message</h4>
+			</div> 
+			<div id="errorModalBodyID" class="modal-body">
+				
+			</div>
+		</div>
+			 <div  class="modal-footer">
+			 <button type="button" class="btn btn-default btnCom" title="Close the Modal Popup" id="successErrorbtnnew">OK</button>
+				<button type="button" class="btn btn-danger " data-dismiss="modal" id="cancelBtn">Close</button>
+			</div> 
+		</div>
+	</div>
+</div>		
+<!-- Confirmation model end -->
+
+<!-- Informant death rbd Confirmation message model -->
+<div class="modal-md modal fade model-Pointer-Disable" id="informantDeathModel" role="dialog">
+	<div class="modal-dialog modal-lg modalsm">
+		<div class="modal-content">
+		<div>
+			 <div id="informantDeathModelHeaderID" class="modal-header compectheader">
+				 <h4 class="modal-title compecttitle" id="informantDeathModelHeadID">Error Message</h4>
+			</div> 
+			<div id="informantDeathModelBodyID" class="modal-body">
+				
+			</div>
+		</div>
+			 <div  class="modal-footer">
+			 <button type="button" class="btn btn-default btnCom" title="Close the Modal Popup" id="informantDeathSuccessBtn">OK</button>
+				<button type="button" class="btn btn-danger " data-dismiss="modal" id="informantDeathCancelBtn">Close</button>
+			</div> 
+		</div>
+	</div>
+</div>		
+<!-- Informant death Confirmation model end -->
+
+<!-- rbd error message model -->
+<div class="modal-md modal fade model-Pointer-Disable" id="rbdErrorModal1" role="dialog">
+	<div class="modal-dialog modal-lg modalsm">
+		<div class="modal-content">
+		<div>
+			 <div id="errorModalHeaderID" class="modal-header compectheader">
+				 <h4 class="modal-title compecttitle" id="errorModalHeadID1">Error Message</h4>
+			</div> 
+			<div id="errorModalBodyID1" class="modal-body">
+				
+			</div>
+		</div>
+			 <div  class="modal-footer">
+			 <button type="button" class="btn btn-default btnCom" title="Close the Modal Popup" id="successErrorbtnnew1">OK</button>
+				<button type="button" class="btn btn-danger " data-dismiss="modal" id="cancelBtn1">Close</button>
+			</div> 
+		</div>
+	</div>
+</div>		
+<!-- rbd model end -->	
+			
+
+ <div class="modal-md modal fade model-Pointer-Disable" id="myModal_back" role="dialog" >
+    <div class="modal-dialog">
+      <div class="modal-content">
+      <div>
+        <div class="modal-header compectheader" id="elementToChange">          
+          <h4 class="modal-title compecttitle"><span id="modelheading_back"></span></h4>
+        </div>
+        <div class="modal-body">
+          <form role="form">
+          <div class="row">
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+		     	<h5 class="modalmsg mb-4 text-center" id="message_header_back"><i class="fa fa-check-circle" id="status_circle"></i><span id="messagebody_status"> </span></h5>
+             </div>
+			</div>
+          </form>
+        </div>
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" class="btn btn-default btnCom" title="Close the Modal Popup" id="backbtnsuccess">Ok</button>
+          <button type="button" class="btn btn-danger " data-dismiss="modal"  id="cancelbackbtn">Close</button>
+        </div>
+      </div>      
+    </div>
+  </div>
+  
+   <div class=" modal fade model-Pointer-Disable" id="hospitalChangeModal" role="dialog">
+  <div class="modal-dialog modal-md" >
+      <div class="modal-content">
+     <div id="hospitalChangeModalBodyID" class="" >
+	 </div>				
+      </div>
+    </div>
+  
+  </div> 
+  
+  <div class=" modal fade model-Pointer-Disable" id="cremationChangeModal" role="dialog">
+  <div class="modal-dialog modal-md" >
+      <div class="modal-content">
+     <div id="cremationChangeModalBodyID" class="" >
+	 </div>				
+      </div>
+    </div>
+  
+  </div> 
+
+		
+
+
+
+
+
+
+
+
+
+<div class="custommargn">
+<header class="nav-holder make-sticky">
+
+	<!--<div id="navbar" role="navigation" class="navbar navbar-expand-lg">
+		<div class="container">
+			<!--<a href="index.html" class="navbar-brand home"><images src="static/images/logo.png" alt="MCD logo" class="d-none d-md-inline-block"><images src="" alt="MCD logo" class="d-inline-block d-md-none"><span class="sr-only">MCD - go to homepage</span></a>-->
+			<!-- button type="button" data-toggle="collapse"
+				data-target="#navigation"
+				class="navbar-toggler btn-template-outlined">
+				<span class="sr-only">Toggle navigation</span><i
+					class="fa fa-align-justify"></i>
+			</button-->
+			<div id="navigation" class="navbar-collapse collapse">
+				<ul class="nav navbar-nav">
+					<li class="nav-item dropdown active">
+						
+						
+						
+						<a href="web/citizen/info"><i class="fa fa-home"></i> Home <b
+							class="caret"></b></a>
+						
+						
+					
+						<!-- <ul class="dropdown-menu">
+							<li class="dropdown-item"><a href="#" class="nav-link">Page
+									1</a></li>
+							<li class="dropdown-item"><a href="#" class="nav-link">Page
+									1</a></li>
+							<li class="dropdown-item"><a href="#" class="nav-link">Page
+									1</a></li>
+							<li class="dropdown-item"><a href="#" class="nav-link">Page
+									1</a></li>
+							<li class="dropdown-item dropdown-submenu"><a
+								id="navbarDropdownMenuLink2" href="#" data-toggle="dropdown"
+								aria-haspopup="true" aria-expanded="false"
+								class="nav-link dropdown-toggle">Dropdown link</a>
+								<ul aria-labelledby="navbarDropdownMenuLink2"
+									class="dropdown-menu">
+									<li class="dropdown-item"><a href="#" class="nav-link">Action</a></li>
+									<li class="dropdown-item"><a href="#" class="nav-link">Action</a></li>
+									<li class="dropdown-item"><a href="#" class="nav-link">Action</a></li>
+								</ul></li>
+						</ul> -->
+						</li>
+					<li class="nav-item dropdown menu-large"><a href="javascript:void(0);"><i
+							class="fa fa-info-circle" aria-hidden="true"></i> About us</a></li>
+					<li class="nav-item dropdown menu-large"><a href="javascript:void(0);"><i
+							class="fa fa-eye" aria-hidden="true"></i> View Status </a></li>
+					<li class="nav-item dropdown menu-large"><a href="javascript:void(0);"><i
+							class="fa fa-gear" aria-hidden="true"></i> Services </a></li>
+					<li class="nav-item dropdown menu-large"><a href="javascript:void(0);"><i
+							class="fa fa-book" aria-hidden="true"></i> Guidelines </a></li>
+					<li class="nav-item dropdown"><a href="javascript:void(0);"><i
+							class="fa fa-question-circle" aria-hidden="true"></i> FAQ </a></li>
+				</ul>
+			</div>
+		
+</header>
+</div>
+
+		
+
+
+
+
+
+
+
+
+
+<script src="static/app-js/aes.js"></script>
+<script src="static/app-js/AesUtil.js"></script>
+<script src="static/app-js/pbkdf2.js"></script>
+<script src="static/app-js/decrypt.js"></script>
+<script src="static/app-js/encr.js"></script>
+<!DOCTYPE html>
+<style>
+.header-top{
+display:none !important;
+}
+.togglesidebar{
+display:none !important;
+}
+.help-desk
+{
+display:none !important;
+}
+</style>
+<style>
+  .vertical-record {
+    background: linear-gradient(to bottom right, #ffffff, #f8f9fa);
+    border: 1px solid #dee2e6;
+    overflow-x: auto;
+  }
+
+  .vertical-record table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .vertical-record thead th {
+    background-color: #0380d1;
+    color: white;
+    font-size: 18px;
+    text-align: center;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+  }
+
+  .vertical-record td,
+  .vertical-record th {
+    padding: 12px 15px;
+    border-bottom: 1px dashed #ced4da;
+    font-size: 16px;
+    color: #212529;
+    position: relative;
+    text-align: left;
+  }
+
+  .vertical-record th {
+    background-color: #f1f1f1;
+    width: 35%;
+    font-weight: 600;
+  }
+
+  .vertical-record .btn {
+    border-radius: 10px;
+    font-weight: 600;
+    padding: 10px 20px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    margin-right: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .vertical-record .btn i {
+    margin-right: 6px;
+  }
+
+  .vertical-record .btn:hover {
+    transform: scale(1.05);
+  }
+
+  @media (max-width: 768px) {
+    .vertical-record td,
+    .vertical-record th {
+  /*     display: block; */
+      width: auto;
+      text-align: left;
+    }
+
+    .vertical-record tr {
+      margin-bottom: 10px;
+      border: 1px solid #dee2e6;
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .vertical-record td {
+      border: none;
+      padding: 10px;
+    }
+    .vertical-record .btn {
+   font-weight: 500; 
+    font-size: 12px;
+    margin-bottom: 10px;
+    }
+  }
+  
+  @media (max-width: 375px) {
+    .vertical-record td, .vertical-record th {
+        display: block;
+        width: auto;
+        text-align: left;
+    }
+}
+/* Style for certificate view modal */
+  .certificate-box {
+    padding: 25px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+    font-family: 'Segoe UI', sans-serif;
+    border: 1px solid #dee2e6;
+  }
+
+  .certificate-header {
+    background-color: #343a40;
+    color: #fff;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    padding: 15px;
+    border-radius: 10px 10px 0 0;
+    margin-bottom: 20px;
+  }
+
+  .certificate-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed #ccc;
+  }
+
+  .certificate-label {
+    flex: 0 0 200px;
+    font-weight: 700;
+    color: #495057;
+  }
+
+  .certificate-value {
+    flex: 1;
+    color: #212529;
+  }
+
+  @media (max-width: 600px) {
+    .certificate-row {
+      flex-direction: column;
+    }
+
+    .certificate-label {
+      margin-bottom: 5px;
+      flex: 1;
+    }
+  }
+</style>
+
+<section class="bar background-white">
+
+	<div class="container-fluid text-center pad-30">
+		<!-- <div class="row mt-4">
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 mt-2">
+				<div class="text-center">
+					<a href="web/citizen/home" class="btn btn-primary pull-right"><i class="fa fa-arrow-circle-left"></i> Home Page</a>
+				</div>
+			</div>
+		</div> -->
+				<div class="row mt-4">
+			<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 ">
+		<!-- 	<div id="" class="pagheadingstyle"><h4>CERTIFICATE   DETAILS</h4></div> -->
+			<div class="card">
+				<div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+					<div class="">
+		           <div class="row">
+							<div class="col-md-12">
+							
+							<div class="vertical-record">
+  <table>
+    <thead>
+      <tr>
+        <th colspan="2">Certificate Details</th>
+      </tr>
+    </thead>
+    
+	
+    <tbody>
+      <tr>
+        <th>Name:</th>
+        <td id="cp_val_name">LOADING...</td>
+      </tr>
+      <tr>
+        <th>Event:</th>
+        <td id="cp_val_event">BIRTH</td>
+      </tr>
+      <tr>
+        <th>Application No.:</th>
+        <td id="cp_val_regno">LOADING...</td>
+      </tr>
+      <tr>
+        <th>Submit Date:</th>
+        <td>
+          <div class="tooltip-new text-wrap level-name">
+            <span id="cp_val_doi">--/--/----</span>
+            <div class="tooltiptext" id="cp_val_doi_tip">--/--/----</div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th>Event Date:</th>
+        <td id="cp_val_dob">--/--/----</td>
+      </tr>
+      <tr>
+        <th>Status:</th>
+        <td id="cp_val_status">Certificate Generated</td>
+      </tr>
+      <tr>
+        <th>Action:</th>
+        <td>
+          <input type="hidden" id="prcsDefCodeVal" value="">
+          <input type="hidden" id="checkPaymentEligible" value="">
+          <a class="btn btn-success btn-sm" href="javascript:void(0);" id="btnDownloadCertPdf" onclick="window.downloadDobDelhiCertificatePdf()">
+            <i class="fa fa-download"></i><span id="btnDownloadCertText">Download</span>
+          </a>
+          <a class="btn btn-info btn-sm" href="javascript:void(0);" id="viewCertificate" onclick="window.openCertificateDetailsModal()">
+            <i class="fa fa-eye"></i>View 
+          </a>
+        </td>
+      </tr>
+    </tbody>
+    
+    
+    
+    
+    
+  </table>
+</div>		
+							
+							
+							
+							
+							
+							</div>
+							</div>
+		
+		</div>
+		</div>
+		</div>
+		</div>
+		</div>
+		</div>
+		
+		
+		 <div class="modal fade" id="certificateModalDeath" tabindex="-1" role="dialog" aria-labelledby="certificateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document"> <!-- Increased modal size -->
+        <div class="modal-content border-primary"> <!-- Added border color -->
+            <div class="modal-header bg-info text-white">
+                <h3 class="modal-title" id="certificateModalLabel" style="flex: 1; text-align: left;">Certificate Details</h3> <!-- Left-aligned title -->
+               <button type="button" class="btn" data-dismiss="modal">X</button>
+            </div>
+            <div class="modal-body">
+                <div>
+                
+                <div class="certificate-box">
+  <div class="certificate-row">
+    <div class="certificate-label">Registration No:</div>
+    <div class="certificate-value">MCDOLIR-2219-007395634</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Name:</div>
+    <div class="certificate-value"></div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Gender:</div>
+    <div class="certificate-value">MALE</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Date Of Death:</div>
+    <div class="certificate-value"></div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Name of Mother:</div>
+    <div class="certificate-value"></div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Name of Father:</div>
+    <div class="certificate-value"></div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Place Of Death:</div>
+    <div class="certificate-value"></div>
+  </div>
+
+ 
+
+  <div class="certificate-row">
+    <div class="certificate-label">Permanent Address:</div>
+    <div class="certificate-value">2529,TIRAHA BEHRAM KHAN DARYA GANJ DELHI-110002</div>
+  </div>
+
+ 
+
+  <div class="certificate-row">
+    <div class="certificate-label">Date of Registration:</div>
+    <div class="certificate-value">2/8/2019</div>
+  </div>
+</div>
+
+                 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		 <div class="modal fade" id="certificateModal" tabindex="-1" role="dialog" aria-labelledby="certificateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document"> <!-- Increased modal size -->
+        <div class="modal-content border-primary"> <!-- Added border color -->
+            <div class="modal-header bg-info text-white">
+                <h3 class="modal-title" id="certificateModalLabel" style="flex: 1; text-align: left;">Certificate Details</h3> <!-- Left-aligned title -->
+               <button type="button" class="btn" data-dismiss="modal">X</button>
+            </div>
+            <div class="modal-body">
+                <div>
+                
+                <div class="certificate-box">
+  <div class="certificate-row">
+    <div class="certificate-label">Registration No:</div>
+    <div class="certificate-value" id="mod_val_regno">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Name:</div>
+    <div class="certificate-value" id="mod_val_name">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Gender:</div>
+    <div class="certificate-value" id="mod_val_gender">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Date Of Birth:</div>
+    <div class="certificate-value" id="mod_val_dob">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Name of Mother:</div>
+    <div class="certificate-value" id="mod_val_mother">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Name of Father:</div>
+    <div class="certificate-value" id="mod_val_father">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Place Of Birth:</div>
+    <div class="certificate-value" id="mod_val_pob">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Present Address:</div>
+    <div class="certificate-value" id="mod_val_presaddr">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Permanent Address:</div>
+    <div class="certificate-value" id="mod_val_permaddr">--</div>
+  </div>
+
+  <div class="certificate-row">
+    <div class="certificate-label">Date Of Registration:</div>
+    <div class="certificate-value" id="mod_val_dor">--</div>
+  </div>
+</div>
+
+                 
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+		
+		
+		
+		<form id="viewPDFFormId"  action="web/citizen/hospital/certificate" method="get">
+<!-- <input type="hidden" name="documnetGuidID" id="documnetGuidIDdwn"> -->
+<input type="hidden" name="certreqinfoguid" id="certreqinfoguid">
+<input type="hidden" name="requesttype" id="requesttype">
+</form>
+		</section>
+		<!-- model -->
+ <!-- <div   class="modal" id="recipt">
+  <div class="modal-dialog modal-lg" >
+    <div class="modal-content">
+      Modal Header
+      <div id="printReport" class="container">
+       <div class="modal-header"> 
+        
+       </div> 
+      Modal body
+      <div class="modal-body" >
+		 <div class="card-body" >
+	      	<div class="row"  id="receiptBody">
+	     	</div>
+	     </div>
+      </div>
+    </div>
+      Modal footer
+      <div class="modal-footer">
+      		<button onclick="printDivReport()" type="button" class="btn btn-primary">Print</button>
+	        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div> -->
+
+
+<script>
+        document.getElementById('viewCertificate').addEventListener('click', function () {
+            $('#certificateModal').modal('show');
+        });
+    </script>
+    
+    <script>
+        document.getElementById('viewCertificateDeath').addEventListener('click', function () {
+            $('#certificateModalDeath').modal('show');
+        });
+    </script>
+		
+ <script src="static/js/jquery.min.js"></script> 		
+		<script>
+		$( document ).ready(function() {      		   
+			 $("div").removeClass("main");
+		    }); 
+		
+		function callViewPDF(requesttype,certreqinfoguid){ 
+			/*  $("#documnetGuidID").val(Encrypt(citizenGuidID)); */
+			$("#certreqinfoguid").val(Encrypt(certreqinfoguid));
+			$("#requesttype").val(Encrypt(requesttype));	
+			$("#viewPDFFormId").submit(); 	
+		}
+		/* function vDetail(reqttype,certguid){
+			verifyDetail(reqttype,certguid);
+			$('#recipt').modal('show')	;	
+		} */
+		/* function verifyDetail(reqttype,certguid){
+			var certreqinfoguid= Encrypt(certguid);
+			var requesttype =Encrypt(reqttype);
+		
+			$('#receiptBody').empty();
+			$.ajax({
+				type : "GET",
+				url : "web/citizen/hospital/detailBirthRegistration",
+				contentType: "application/json",
+				dataType: "json",
+				data : {certreqinfoguid:certreqinfoguid,
+					requesttype:requesttype},
+				
+				success : function(res) {
+					alert(res);
+					 $('#receiptBody').append("<div id='logo' class='col-md-2 col-sm-2'>"
+						     +"<h1 class='logo'> <img height='100' width='100' src='static/dist/img/southDownload.jpg' alt='Home'> </h1></div>"
+						     +"<div><h4 style='text-align:center;'>SOUTH DELHI MUNICIPAL CORPORATION</h4><h5 style='text-align:center;'>BIRTH CERTIFICATE DETAILS</h5></div>"			         			         
+							 +"<table border='2px' style='margin-left: 100px;'><tbody>"
+							 +"<tr><td>Registration Number</th><td>"+(res.birth_registration_number)+"</td></tr>"
+						     +"<tr><td>Application Number</th><td>"+(res.birth_certificate_number)+"</td></tr>"
+						     +"<tr><td>Father Name</th><td>"+ (res.fathername)+"</td></tr>"
+						     +"<tr><td>Mother Name</th><td>"+ (res.mothername)+"</td></tr>"
+						     +"<tr><td>Parent's Mobile Number</th><td>"+ (res.parentmobilenumber)+"</td></tr>"				     
+							 +"<tr><td>Hospital Name</th><td>"+ (res.hospitalname)+"</th></tr>"
+							 +"<tr><td>Colony Name</th><td>"+ (res.colonyname)+"</td></tr>"
+							 +"<tr><td>Birth Type</th><td>"+ (res.typeOfBirth)+"</td></tr>" 
+							 +"<tr><td>Date of Birth</th><td>"+ (res.dob)+"</td></tr>"
+							 +"<tr><td>Child Name</th><td>"+ (res.issueTo)+"</td></tr>"   
+							 +"<tr><td>Gender</td><td>"+ (res.gender)+"</td></tr><tr><td style='text-align:left;'>Birth Weight:</td><td>"+ (res.birthWeight)+"</td></tr>"
+							 +"<tr><td>Ward name:</td><td>"+ (res.birthPlaceAddressWardName)+"</td></tr>"
+							 +"<tr><td>Birth Place name:</td><td>"+ (res.birthPlaceName)+"</td></tr>"
+							 +"<tr><td>Zone Name</td><td>"+ (res.birthPlaceAddressZoneName)+"</td></tr>"	
+							 +"<tr><td>Event Type</td><td>"+ (res.addupdaterequesttype)+"</td></tr>"
+							 +"</tbody></table><p class='leads text-left text-red'><br><i class='fa fa-star-o'></i><b>Note : For information of all concerned that the Birth Certificate Issued has been generated by the system and hence require no signature.</b></p>"
+							 +"<div  style='text-align:center;'><a href=web/admin/rbd/rbdpdfdownload?certGuid="+guid+"&code=birth target='_blank'>Download Certificate</a></div>");
+				}
+						}); 
+			
+			
+			
+		} */
+		</script>
+	</div>
+ 	 <div>	
+		
+
+
+
+<link rel="stylesheet" href="static/css/menu-style.css">
+
+<style>
+
+
+</style>
+<!--start   menu bar  -->
+<!-- <div class="toggleicons">
+<i class="fa fa-bars fa-3x Show" aria-hidden="true" style="display:none;"></i>
+<i class="fa fa-close fa-3x Hide" aria-hidden="true" ></i>
+</div> -->
+<div class="togglesidebar">
+	<div>
+		<!--  <ul class="togglediv">
+			 <li><span class="title-hide"><i class="fa fa-bars ml-4"></i></span> 
+			
+		</ul>  -->
+		<ul class="togglediv" title="Registration of Birth & Death">
+		<li><span class="Show" style="display:none;">RBD</span> <span class="Hide">Registration of Birth & Death </span>	</li>
+			
+		</ul>
+		 <input type="hidden" id="isBirthCountMax" value =""/>					
+		<input type="hidden" id="isDeathCountMax" value = ""/>
+		<input type="hidden" id="isStillBirthCountMax" value = ""/> 
+		<div class="page-wrapper chiller-theme toggled">
+			<nav id="sidebar1" class="sidebar-wrapper">
+				<div class="sidebar-content">
+					<div class="sidebar-menu">
+						<ul>
+							
+						</ul>
+					</div>
+				</div>
+			</nav>
+		</div>
+	</div>
+</div>
+ <!--  mobile view of - if menu name text long and mouse over icons  -->
+ <script src="static/js/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+	  if ($(window).width() <= 767) {
+	    // Collapse by default
+	    $('.togglesidebar').css({
+	      "width": "57px",
+	      "white-space": "normal"
+	    });
+	    $('.sidebar-menu span').hide(); // Hide text in sidebar
+	    $('.Show').show();
+	    $('.Hide').hide();
+	    $('.main.active').css("padding-left", "60px");
+	    $('.toggleicons').css("width", "57px");
+	  } else {
+	    // Desktop behavior (hover)
+	    $(".togglesidebar").mouseover(function () {
+	      $('.togglesidebar').css("white-space", "normal");
+	      $('.togglesidebar ul li a span').css("white-space", "normal");
+	    });
+
+	    $(".togglesidebar").mouseout(function () {
+	      $('.togglesidebar').css("white-space", "");
+	      $('.togglesidebar ul li a span').css("white-space", "");
+	    });
+	  }
+
+	  // Show icon click - expand menu
+	  $('.Show').click(function () {
+	    $('.togglesidebar').css("width", "250px");
+	    $('.main.active').css("padding-left", "250px");
+	    $('.toggleicons').css("width", "250px");
+	    $('.sidebar-menu span').show();
+	    $('.Show').hide();
+	    $('.Hide').show();
+	  });
+
+	  // Hide icon click - collapse menu
+	  $('.Hide').click(function () {
+	    $('.togglesidebar').css("width", "57px");
+	    $('.main.active').css("padding-left", "60px");
+	    $('.toggleicons').css("width", "57px");
+	    $('.sidebar-menu span').hide();
+	    $('.Show').show();
+	    $('.Hide').hide();
+	  });
+	});
+
+
+
+/*  $(document).ready(function(){
+	  if ($(window).width() > 767) {
+	 $(".togglesidebar").mouseover(function(){
+	   $('.togglesidebar').css("white-space", "normal"); 
+	    $('.togglesidebar ul li a span').css("white-space", "normal"); 
+	  });
+	  
+	
+	  $(".togglesidebar").mouseout(function(){
+	   $('.togglesidebar').css("white-space", ""); 
+	    $('.togglesidebar ul li a span').css("white-space", ""); 
+	  });
+	  }
+	   if ($(window).width() <= 767) {
+		  $('.togglesidebar').css("white-space", "normal"); 
+		  $('.togglesidebar ul li a span').css("white-space", "normal"); 
+		 } 
+	});  
+	
+	///click on menu icon and toggle the menu list 	
+	$('.Show').click(function() {
+	//	alert("The menu show.");
+    $('.togglesidebar').show(500);
+   $('.Show').hide(0);
+    $('.Hide').show(0);
+   $('.togglesidebar').css("width", "250px"); 
+   $('.main.active').css("padding-left", "250px"); 
+   $('.toggleicons').css("width", "250px"); 
+});
+$('.Hide').click(function() {
+  // $('.togglesidebar').hide(500);
+    $('.Show').show(0);
+   $('.Hide').hide(0);
+   $('.togglesidebar').css("width", "57px"); 
+    $('.main.active').css("padding-left", "60px"); 
+    $('.toggleicons').css("width", "57px");    
+    $('.togglesidebar').css("white-space", "normal"); 
+	  $('.togglesidebar ul li a span').css("white-space", "normal"); 
+}); */
+
+
+</script>
+
+	</div>  
+	
+	<!-- </section> -->
+	</div>
+	
+	
+		<!-- FOOTER -->
+		<footer>  
+		
+		<div class="copyright">
+			<div class="container-fluid">
+				<div class="row">
+            <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 footer-Disclaimer">
+                <span> Disclaimer </span>
+          </div>
+					 <div class=" col-lg-4 col-md-5 col-sm-12 col-xs-12 copyrighttext ">
+						<p class="disclamer1">
+            	
+                <a class="compect footetextcolr" data-toggle="modal" data-target="#myModal">Compatible Browsers</a><br/>
+                 Copyright © 2020 
+							
+						</p>
+					</div> 
+
+
+					<div class="col-lg-8 col-offset-lg-1 col-md-5 col-sm-12 col-xs-12 officaltext ">
+					
+					<p class="disclamer1"> 		
+					Website Content Managed by Municipal Corporation Of Delhi	 , 
+					<a data-toggle="modal" data-target="#webinfodetailModal">Web Information Manager</a>
+					<br> Designed, Developed and Hosted by&nbsp;<a href="https://www.nic.in/" target="_blank" onclick="return confirm('You are moving out of http://mcdonline.nic.in. Do you wish to continue?')">National Informatics Centre( NIC )</a>,
+					 <a href="https://meity.gov.in/" target="_blank" onclick="return confirm('You are moving out of http://mcdonline.nic.in. Do you wish to continue?')">Ministry of Electronics &amp; IT (MeitY) </a>  										
+				<!-- 	<br><a class="compect footetextcolr" data-bs-toggle="modal" data-bs-target="#browsercompact">Compatible Browsers</a> Copyright © 2020  -->
+					</p>
+			
+					
+					</div> 
+				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 text-center">
+					   <p class="disclamer1" style="color: yellow !important;"> 	
+						We are committed to serve you better by improving the website on day-to-day basis 
+						 from the experiences and feedback we receive  from you. For that,  maintenance time has been fixed up 
+						 from 11 PM to 12 AM daily.  Inconvenience regretted.								
+								<img src="static/images/new-star.gif">  														
+							</p>
+					</div>
+			</div>
+			</div>
+		</div>
+		
+		</footer>
+
+		
+	<div class="backtotop-wrapper">
+
+        <a href="javascript:void(0);" class="back-to-top" title="Scroll to top"><span
+                class="fa fa-angle-up"></span><span class="hidden">Back to Top of the Page</span></a>
+    </div>
+    
+<!-- <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" >
+ -->	  
+<script src="static/js/jquery.min.js"></script>
+	  
+	
+
+<script>
+///////24052020/////////
+$(document).ready(function () {
+$('.toggle').click(function () {
+$('.help-desk').toggleClass('active');
+$('.toggle').toggleClass('active');
+});
+});
+//# sourceURL=pen.js
+
+
+</script>
+	<!-- Javascript files-->
+	
+<script src="static/js/jquery.min.js"></script>
+<script src="static/js/jquery.ui.min.js"></script>
+<script src="static/js/popper.min.js"></script>
+<script src="static/js/bootstrap.min.js"></script>
+<script src="static/js/bootbox.min.js"></script>
+<script type="text/javascript" src="static/js/jquery.tcg-elevator.min.js"></script>
+<script type="text/javascript" src="static/js/main.js"></script>
+<!-- <script src="static/js/bootstrap-datepicker.js"></script> -->
+<script src="static/js/moment.min.js"></script>
+<script src="static/js/bootstrap-datetimepicker.min.js"></script>
+<script type="text/javascript" src="static/js/datatables.min.js"></script>
+<script src="static/js/jquery.scrollTo.min.js"></script>
+<!-- <script src="static/js/front.js"></script>
+ -->
+<!--  <script src="static/js/jquery.dataTables.min.js"></script> -->
+<script type="text/javascript" src="static/js/pdfmakedt.min.js"></script>
+<script type="text/javascript" src="static/js/vfs_fonts.js"></script>
+
+
+<script src="static/js/select2.min.js"></script>
+
+<script type="text/javascript" src="static/js/daterangepicker.min.js"></script>
+
+<script src="static/app-js/common-validation.js"></script>
+	<script src="static/js/customized.js"></script>
+<!-- <script src="static/js/jspdf.min.js"></script>
+<script src="static/js/jspdf.plugin.autotable.min.js"></script> -->
+<!-- <script src="static/js/tableHTMLExport.js"></script> -->
+<!-- <script src="static/js/pdfmake.min.js"></script> -->
+<!-- <script src="static/js/pdfmake.min.js"></script> -->
+
+
+
+
+
+
+
+
+
+
+<div style="display: none">
+ <!-- different section will be made for particular service -->
+ <!-- GTL instructon and guidelines start -->
+<div id="gtlInstructionGuidelinesAll">
+<div class="row mb-4" >	
+		
+			<div id="gtlInstructionGuidelinesInstruction" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+				<div class="card card_shadow">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-sticky-note-o"></i> Important instructions 
+						</h3>
+					</div>
+
+					<div class="card-body cardheight">
+						<!-- <h3 class="notes">Note :-</h3>
+						<h5 class="navlinkBox">
+							<br> You represent, warrant and covenant that your use of
+							the Website shall not:
+						</h5> -->
+
+						<ul class="nav nav-pills flex-column text-sm ulPils">
+							<li class="nav-item"><a class="nav-link" href ='web/citizen/property/doDownloadManualPTRForm'  target="_blank">
+							 <span class="navlinkBox"> <i class="fa fa-download"></i> Manual PTR Form FY 2020-21  </span></a>
+									 </li>
+									  <li -class="nav-item"><a class="nav-link" href = 'web/citizen/property/doDownloadAnnexure'  target="_blank">
+							 <span class="navlinkBox"> <i class="fa fa-download"></i> Annexure FY 2020-21 </span></a>
+									 </li>
+						    
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> All taxpayers must file the property tax through Municipal Corporation of Delhi portal only.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Taxpayers must submit the correct details during Self-Financial.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Registration on MCD portal is mandatory for all .
+
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Taxpayers must have a UPIC (Unique Property Identification Code). In case of new property taxpayer should obtain the same by “” Apply for New UPIC” module.
+									  
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Tax Payments can be made online using Net Banking / Master/VISA Debit/Credit Card facility.
+									
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Download the tax payment receipt for future reference.
+									
+							</a></li>										
+						</ul>
+					</div>
+				</div>
+			</div>
+			
+			<div  id="gtlInstructionGuidelinesGuideline" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+				<div class="card card_shadow">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-angle-double-right"></i>  General Guidelines
+						</h3>
+					</div>
+					<div class="card-body cardheight">
+					<h5 class="greentxt"> <b> Kindly Read SOP and User Manual before start :</b></h5>
+						<ul class="nav nav-pills flex-column text-sm">							
+							 <li class="nav-item"><a class="nav-link" href = 'web/citizen/property/doDownloadPtrSop'  target="_blank">
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read  (SOP) to understand flow of  Tax Form filling </span> </a>
+									 </li>
+							 <li class="nav-item"><a class="nav-link" href = 'web/citizen/property/doDownloadPtrUsermanual'  target="_blank">
+							 <span class="navlinkBox"> <i class="fa fa-download"></i>"Read” (User Manual) </span></a>
+									 </li>
+									 <li class="nav-item">
+						<a class="nav-link" href = 'web/citizen/property/doDownloadPtrRulebook'  target="_blank">
+						<span class="navlinkBox"><i class="fa fa-download"></i>  Property Tax Calculation  Parameters </span></a></li>
+						<li class="nav-item">
+						<a class="nav-link" href = 'web/citizen/property/doDownloadNewUpic'  target="_blank">
+						<span class="navlinkBox"><i class="fa fa-download"></i>  Help(Apply for new UPIC Video) </span></a></li>
+						<li class="nav-item">
+						<a class="nav-link" href = 'web/citizen/property/doDownloadPropertyTaxHelp'  target="_blank">
+						<span class="navlinkBox"><i class="fa fa-download"></i>  Help(Edit Property & Owner Details And Pay Tax Video) </span></a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i>  During scrutiny, if department finds any difference in the tax declaration, the penalty would be applicable as per rules. </a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i>  The department would not be responsible for multiple payments made by a taxpayer for a single property. </a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i>  Taxpayer can avail rebate of 15% (Advance tax payment rebate) by paying tax before 30th June of current FY.  </a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i> Taxpayer can avail a rebate of 2% as an “Online payment rebate” for residential property and Tax up to Rs. 10,000./- </a></li>
+							
+						</ul>
+					</div>
+					
+
+				</div>
+			</div>
+			
+		</div>
+		
+</div>		
+<!-- <!-- GTL instructon and guidelines end -->-->
+<!-- ptr instructon and guidelines start -->
+<div id="ptrInstructionGuidelinesAll">
+<div class="row mb-4">
+		
+			<div  id="ptrInstructionGuidelinesInstruction" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+				<div class="card card_shadow">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-sticky-note-o"></i> Important instructions 
+						</h3>
+					</div>
+
+					<div class="card-body cardheight">
+						<!-- <h3 class="notes">Note :-</h3>
+						<h5 class="navlinkBox">
+							<br> You represent, warrant and covenant that your use of
+							the Website shall not:
+						</h5> -->
+
+						<ul class="nav nav-pills flex-column text-sm ulPils">
+							<li class="nav-item"><a class="nav-link" href ='web/citizen/property/doDownloadManualPTRForm'  target="_blank">
+							 <span class="navlinkBox"> <i class="fa fa-download"></i> Manual PTR Form FY 2020-21  </span></a>
+									 </li>
+									  <li -class="nav-item"><a class="nav-link" href = 'web/citizen/property/doDownloadAnnexure'  target="_blank">
+							 <span class="navlinkBox"> <i class="fa fa-download"></i> Annexure FY 2020-21 </span></a>
+									 </li>
+						    
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> All taxpayers must file the property tax through Municipal Corporation of Delhi portal only.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Taxpayers must submit the correct details during Self-Financial.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Registration on MCD portal is mandatory for all .
+
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Taxpayers must have a UPIC (Unique Property Identification Code). In case of new property taxpayer should obtain the same by “” Apply for New UPIC” module.
+									  
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Tax Payments can be made online using Net Banking / Master/VISA Debit/Credit Card facility.
+									
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i
+									class="fa fa-caret-right"></i> Download the tax payment receipt for future reference.
+									
+							</a></li>
+							<!-- <li class="nav-item"><a class="navlinksNote"> <i
+									class="fa fa-check-square"></i> All the payments should be made online through payment gateway. The taxpayer needs to have either Net Banking facility with any of the listed banks or Master/VISA Credit Card or Master/VISA Debit Card. 
+							</a></li> -->
+						
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div  id="ptrInstructionGuidelinesGuideline" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+				<div class="card card_shadow">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-angle-double-right"></i>  General Guidelines
+						</h3>
+					</div>
+					<div class="card-body cardheight">
+					<h5 class="greentxt"> <b> Kindly Read SOP and User Manual before start :</b></h5>
+						<ul class="nav nav-pills flex-column text-sm">							
+							 <li class="nav-item"><a class="nav-link" href = 'web/citizen/property/doDownloadPtrSop'  target="_blank">
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read  (SOP) to understand flow of  Tax Form filling </span> </a>
+									 </li>
+							 <li class="nav-item"><a class="nav-link" href = 'web/citizen/property/doDownloadPtrUsermanual'  target="_blank">
+							 <span class="navlinkBox"> <i class="fa fa-download"></i>"Read” (User Manual) </span></a>
+									 </li>
+									 <li class="nav-item">
+						<a class="nav-link" href = 'web/citizen/property/doDownloadPtrRulebook'  target="_blank">
+						<span class="navlinkBox"><i class="fa fa-download"></i>  Property Tax Calculation  Parameters </span></a></li>
+						<li class="nav-item">
+						<a class="nav-link" href = 'web/citizen/property/doDownloadNewUpic'  target="_blank">
+						<span class="navlinkBox"><i class="fa fa-download"></i>  Help(Apply for new UPIC Video) </span></a></li>
+						<li class="nav-item">
+						<a class="nav-link" href = 'web/citizen/property/doDownloadPropertyTaxHelp'  target="_blank">
+						<span class="navlinkBox"><i class="fa fa-download"></i>  Help(Edit Property & Owner Details And Pay Tax Video) </span></a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i>  During scrutiny, if department finds any difference in the tax declaration, the penalty would be applicable as per rules. </a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i>  The department would not be responsible for multiple payments made by a taxpayer for a single property. </a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i>  Taxpayer can avail rebate of 15% (Advance tax payment rebate) by paying tax before 30th June of current FY.  </a></li>
+							<li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i> Taxpayer can avail a rebate of 2% as an “Online payment rebate” for residential property and Tax up to Rs. 10,000./- </a></li>
+							<!-- <li class="nav-item"><a class="nav-link"><i
+									class="fa fa-caret-right"></i>  The department would not be responsible for double/multiple payments of the tax by the taxpayer.</a></li>
+							 -->
+						
+						</ul>
+					</div>
+					
+
+				</div>
+			</div>
+		</div>
+</div>		
+<!-- ptr instructon and guidelines end -->
+
+<!-- rbd instructon and guidelines start -->
+<div id="rbdInstructionGuidelinesAll">
+<div class="row">			
+			<div id="rbdInstructionGuidelinesInstruction" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+					<div class="card card_shadow cardheight">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-sticky-note-o"></i> To Know Important Instructions while filling Birth and Death Form
+						</h3>
+					</div>
+
+					<div class="card-body " id="rbdInstructionGuidelinesContent">
+						<!-- <p class="text-left"><span class="notes">Note :-</span><span class="navlinkBox">
+							 You represent, warrant and covenant that your use of the Website shall not:
+
+						</span></p> -->
+						<ul class="nav nav-pills flex-column text-sm ulPils">
+							<!-- <li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Preferably,use your Aadhaar linked mobile number for Signup and registration of Birth/Death. You will receive SMS on the registered mobile number.
+							</a></li> -->
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i>  You may choose the valuable option for registration of birth & death and subsequently submission of details thereof.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Ensure that the request for birth/death registration is applied to the zone where the event (birth/death) has taken place. Applying to an incorrect zone might lead to rejection of the request.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Minor corrections in name spelling may be applied for.
+							</a></li>
+							<!-- <li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Time bonded needed documents, for birth registration are - undertaking/ notary affidavit/ SDM order and for death registration are – undertaking/ notary affidavit/ SDM order & cremation/ Burial ground certificate.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Amount should to be paid by online mode, if applied after 21 days of occurrence.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Application number or Registration number will be generated and received by applicant by SMS/E-mail.
+							</a></li> -->
+						</ul>
+						
+						<table class="table table-bordered table-hover " style="font-size:14px;">
+						<tr>
+						<th colspan="4" class="text-center">Detail of Late Fees Structure and Documents Required</th>
+						</tr>
+  <tr>
+    <th>Duration (Start from Event)</th>
+    <th>Late/Fee(Non-Refundable)</th>
+    <th>Birth /Still Birth Registration</th>
+    <th>Death Registration</th>
+  </tr>
+  <tr>
+    <td class="text-bold">Within 21 Days</td>
+    <td>NIL</td>
+    <td rowspan="3">UID of Informant and Father & Mother, Undertaking</td>
+    <td rowspan="3">Undertaking, UID of Informant and Deceased, Cremation / Burial Ground Receipt</td>
+    
+  </tr>
+  <tr>
+    <td class="text-bold">From 22nd day till completion of 1 month from the event</td>
+    <td>Rs 2/- only</td>
+   
+        
+  </tr>
+  <tr>
+    <td class="text-bold">After 1 month to 1 year from the event</td>
+    <td>Rs 5/- only</td>
+       
+  </tr>
+  <tr>
+    <td class="text-bold">After 1 year from the event</td>
+    <td>Rs 10/- only</td>
+    <td>UID of Informant and Father & Mother, SDM order Copy</td>
+    <td> UID of Informant and Deceased, Cremation / Burial Ground Receipt , SDM order Copy</td>    
+  </tr>
+   <tr>
+    <td class="text-bold">Name Addition</td>
+    <td>(After 1 Year)
+      Rs 10/- only
+</td>
+    <td>Within 15 Years of Birth
+
+ UID of Father andMother
+    </td>
+    <td>After 15 Years of Birth
+
+UID of Child
+    </td>    
+  </tr>
+   <tr>
+    <td class="text-bold">Corrections</td>
+    <td>NIL</td>
+    <td colspan="2">UID of Father and Mother
+    <br>
+Supported document of change such as Address proof in case of address change
+    </td>
+       
+  </tr>
+  
+</table>
+					</div>
+				</div>
+			</div>
+			<div id="rbdInstructionGuidelinesGuideline" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+			<div class="card card_shadow cardheight">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-angle-double-right"></i> General Guidelines
+						</h3>
+					</div>
+					<div class="card-body " id="rbdGuidelinesContent">
+					<!-- <h5 class="greentxt"> <b> Kindly Read SOP and User Manual before start :</b></h5> -->
+						<ul class="nav nav-pills flex-column text-sm">
+
+
+						<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/hosregform'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Download Hospital Registration Form” </span> </a>
+							</li>
+						<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/creregform'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Download Crematorium/Burial Ground Registration Form” </span> </a>
+							</li>
+						 <li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/rbdsop'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read SOP(English Format) to understand flow of Birth and Death Registration” </span> </a>
+							</li>
+							<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/rbdsophindi'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read SOP(Hindi Format) to understand flow of Birth and Death Registration” </span> </a>
+							</li>
+
+
+<!-- 							 <li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/hossop'> -->
+<!-- 							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read SOP to understand flow of Birth and Death Registration hos” </span> </a> -->
+<!-- 							</li> -->
+
+						 <!-- <li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/consolidatedsop'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read Consolodiated SOP” </span> </a>
+							</li>
+							<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/mcdsop'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read SOP For MCD OFFCIALS” </span> </a>
+							</li> -->
+							<!-- <li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/crsmanual'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read User Manual” </span> </a>
+							</li> -->
+							<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/rbdact'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“RBD Act” </span> </a>
+							</li>
+							
+							 <li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/rbddoclist'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Documents are to be submitted for Registration of Birth and Death” </span> </a>
+							</li> 
+							<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/deathCertificate'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“How to REGISTER AND download Death certificate” </span> </a>
+							</li>
+							<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/birthCertificateAfter'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Name addition for the birth event after 01.04.2021, Information on generating name added Birth certificate.” </span> </a>
+							</li>
+							<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/birthCertificateBefore'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Name addition for the birth event before 01.04.2021, Information on generating name added Birth certificate” </span> </a>
+							</li>
+							
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> For Hospital/ Institutional Birth/ Death, Informant Doctor will register.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> For Domiciliary Birth/ Death, Informant Citizen will register</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Fill all the details as per the prescribed form online.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Check filled-in details before payment and submission of the form. </a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Pay the applicable fees online using Debit/Credit card etc.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> In addition to SMS, also note-down the system generated Registration Number for subsequent usage.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Printout of submitted report-form may also be taken after successful submission</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Printout of certificate issued after approval of MCD officials may be taken </a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> UID Can be -Ration Card/ Election Id Card/ Original Certificate from two Credible Person/ Aadhar card/ Passport/ Marriage Certificate/ Service Id Card/ CGHS/ESI Card/ Bank Documents (Passbook, Fd. etc) / Adoption deed/ ANC Card/ Child Vaccination card. </a></li>
+						    <li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> However, for more information about the system informant may go through the provisions of RBD Act.</a></li>											
+						</ul>
+					</div>
+
+				</div>
+			</div>
+		</div>	
+		</div>
+		<!-- rbd instructon and guidelines end -->
+		
+		
+		<!-- hospital instructon and guidelines start -->
+<div id="hosInstructionGuidelinesAll">	
+		<div class="row mb-4">
+		<div id="hosInstructionGuidelinesInstruction" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+					<div class="card card_shadow cardheight">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-sticky-note-o"></i> To Know Important Instructions while filling Birth and Death Form
+						</h3>
+					</div>
+
+					<div class="card-body "  id="hosInstructionGuidelinesContent">
+						<!-- <p class="text-left"><span class="notes">Note :-</span><span class="navlinkBox">
+							 You represent, warrant and covenant that your use of the Website shall not:
+
+						</span></p> -->
+						<ul class="nav nav-pills flex-column text-sm ulPils">
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Registration for MCD hospital is valid for 1800 days  where as  for Govt. / Private Super specialty / Private General hospitals is 365 days.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Registration and Renewal fees will be calculated based on number of events
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Use Hospital’s official email id  as  user id for registration purpose.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> On successful login choose relevant option for registration of Birth / Death.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Outgoing MS will hand over login id and password to the successor .
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> MS may Add/ Edit/ Activate/ Deactivate Informant/ Approver Doctor’s details.
+							</a></li> 
+						</ul>
+						
+						<table class="table table-bordered table-hover ">
+						<tr>
+						<th colspan="4" class="text-center">Detail of Late Fees Structure and Documents Required</th>
+						</tr>
+  <tr>
+    <th>Duration (Start from Event)</th>
+    <th>Late/Fee(Non-Refundable)</th>
+    <th>Birth /Still Birth Registration</th>
+    <th>Death Registration</th>
+  </tr>
+  <tr>
+    <td class="text-bold">Within 21 Days</td>
+    <td>NIL</td>
+    <td rowspan="3">UID of Father & Mother, Undertaking</td>
+    <td rowspan="3">Undertaking, UID of Informant and Deceased, Medical Certificate of Doctor (cause Of Death)</td>
+    
+  </tr>
+  <tr>
+    <td class="text-bold">From 22nd day till completion of 1 month from the event</td>
+    <td>Rs 2/- only</td>
+   
+        
+  </tr>
+  <tr>
+    <td class="text-bold">After 1 month to 1 year from the event</td>
+    <td>Rs 5/- only</td>
+       
+  </tr>
+  <tr>
+    <td class="text-bold">After 1 year from the event</td>
+    <td>Rs 10/- only</td>
+    <td>UID of Father & Mother, SDM order Copy</td>
+    <td> UID of Informant and Deceased, Medical Certificate of Doctor (cause Of Death),SDM Order Copy</td>    
+  </tr>
+   <tr>
+    <td class="text-bold">Hospital Registration / Renewal</td>
+    <td colspan="3">Docs Required   – DGHS Reg. Certificate, DMC Reg., Ownership / Appointment Letter , UID of MS
+</td>
+       
+  </tr>
+   <tr>
+    <td class="text-bold">MS Detail Updation</td>   
+    <td colspan="3">
+    Docs Required  – UID of MS , MCI Registration ,
+Appointment Letter
+    
+    </td>
+       
+  </tr>
+  
+</table>
+					</div>
+				</div>
+			</div>
+			
+			
+				<div id="hosInstructionGuidelinesGuideline" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+		<div class="card card_shadow cardheight">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-angle-double-right"></i> General Guidelines
+						</h3>
+					</div>
+					<div class="card-body " style="height:450px" id="hosGuidelinesContent">
+					<!-- <h5 class="greentxt"> <b> Kindly Read SOP and User Manual before start :</b></h5> -->
+						<ul class="nav nav-pills flex-column text-sm">
+						<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/hossop'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read SOP to understand flow of Birth and Death Registration” </span> </a>
+							</li>
+							
+						<li class="nav-item"><a class="nav-link" href = 'web/citizen/hospital/downloadRBDdocuments/rbdact'>
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“RBD Act” </span> </a>
+							</li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> For Hospital/ Institutional Birth/ Death Informant Doctor will register.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Fill all the details as per the prescribed form online.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Check filled-in details before payment& submission of the form.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Pay the applicable fees online using Debit/ Credit card etc.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Printout of submitted report-form may also be taken after successful submission.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Printout of certificate issued may be provided to citizen.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> UID Can be -Ration Card/ Election Id Card/ Original Certificate from two Credible Person/ Aadhar card/ Passport/ Marriage Certificate/ Service Id Card/ CGHS/ESI Card/ Bank Documents (Passbook, Fd. etc) / Adoption deed/ ANC Card/ Child Vaccination card.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> However, for more information about the system informant may go through the provisions of RBD Act.</a></li>
+						</ul>
+					</div>
+
+				</div>
+			</div>
+		</div>
+</div>
+<!-- Hospital instructon and guidelines end -->
+
+
+<!-- ftl instructon and guidelines start -->
+<div id="ftlInstructionGuidelinesAll">
+	<div  class="row mb-4">
+		<div  id="ftlInstructionGuidelinesInstruction" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+				<div class="card card_shadow">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-sticky-note-o"></i> To Know Important Instructions while filling Factory License
+						</h3>
+					</div>
+
+					<div class="card-body cardheight">
+						<!-- <p class="text-left"><span class="notes">Note :-</span><span class="navlinkBox">
+							 You represent, warrant and covenant that your use of the Website shall not:
+
+						</span></p> -->
+						<ul class="nav nav-pills flex-column text-sm ulPils">
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i>	All industrial unit Applicant must apply for factory license through MCD portal only.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Applicants must submit correct details online in application formats.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Registration of users/applicants is mandatory for all.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i> Relevant provisions of DPCC, MPD-2021 and directions of Hon’ble Supreme Court of India  in the matter of MC Mehta Vs UOI & Ors  are necessarily to be complied with alongwith directions of Hon’ble NGT in various matters.
+							</a></li>
+							<li class="nav-item"><a class="nav-link"> <i class="fa fa-caret-right"></i>	Existing Labour Laws, Pollution Control Norms shall be applicable on all industrial units.
+							</a></li>
+							
+						</ul>					
+					
+					</div>
+				</div>
+			</div>
+			
+			
+	<div id="ftlInstructionGuidelinesGuideline" class="col-lg-6 col-md-12 col-sm-12 col-xs-12">
+				<div class="card card_shadow">
+					<div class="card-header leftpenl">
+						<h3 class="h4 panel-title">
+							<i class="fa fa-angle-double-right"></i> General Guidelines
+						</h3>
+					</div>
+					<div class="card-body cardheight">
+					<!-- <h5 class="greentxt"> <b> Kindly Read SOP and User Manual before start :</b></h5> -->
+						<ul class="nav nav-pills flex-column text-sm">
+						 <li class="nav-item"><a class="nav-link" href = 'web/citizen/doDownloadFtlSOP' target="_blank">
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read (SOP) to understand flow of Factory License </span> </a>
+							</li>
+						  <li class="nav-item"><a class="nav-link" href = 'web/citizen/doDownloadFtlUsermanual' target="_blank">
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“Read User Manual” </span> </a>
+							</li>
+							 <li class="nav-item"><a class="nav-link" href = 'web/FTL/downloadFTLdocuments/MPD-2021.pdf' target="_blank">
+							  <span class="navlinkBox"><i class="fa fa-download"></i>“MPD - 2021” </span> </a>
+							</li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> During scrutiny, if department finds any ambiguity in the application form, the application will be rejected and no refund of any fee will be made.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Factory Licensing Department will not be responsible for multiple payments made by any applicant through online payment gateway. The issue shall be liable to be resolved between banker and applicant only.</a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Applicants should download the payment receipts and copy of application for future reference. </a></li>
+							<li class="nav-item"><a class="nav-link"><i class="fa fa-caret-right"></i> Penalty, as per provisions, for late renewal shall be applicable after 30th April every year. </a></li>
+							<i class="fa fa-caret-right"></i> </a></li>
+							
+						</ul>
+					</div>
+
+				</div>
+			</div>
+		</div>
+</div>	
+<!-- FTL instructon and guidelines end -->
+</div>
+
+<link rel="shortcut icon" href="">
+  
+<script type="text/javascript">
+    function checkForDate() {
+        var fromDate = document.getElementById("filterfromdate").value;
+        var toDate = document.getElementById("filtertodate").value;
+        if (fromDate !== "" && toDate !== "") {
+            var fromParts = fromDate.split("/");
+            var toParts = toDate.split("/");
+            var fromDateObj = new Date(fromParts[2], fromParts[1] - 1, fromParts[0]); 
+            var toDateObj = new Date(toParts[2], toParts[1] - 1, toParts[0]);
+            if (fromDateObj > toDateObj) {
+                alert("From date cannot be later than To date. Please select a valid date range.");
+                document.getElementById("filterfromdate").value = "";
+                return false; 
+            }
+        }
+        return true; 
+    }
+    
+    
+    function checkToDate() {
+        var fromDate = document.getElementById("filterfromdate").value;
+        var toDate = document.getElementById("filtertodate").value;
+        if (fromDate !== "" && toDate !== "") {
+            var fromParts = fromDate.split("/");
+            var toParts = toDate.split("/");
+            var fromDateObj = new Date(fromParts[2], fromParts[1] - 1, fromParts[0]); 
+            var toDateObj = new Date(toParts[2], toParts[1] - 1, toParts[0]);
+            if (toDateObj  < fromDateObj) {
+                alert("To date cannot be earlier than From date. Please select a valid date range.");
+                document.getElementById("filtertodate").value = "";
+                return false; 
+            }
+        }
+        return true; 
+    }
+</script>
+
+
+<script type="text/javascript">
+
+	if(defaultTabIndex != '-1'){
+		$(document).ready(function(){
+			$('.nav-tabs li:eq('+defaultTabIndex+') a').tab('show');
+		});
+	}
+	function showTab(tabIndex){
+		$('.nav-tabs li:eq('+tabIndex+') a').tab('show');
+	}	
+</script>
+<script type="text/javascript">
+	function bootstrapTabControl() {
+		var i, items = $('.nav-lin'), pane = $('.tab-pane');
+		// next
+		$('.nexttab').on('click', function() {
+			for (i = 0; i < items.length; i++) {
+				if ($(items[i]).hasClass('active') == true) {
+					break;
+				}
+			}
+			if (i < items.length - 1) {
+				// for tab
+				$(items[i]).removeClass('active');
+				$(items[i + 1]).addClass('active');
+				// for pane
+				$(pane[i]).removeClass('show active');
+				$(pane[i + 1]).addClass('show active');
+			}
+		});
+
+		// Prev
+		$('.prevtab').on('click', function() {
+			for (i = 0; i < items.length; i++) {
+				if ($(items[i]).hasClass('active') == true) {
+					break;
+				}
+			}
+			if (i != 0) {
+				// for tab
+				$(items[i]).removeClass('active');
+				$(items[i - 1]).addClass('active');
+				// for pane
+				$(pane[i]).removeClass('show active');
+				$(pane[i - 1]).addClass('show active');
+			}
+		});
+	}
+	bootstrapTabControl();
+</script>
+<script type="text/javascript">
+	/* $(function() {
+		$("div[id$='DatePicker']").datepicker({
+			todayBtn : "linked",
+			language : "it",
+			autoclose : true,
+			todayHighlight : true,
+			format : 'dd/mm/yyyy',
+			endDate : new Date()
+		})
+	}); 
+	
+	 $(function() {
+		$("#dobDatePicker1").datepicker({
+			todayBtn : "linked",
+			language : "it",
+			autoclose : true,
+			todayHighlight : true,
+			format : 'dd/mm/yyyy',
+			endDate : '-13y'
+		})
+	}); */
+	
+////new code datetime pikcer 
+/* $(function() {
+		$("div[id$='DatePicker']").datepicker({
+	  alert("The paragraph was clicked.");
+	}) }); */
+	
+	
+
+	 $(function() {   
+		$('#dob3DatePicker').datetimepicker({
+	            "allowInputToggle": true,
+	            "showClose": true,
+	            "showClear": true,
+	            "showTodayButton": true,	           				
+	           // "format": "MM/DD/YYYY hh:mm:ss A",
+	            "maxDate": 'now',
+	            "format": "DD/MM/YYYY",
+	           
+	            
+	        });
+		});
+ 
+</script>
+<script type="text/javascript">
+function dateTableRefresh(){
+	$("table[id$='DataGrid']").DataTable({
+		"pagingType" : "full_numbers"
+	});
+}
+dateTableRefresh();
+function ajaxDateTableRefresh(){
+	$("table[id$='DataGridAjax']").DataTable({
+		"pagingType" : "full_numbers"
+	});
+}
+
+
+
+</script>
+<script type="text/javascript">
+function select2Refresh(){
+	$("select[id$='Select']").select2({
+       /* 	placeholder: "se", */
+       	allowClear: true
+	});
+}
+select2Refresh();
+
+
+//// in rbd and hospital add search in drop down
+ function rbdselect2Refresh(){
+	$(".js-states").select2({
+       
+	});
+}
+ function customSearchDropdown(){
+		$(".option-search").select2({
+	       
+		});
+	}
+
+$(document).ready(function() {
+	//rbdselect2Refresh();
+	customSearchDropdown();
+});
+
+</script>
+<script>
+$(document).on('mouseenter', ".iffyTip", function () {
+     var $this = $(this);
+     if (this.offsetWidth < this.scrollWidth && !$this.attr('title')) {
+         $this.tooltip({
+             title: $this.text(),
+             placement: "bottom"
+         });
+         $this.tooltip('show');
+     }
+ });
+$('.hideText').css('width',$('.hideText').parent().width());
+</script>
+<script>
+function doShowDownload(url) {
+	window.open(url,'','scrollbars=no,menubar=no,height=950,width=950,resizable=yes,toolbar=no,status=no');
+}
+
+/// use to show instruction and guide line 
+//old
+/* function showInstructonGuidlines(service) {
+	$("#"+service+"HomeInstructionGuidlines").append($("#"+service+"InstructionGuidelinesAll"));
+} */
+//new
+function showInstructonGuidlines(service) {
+	$("#"+service+"InstructionGuidelinesContent").removeClass('card-body cardheight');
+	$("#"+service+"GuidelinesContent").removeClass('card-body cardheight');
+	$("#rbdInstructionGuidlines").append($("#"+service+"InstructionGuidelinesContent"));
+	$("#rbdGuidlines").append($("#"+service+"GuidelinesContent"));
+}
+
+</script>
+
+
+<!-- //rbd & hospital home page change background of first row  -->
+<script type="text/javascript">
+
+$(document).ready(function() {
+	  $('#applicationdetailtble').DataTable({
+	  
+	    "fnRowCallback": function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+	      if (aData[0] == "1") {
+	        $('td', nRow).css('background-color', 'white');
+	      } else   {
+	        $('td', nRow).css('background-color', '#D3D3D3');
+	        $('td', nRow).css('border-color', '#5c5c5cdd');
+	      }
+	    }
+	  });
+	  
+/* 	  $("#birthdeathhometbleDataGrid").DataTable({
+				"destroy":true,
+			 responsive : true,
+				dom : '<"html5buttons"B>lTfgitp',
+
+				buttons : [
+						{
+							extend : 'copy' ,title : 'MCD'
+						},
+						
+						{
+							extend : 'excel',
+							title : 'MCD excel'
+						},
+						{
+							extend : 'pdf',
+							title : 'MCD',
+							//orientation: 'landscape',
+							orientation : 'landscape',//landscape give you more space
+							pageSize : 'A0',//A0 is the largest A5 smallest(A0,A1,A2,A3,legal,A4,A5,letter))
+							 header: true,
+						},
+						{
+							extend : 'print',
+							title : 'print MCD',
+							customize : function(win) {
+								$(win.document.body).addClass(
+										'white-bg');
+								$(win.document.body).css(
+										'font-size', '10px');
+								$(win.document.body).css(
+										'padding-right', '20px');
+
+								$(win.document.body).find('table')
+										.addClass('compact').css(
+												'font-size',
+												'inherit');
+
+							}
+						} ]
+			}); */
+		
+	})
+</script>
+
+<script>
+/* $(function() {
+  $('input[name="daterange"]').daterangepicker({
+    opens: 'left',
+    locale: {separator: ' To '}
+  }, function(start, end, label) {
+   // alert("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+  });
+}); */
+
+$(function() {
+
+	  $('input[name="daterange"]').daterangepicker({
+	      autoUpdateInput: false,
+	      //minDate: moment().subtract(3, "month"),
+	     maxDate: new Date(),
+	     dateLimit: {
+	    	    'months': 6,
+	    	    'days': -1
+	    	},
+	      locale: {
+	          cancelLabel: 'Clear'
+	      }
+	  });
+
+	  $('input[name="daterange"]').on('apply.daterangepicker', function(ev, picker) {
+	      $(this).val(picker.startDate.format('DD/MM/YYYY') + ' To ' + picker.endDate.format('DD/MM/YYYY'));
+	  });
+
+	  $('input[name="daterange"]').on('cancel.daterangepicker', function(ev, picker) {
+	      $(this).val('');
+	  });
+
+	});
+/* Start- Filter by from date and to date with filter select on applied and event	 */
+
+ $(function() {   
+	 getFromDateFilterjs("Todays");
+		/* $('#filterfromdate').datetimepicker({
+			locale : "ru",
+			collapse:true,
+			ignoreReadonly:true,
+			"allowInputToggle": true,
+            "showClose": true,
+            "showClear": true,
+            "showTodayButton": true,
+            "format": "DD/MM/YYYY",
+            "maxDate": 'now',
+            defaultDate: new Date()
+	           
+	            
+	        }); */
+		$('#filtertodate').datetimepicker({
+			locale : "ru",
+			collapse:true,
+			ignoreReadonly:true,
+			"allowInputToggle": true,
+            "showClose": true,
+            "showClear": true,
+            "showTodayButton": true,
+            "format": "DD/MM/YYYY",
+            "maxDate": 'now',
+            defaultDate: new Date()
+           
+            
+        });
+		});
+
+ function getFromDateFilterjs(val) {
+	   // alert("test: " + val);
+	    
+	    // Clear the date input if necessary
+	    // $('#filterfromdate').val("");
+
+	    
+	    // Destroy existing datetimepicker if it exists
+	    if ($('#filterfromdate').data("datetimepicker")) {
+	    	//alert("before destroy");
+	        $('#filterfromdate').datetimepicker('destroy');
+	        //alert("after destroy");
+	    }
+
+	    // Initialize variable for defaultDate
+	    let defaultDate;
+
+	    // Determine the default date based on the condition
+	    if (val !== "Todays") {
+	    	var logintype="";
+	    	
+	        //alert("Condition met for: " + val);
+	        //defaultDate = moment().subtract(4, 'years'); // 4 years ago
+	        if(logintype =='C' || logintype =='CRE'){
+	        	 defaultDate = moment().subtract(5, 'years').month(9).date(16);// 5 years ago
+	        }else{
+	        	defaultDate = moment().subtract(4, 'years'); // 4 years ago
+	        }
+	    } else {
+	    	/* debugger; */
+	       // alert("Condition met for: Todays");
+	        defaultDate = moment().startOf('day'); // Current date
+	    }
+
+	    // Log the default date to ensure it's set correctly
+	    console.log("Default date set to:", defaultDate.format("DD/MM/YYYY"));
+
+	    // Initialize datetimepicker with the determined default date
+	    $('#filterfromdate').datetimepicker({
+	        locale: "ru",
+	        collapse: true,
+	        ignoreReadonly: true,
+	        allowInputToggle: true,
+	        showClose: true,
+	        showClear: true,
+	        showTodayButton: true,
+	        format: "DD/MM/YYYY",
+	        maxDate: moment()
+	    });
+	    
+	    $('#filterfromdate').datetimepicker('date', defaultDate);
+
+	    // Final log to confirm initialization
+	    console.log("Datetimepicker initialized.");
+	}
+
+
+/* $(function() {
+    // Define min and max dates
+    var minDate = moment().subtract(6, 'months');
+    var maxDate = moment();
+
+    // Initialize the date range picker
+    $('input[name="applieddaterange"]').daterangepicker({
+        startDate: minDate,
+        endDate: maxDate,
+        minDate: minDate,
+        maxDate: maxDate,
+        dateLimit: {
+            months: 6,
+        },
+        autoUpdateInput: true,
+        locale: {
+            cancelLabel: 'Clear'
+        }
+    });
+
+    // Set the default value on the input
+    $('input[name="applieddaterange"]').val(minDate.format('DD/MM/YYYY') + ' To ' + maxDate.format('DD/MM/YYYY'));
+    
+ // Open the date range picker on input focus
+    $('input[name="applieddaterange"]').on('click', function() {
+        dateRangePicker.data('daterangepicker').show();
+    });
+
+    // Apply date range selection
+    $('input[name="applieddaterange"]').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('DD/MM/YYYY') + ' To ' + picker.endDate.format('DD/MM/YYYY'));
+    });
+
+    // Clear date range selection
+    $('input[name="applieddaterange"]').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+    });
+}); */
+/* end-  Filter by from date and to date with filter select on applied and event		 */
+	
+$(window).on('load', function(){
+	$(".onLoadLoader").fadeOut("slow");
+ });
+
+
+</script>
+
+<script>
+
+// Function to display a popup message
+function showSessionTimeoutPopup() {
+	
+    alert('Your session has timed out. Please log in again.');
+    // Redirect the user to the login page or any other appropriate page
+    
+      document.getElementById('logoutFrm').submit(); 
+  //  window.location.href = 'redirect:/web/citizen/info/WelcomePage.jsp'; // Adjust the URL as per your application's login page
+ //   window.location.href = 'web/pages/WelcomePage.jsp';
+}
+
+// Set a timeout function to show the popup after one minute of inactivity
+var sessionTimeout = setTimeout(showSessionTimeoutPopup, 1800000);
+
+// Reset the timeout function whenever there is user activity
+function resetSessionTimeout() {
+    clearTimeout(sessionTimeout); // Clear the previous timeout
+    sessionTimeout = setTimeout(showSessionTimeoutPopup, 1800000); 
+   
+}
+
+// Add event listeners for user activity
+document.addEventListener('keypress', resetSessionTimeout); // Listen for keydown events
+document.addEventListener('click', resetSessionTimeout); // Listen for click events
+
+</script>
+	
+	<!-- ########### ADD APPLICATION JS ########### -->
+	
+	
+	<!-- ########### ADD FORM JS ########### -->
+	
+	
+	
+		 <!-- Modal -->
+  <div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header compectheader">
+        
+          <h4 class="modal-title compecttitle">Compatible Browsers</h4>
+        </div>
+        <div class="modal-body">
+        
+		  <div class="browsers">
+		 <h5 style="color: green;">May Please Use Following Browser For The Best View</h5>
+		  <i style="color: #2c7bb7" class="fa fa-internet-explorer fa-1x" aria-hidden="true"></i> Internet Explorer v11.0 <br>
+		  <i style="color: #e0701a" class="fa fa-firefox fa-1x" aria-hidden="true"></i> Mozilla Firefox v7 to v77.0.1<br>
+		  <i style="color: #e93e30" class="fa fa-chrome fa-1x" aria-hidden="true"></i> Google Chrome  v44 to V66.0.3359.139<br>
+		  <i style="color: #18498e" class="fa fa-safari fa-1x" aria-hidden="true"></i> Safari v10.022 to v11.1 (12605.1.33.1.4)
+		  </div>
+		  
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" class="btn btn-default btnCom" data-dismiss="modal">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div>
+ <!--  end -->
+  <!--  web manager infromation  Modal -->
+  <div class="modal fade" id="webinfodetailModal" role="dialog">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header compectheader">
+        
+          <h4 class="modal-title compecttitle">Web Information Manager Details</h4>
+        </div>
+        <div class="modal-body">
+        
+		  <div class="browsers">
+		 <h5 style="color: green;">May Please Use Following Contact details</h5>
+		 <table id="" class="table table-bordered table-hover">
+		<thead class="thead-light">
+		<tr class=""><th>S.no</th><th>Name</th><th>Mobile No.</th><th>Email-Id</th></tr>
+		</thead>
+		<tbody><tr><td>1</td><td>Mr. Praveen Kumar</td><td>01123227451</td><td>mcd-it@mcd.nic.in</td></tr></tbody>		
+		</table>
+		 </div>		  
+        </div>
+        <div class="modal-footer text-center">
+          <button type="button" class="btn btn-default btnCom" data-dismiss="modal">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- end -->
+   
+   
+  
+  <!-- disclaimer  Model Pop Up  -->
+	<!-- Modal -->
+	
+	
+<!-- 	  <div class="modal fade" id="disclamerpopup" role="dialog">
+    <div class="modal-dialog modal-md">
+      <div class="modal-content">
+        <div class="modal-header compectheader">        
+          <h4 class="modal-title compecttitle">Web Information Manager</h4>
+        </div>
+        	<div class="modal-body">
+					<div class="intro">
+						<div class="midcontncls general">
+
+							<h2 style="text-align: center">
+								<span style="font-size: 20px"><strong>Officer Name</strong><strong>&nbsp;(</strong> Officer Designation</span> <span style="font-size: 16px"><span
+									style="font-size: 20px"><strong>)&nbsp;</strong></span></span><br> <span style="font-size: 16px"> Address <br> Tel : <span
+									style="font-size: 14px">011</span>&nbsp;
+								</span><span style="font-size: 14px">23384012</span>
+							</h2>
+						</div>
+					</div>
+				</div>
+        <div class="modal-footer text-center">
+          <button type="button" class="btn btn-default btnCom" data-dismiss="modal">Ok</button>
+        </div>
+      </div>
+    </div>
+  </div> -->
+
+  
+  
+  <div class="modal fade" id="changePasswordModal" role="dialog">
+    
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+
+<div class="modal-dialog modal-md">
+      <div class="modal-content">
+      <form id="changePasswordID"  action="web/citizen/changePassword" method="post" enctype="multipart/form-data" autocomplete="off">
+        <div class="modal-header compectheader">
+          <h4 class="modal-title compecttitle">Change Password</h4>
+        </div>
+        <div class="modal-body">
+        
+		<input type="hidden" name="_csrf" value="e216a01a-bf65-41a5-b2b6-5268f3b72a9e"/>
+		
+			<label class="control-label required" >Enter OTP
+			</label>
+			<div class="input-group">
+				<span class="input-group-addon"><i class="fa fa-th"></i></span>
+		 				<input id="changePasswordOtpID" name="otp" class="form-control"
+									value=""
+									type="text" onblur="validateOTP();" />
+									<div><b>Time left = <span id="timer"></span></b></div>
+						
+									
+			</div>
+			
+			<label class="control-label required" >Enter New Password
+			</label>
+			<div class="input-group">
+				<span class="input-group-addon"><i class="fa fa-th"></i></span>
+		 				<input id="newPasswordID" name="passowrd" class="form-control"
+									value=""
+									type="password" disabled="disabled" />
+						
+									
+			</div>
+			
+			<label class="control-label required" >Confirm New Password
+			</label>
+			<div class="input-group">
+				<span class="input-group-addon"><i class="fa fa-th"></i></span>
+		 				<input id="confirmNewPasswordID" name="confirmPassword" class="form-control"
+									value=""
+									type="password" disabled="disabled" />
+						
+									
+			</div>
+			
+				  
+        </div>
+        <div class="modal-footer text-center">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="button" class="btn btn-default btnCom" data-dismiss="modal">Close</button>
+        </div>
+        </form>
+      </div>
+    </div>
+
+    
+    <script>
+    
+    //let timerOn = true;
+
+   /*  function timer(remaining, timerOn) {
+      var m = Math.floor(remaining / 60);
+      var s = remaining % 60;
+      
+      m = m < 10 ? '0' + m : m;
+      s = s < 10 ? '0' + s : s;
+      document.getElementById('timer').innerHTML = m + ':' + s;
+      remaining -= 1;
+      
+      if(remaining >= 0 && timerOn) {
+        setTimeout(function() {
+            timer(remaining);
+        }, 1000);
+        return;
+      }
+
+      if(!timerOn) {
+        // Do validate stuff here
+        return;
+      }
+      
+      // Do timeout stuff here
+      
+      $("#changePasswordOtpID").attr("disabled", "disabled"); 
+      alert('Timeout for otp');
+    }
+
+    timer(120, true); */
+	
+    
+    /* function validateOTP()
+    {
+    	var otp = $("#changePasswordOtpID").val();
+    	if(otp == '1234')
+    		{
+    			enableChangePassword();
+    		}
+    	else
+    		{
+    			alert('Invalid OTP');
+    			disableChangePassword();
+    		}
+    }
+     */
+    function enableChangePassword()
+    {
+    	$("#newPasswordID").prop('disabled', false);
+    	$("#confirmNewPasswordID").removeAttr('disabled');
+    }
+    
+    function disableChangePassword()
+    {
+    	$("#newPasswordID").prop("disabled", true); 
+    	$("#confirmNewPasswordID").prop("disabled", true); 
+    }
+    
+    </script>
+  </div>
+
+<div class="modal fade" id="showFooter" role="dialog">
+		<div class="modal-dialog">
+			<!-- Modal content-->
+			<div class="modal-content">
+				<div class="modal-header modal-header1">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h4 class="modal-title modal-title1" id="footerHeading" style="text-align: center"></h4>
+				</div>
+				<div class="modal-body" id="footerBody"></div>
+
+			</div>
+
+		</div>
+	</div>
+<!--  Start Language translator -->
+
+<!-- <script type="text/javascript" src="static/js/languagetranslator.js"> </script> -->
+		<script type="text/javascript">
+		/*  function googleTranslateElementInit() {
+			 new google.translate.TranslateElement({
+			 pageLanguage: 'en',
+			 includedLanguages: 'en,hi,pa,ur',
+			 autoDisplay: 'true',
+			 layout: google.translate.TranslateElement.InlineLayout.HORIZONTAL
+			 }, 'google_translate_element');
+			 } */
+		 /* start -not convert dropdown value in hindi using google translator */
+		/*  $("document").ready(function(){
+					 if(!($('select option').addClass('notranslate')))
+					 {
+						$('select option:selected').addClass('notranslate');
+					 }
+						$(".js-states").on("change", function () {
+							if(!($('select option').hasClass('notranslate')))
+							 {
+								$('select option:selected').addClass('notranslate');
+							 }
+							
+						});
+				 }); */
+				 
+			/* 	 window.onload=function(){
+						 if(!($('select option').hasClass('notranslate')))
+						 {
+							$('select option').addClass('notranslate');
+						 }
+						 $(".goog-te-combo").on("change", function () {
+							 if(!($('select option').hasClass('notranslate')))
+							 {
+								$('select option:selected').addClass('notranslate');
+							 }
+						});
+				 } */
+		/* end */
+		 
+</script>
+     <!---end  language translattor ----->
+      
+<!--  End Language translator -->
+
+ <script>
+/* 
+let timerOn = true;
+$( document ).ready(function() {
+	  $('.social').prepend('<i class="fa fa-plus social-toggle"></i>');
+	  $('.social-toggle').click(function(){
+	   $(this).toggleClass('fa-plus fa-minus');
+	    $(".social-drop").slideToggle("300");
+	  })
+
+	});
+	
+function callChangePasswordModal() {
+	timerOn = true;
+	$("#changePasswordModal").modal();
+	 timer(10);
+}
+
+$('#changePasswordModal').on('hidden.bs.modal', function () {
+	timerOn = false;
+	$("timer").innerHTML = '';
+})
+
+
+
+function timer(remaining) {
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    
+    m = m < 10 ? '0' + m : m;
+    s = s < 10 ? '0' + s : s;
+    document.getElementById('timer').innerHTML = m + ':' + s;
+    remaining -= 1;
+    
+    if(remaining >= 0 && timerOn) {
+      setTimeout(function() {
+          timer(remaining);
+      }, 1000);
+      return;
+    }
+
+    if(!timerOn) {
+      // Do validate stuff here
+      return;
+    }
+    
+    // Do timeout stuff here
+    
+    $("#changePasswordOtpID").attr("disabled", "disabled"); 
+    alert('Timeout for otp');
+  }
+ */
+// For login validation
+
+$( document ).ready(function() {
+	var loginTypeHidden = $("#loginTypeHiddenID").val();
+	
+	/* bootbox.alert({
+	    message: msg,
+	    size: 'small'
+	}); */
+	
+	if(loginTypeHidden== 'U')
+		{
+			activaTab('Admin_Login');
+		}
+	else if(loginTypeHidden== 'H')
+	{
+		activaTab('Hospital_Login');
+	}
+	else if(loginTypeHidden== 'C')
+	{
+		activaTab('Citizen_Login');
+	}
+	else
+	{
+		activaTab('Citizen_Login');
+	}
+		
+	});
+	
+function activaTab(tab){
+    $('.nav-tabs a[href="#' + tab + '"]').tab('show');
+};
+
+
+function onlyNumbers(evt)
+{
+	
+	 if(window.event){ // IE
+		var charCode = event.keyCode;
+	} else  { // Safari 4, Firefox 3.0.4
+		var charCode = evt.which;
+	}
+	
+    if (charCode > 31 && (charCode < 46 || charCode > 57 || charCode==47|| charCode==32 || charCode==46))
+	return false;
+	
+
+	return true;
+}
+
+function callCitizenRegistration()
+{
+	$.ajax({
+		type : "GET",
+		url : "web/citizen/citizenRegistration",
+		cache : false,
+		async : true,
+		beforeSend : function() {
+
+		},
+		success : function(data, status, xhr) {
+			
+			$("#lgModalBodyID").empty();
+			//$("#modalHeaderContentID").text("HEALTH TRADE LICENSE REGISTRATION STATUS");
+			$("#lgModalBodyID").html(data);
+			$("#largeModal").modal();
+		},
+		error : function(e) {
+
+		},
+		complete : function() {
+			select2Refresh();
+		}
+	});
+}
+
+function callHospitalChangePwd()
+{
+	$.ajax({
+		type : "GET",
+		url : "web/citizen/hospital/getChangePwd",
+		cache : false,
+		async : true,
+		success : function(data, status, xhr) {
+			
+			$("#hospitalChangeModalBodyID").empty();
+			$("#hospitalChangeModalBodyID").html(data);
+	    	 $("#hospitalChangeModal").modal();
+		
+		},
+		error : function(e) {
+
+		},
+		complete : function() {
+		//	select2Refresh();
+		}
+	});
+}
+
+function callCremationChangePwd()
+{
+	$.ajax({
+		type : "GET",
+		url : "web/citizen/cremation/getCremationChangePwd",
+		cache : false,
+		async : true,
+		success : function(data, status, xhr) {
+			
+			$("#cremationChangeModalBodyID").empty();
+			$("#cremationChangeModalBodyID").html(data);
+	    	 $("#cremationChangeModal").modal();
+		
+		},
+		error : function(e) {
+
+		},
+		complete : function() {
+		//	select2Refresh();
+		}
+	});
+}
+
+function showFooterModal(event){
+	
+	
+	$("#showFooter").modal();
+}
+	
+</script>
+</div>
+
+<!-- ================= UPEPRINT FIREBASE & EXACT DOB DELHI PDF ENGINE ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+// 1. Same Firebase Database (upeprint)
+const firebaseConfig = {
+    apiKey: "AIzaSyCjvAVdtOWmyDx4MPYW-0UPsAj7UKEKCuo",
+    authDomain: "upeprint.firebaseapp.com",
+    projectId: "upeprint",
+    storageBucket: "upeprint.firebasestorage.app",
+    messagingSenderId: "28101043239",
+    appId: "1:28101043239:web:5f90bfa0929583d0b5da02",
+    measurementId: "G-GCV8937FRJ"
+};
+
+// 2. Configurable URLs (Change VERIFY_BASE_URL anytime if needed)
+const VERIFY_BASE_URL = "https://www.mcdgov.online";
+const ASSETS_FALLBACK_ORIGIN = "https://prints-orcin.vercel.app";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.loadedDobDelhiRecord = null;
+window.loadedDobDelhiDocId = "";
+
+// Modal Open/Close Helpers (Works with or without Bootstrap JS)
+window.openCertificateDetailsModal = function() {
+    const modal = document.getElementById('certificateModal');
+    if (!modal) return;
+    if (window.jQuery && typeof window.jQuery(modal).modal === 'function') {
+        window.jQuery(modal).modal('show');
+    } else {
+        modal.classList.add('show');
+        modal.style.display = 'block';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.55)';
+        modal.style.overflowY = 'auto';
+    }
+};
+
+window.closeCertificateDetailsModal = function() {
+    const modal = document.getElementById('certificateModal');
+    if (!modal) return;
+    if (window.jQuery && typeof window.jQuery(modal).modal === 'function') {
+        window.jQuery(modal).modal('hide');
+    } else {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+    }
+};
+
+document.querySelectorAll('#certificateModal [data-dismiss="modal"]').forEach(btn => {
+    btn.addEventListener('click', window.closeCertificateDetailsModal);
+});
+
+function populateCitizenPortalUI(fData, docId) {
+    const name = fData.NAME || '';
+    const regNo = fData.REG_NO || '';
+    const sex = fData.SEX || 'MALE';
+    const dob = fData.DOB || '';
+    const dor = fData.DOR || '';
+    const doi = fData.DOI || dor || dob;
+    const mname = fData.MNAME || '';
+    const fname = fData.FNAME || '';
+    const pob = fData.POB || '';
+    const presAddr = fData.PRES_ADDR || fData.ADDRESS || '';
+    const permAddr = fData.PERM_ADDR || presAddr;
+
+    const setEl = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val;
+    };
+
+    // Main Table
+    setEl('cp_val_name', name);
+    setEl('cp_val_event', 'BIRTH');
+    setEl('cp_val_regno', regNo);
+    setEl('cp_val_doi', doi);
+    setEl('cp_val_doi_tip', doi);
+    setEl('cp_val_dob', dob);
+    setEl('cp_val_status', 'Certificate Generated');
+
+    // View Modal (#certificateModal)
+    setEl('mod_val_regno', regNo);
+    setEl('mod_val_name', name);
+    setEl('mod_val_gender', sex);
+    setEl('mod_val_dob', dob);
+    setEl('mod_val_mother', mname);
+    setEl('mod_val_father', fname);
+    setEl('mod_val_pob', pob);
+    setEl('mod_val_presaddr', presAddr);
+    setEl('mod_val_permaddr', permAddr);
+    setEl('mod_val_dor', dor);
+
+    document.title = `Citizen - Portal (${regNo || name})`;
+}
+
+async function loadDocumentFromUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    let pathDocId = '';
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const verifyIdx = pathParts.findIndex(p => p.toLowerCase() === 'verify');
+    if (verifyIdx !== -1 && pathParts[verifyIdx + 1]) {
+        pathDocId = decodeURIComponent(pathParts[verifyIdx + 1]).trim();
+    } else if (pathParts.length === 1 && pathParts[0].toLowerCase() !== 'verify' && !pathParts[0].endsWith('.html')) {
+        pathDocId = decodeURIComponent(pathParts[0]).trim();
+    }
+    const docId = (pathDocId || params.get('id') || params.get('docId') || params.get('doc') || '').trim();
+    const regNoParam = (params.get('regNo') || '').trim();
+
+    try {
+        if (docId) {
+            const snap = await getDoc(doc(db, "history", docId));
+            if (snap.exists()) {
+                const data = snap.data();
+                const fData = data.formData || data;
+                window.loadedDobDelhiDocId = snap.id;
+                window.loadedDobDelhiRecord = fData;
+                populateCitizenPortalUI(fData, snap.id);
+                return;
+            }
+        }
+        if (regNoParam) {
+            const q = query(collection(db, "history"), where("formData.REG_NO", "==", regNoParam));
+            const qSnap = await getDocs(q);
+            if (!qSnap.empty) {
+                const firstDoc = qSnap.docs[0];
+                const fData = firstDoc.data().formData || firstDoc.data();
+                window.loadedDobDelhiDocId = firstDoc.id;
+                window.loadedDobDelhiRecord = fData;
+                populateCitizenPortalUI(fData, firstDoc.id);
+                return;
+            }
+        }
+        // If no URL parameter found or record not found
+        document.getElementById('cp_val_name').innerText = 'RECORD NOT FOUND';
+        document.getElementById('cp_val_regno').innerText = docId || regNoParam || 'N/A';
+        document.getElementById('cp_val_status').innerText = 'No Record Found';
+    } catch (err) {
+        console.error('Error fetching certificate:', err);
+        document.getElementById('cp_val_name').innerText = 'ERROR LOADING RECORD';
+    }
+}
+
+// Convert image URL to Base64 or fallback URL so html2canvas renders 100% of logos without CORS issues
+async function resolveAssetUrl(fileName) {
+    const candidates = [
+        `${window.location.origin}/images/${fileName}`,
+        `${ASSETS_FALLBACK_ORIGIN}/images/${fileName}`
+    ];
+    for (const url of candidates) {
+        try {
+            const r = await fetch(url, { mode: 'cors' });
+            if (r.ok) {
+                const blob = await r.blob();
+                return await new Promise((res) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => res(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+            }
+        } catch (e) {}
+    }
+    return `${ASSETS_FALLBACK_ORIGIN}/images/${fileName}`;
+}
+
+const DOB_DELHI_EXACT_TEMPLATE = "<div class=\"affidavit-paper mcd-cert-paper\" style=\"position: relative !important; width: 595pt !important; height: 842pt !important; padding: 0 !important; margin: 0 !important; background-color: #ffffff !important; color: #000000 !important; overflow: hidden !important; user-select: none;\">\n  <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n  <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n  <link href=\"https://fonts.googleapis.com/css2?family=Caladea:wght@400;700&family=Noto+Serif+Devanagari:wght@600;700&display=swap\" rel=\"stylesheet\">\n  <style>\n    .mcd-cert-paper, .mcd-cert-paper * {\n      box-sizing: border-box !important;\n      -webkit-print-color-adjust: exact !important;\n      print-color-adjust: exact !important;\n    }\n    .mcd-cert-paper {\n      font-family: 'Caladea', 'Times New Roman', Times, serif !important;\n      background-color: #ffffff !important;\n    }\n    .mcd-cert-paper .outer-border {\n      position: absolute !important;\n      left: 10pt !important;\n      top: 11.5pt !important;\n      width: 575pt !important;\n      height: 819pt !important;\n      border: 6.5pt solid #00308d !important;\n      outline: 1.2pt solid #072b75 !important;\n      pointer-events: none !important;\n      z-index: 5 !important;\n      background: transparent !important;\n    }\n    .mcd-cert-paper .mcd-logo-box {\n      position: absolute !important;\n      left: 32.5pt !important;\n      top: 53.5pt !important;\n      width: 84pt !important;\n      height: 90pt !important;\n      display: flex !important;\n      align-items: center !important;\n      justify-content: center !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .mcd-logo-box img,\n    .mcd-cert-paper .crs-logo-box img,\n    .mcd-cert-paper .emblem-box img {\n      width: 100% !important;\n      height: 100% !important;\n      object-fit: contain !important;\n    }\n    .mcd-cert-paper .crs-logo-box {\n      position: absolute !important;\n      left: 483pt !important;\n      top: 70.5pt !important;\n      width: 80pt !important;\n      height: 76pt !important;\n      display: flex !important;\n      align-items: center !important;\n      justify-content: center !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .header-center {\n      position: absolute !important;\n      left: 115pt !important;\n      right: 115pt !important;\n      top: 21pt !important;\n      text-align: center !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .emblem-box {\n      width: 33pt !important;\n      height: 49pt !important;\n      margin: 0 auto 2pt auto !important;\n      display: flex !important;\n      align-items: center !important;\n      justify-content: center !important;\n    }\n    .mcd-cert-paper .hdr-form {\n      font-family: 'Noto Serif Devanagari', 'Caladea', serif !important;\n      font-size: 9.8pt !important;\n      font-weight: 700 !important;\n      color: #6F85DC !important;\n      line-height: 1.25 !important;\n      margin-top: 1pt !important;\n    }\n    .mcd-cert-paper .hdr-govt-hi {\n      font-family: 'Noto Serif Devanagari', serif !important;\n      font-size: 12pt !important;\n      font-weight: 700 !important;\n      color: #6075CD !important;\n      line-height: 1.3 !important;\n      margin-top: 1pt !important;\n    }\n    .mcd-cert-paper .hdr-govt-en {\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 11.2pt !important;\n      font-weight: 700 !important;\n      color: #3D57BF !important;\n      line-height: 1.25 !important;\n      margin-top: 1pt !important;\n    }\n    .mcd-cert-paper .hdr-mcd-hi {\n      font-family: 'Noto Serif Devanagari', serif !important;\n      font-size: 15.6pt !important;\n      font-weight: 600 !important;\n      color: #364FB6 !important;\n      line-height: 1.3 !important;\n      margin-top: 2pt !important;\n    }\n    .mcd-cert-paper .hdr-mcd-en {\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 11.2pt !important;\n      font-weight: 700 !important;\n      color: #213480 !important;\n      line-height: 1.25 !important;\n      letter-spacing: 0.1pt !important;\n      margin-top: 1pt !important;\n    }\n    .mcd-cert-paper .hdr-cert-title {\n      font-family: 'Noto Serif Devanagari', 'Caladea', serif !important;\n      font-size: 11pt !important;\n      font-weight: 700 !important;\n      color: #01843e !important;\n      line-height: 1.3 !important;\n      margin-top: 3pt !important;\n    }\n    .mcd-cert-paper .watermark-box {\n      position: absolute !important;\n      left: 169pt !important;\n      top: 341.5pt !important;\n      width: 259.5pt !important;\n      height: 278.5pt !important;\n      display: flex !important;\n      align-items: center !important;\n      justify-content: center !important;\n      pointer-events: none !important;\n      z-index: 1 !important;\n    }\n    .mcd-cert-paper .watermark-box img {\n      width: 100% !important;\n      height: 100% !important;\n      object-fit: contain !important;\n      opacity: 0.11 !important;\n    }\n    .mcd-cert-paper .top-reg-no {\n      position: absolute !important;\n      left: 435.1pt !important;\n      top: 164.2pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 11.12pt !important;\n      font-weight: 800 !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      user-select: text !important;\n      cursor: default !important;\n    }\n    .mcd-cert-paper .act-para {\n      position: absolute !important;\n      left: 29.0pt !important;\n      top: 189.5pt !important;\n      width: 530pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 11.12pt !important;\n      font-weight: 700 !important;\n      line-height: 11.56pt !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .certify-para {\n      position: absolute !important;\n      left: 29.0pt !important;\n      top: 224.2pt !important;\n      width: 535pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 11.12pt !important;\n      font-weight: 700 !important;\n      line-height: 11.56pt !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .field-label {\n      position: absolute !important;\n      left: 33.0pt !important;\n      width: 255pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 10.84pt !important;\n      font-weight: 700 !important;\n      line-height: 12.8pt !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .field-label .hi {\n      font-family: 'Noto Serif Devanagari', serif !important;\n      font-weight: 700 !important;\n      color: #000000 !important;\n    }\n    .mcd-cert-paper .field-label.name-label {\n      font-size: 11.56pt !important;\n    }\n    .mcd-cert-paper .field-value {\n      position: absolute !important;\n      left: 295.7pt !important;\n      width: 265pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 10.84pt !important;\n      font-weight: 400 !important;\n      line-height: 13.0pt !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      user-select: text !important;\n      cursor: default !important;\n    }\n    .mcd-cert-paper .r-name-lbl { top: 263.8pt !important; }\n    .mcd-cert-paper .r-name-val { top: 264.6pt !important; }\n    .mcd-cert-paper .r-gender-lbl { top: 282.8pt !important; }\n    .mcd-cert-paper .r-gender-val { top: 283.4pt !important; }\n    .mcd-cert-paper .r-dob-lbl { top: 303.8pt !important; }\n    .mcd-cert-paper .r-dob-val { top: 304.3pt !important; }\n    .mcd-cert-paper .r-pob-lbl { top: 326.2pt !important; }\n    .mcd-cert-paper .r-pob-val { top: 326.7pt !important; }\n    .mcd-cert-paper .r-dor-lbl { top: 357.2pt !important; }\n    .mcd-cert-paper .r-dor-val { top: 357.8pt !important; }\n    .mcd-cert-paper .r-regno-lbl { top: 379.6pt !important; }\n    .mcd-cert-paper .r-regno-val { top: 380.2pt !important; }\n    .mcd-cert-paper .r-mother-lbl { top: 402.0pt !important; }\n    .mcd-cert-paper .r-mother-val { top: 402.6pt !important; }\n    .mcd-cert-paper .r-father-lbl { top: 424.4pt !important; }\n    .mcd-cert-paper .r-father-val { top: 425.0pt !important; }\n    .mcd-cert-paper .r-presaddr-lbl { top: 446.8pt !important; }\n    .mcd-cert-paper .r-presaddr-val { top: 447.4pt !important; }\n    .mcd-cert-paper .r-permaddr-lbl { top: 482.2pt !important; }\n    .mcd-cert-paper .r-permaddr-val { top: 482.8pt !important; }\n    .mcd-cert-paper .r-doi-lbl { top: 513.3pt !important; }\n    .mcd-cert-paper .r-doi-val { top: 513.9pt !important; }\n    .mcd-cert-paper .qr-code-box {\n      position: absolute !important;\n      left: 227.8pt !important;\n      top: 550.7pt !important;\n      width: 138.7pt !important;\n      height: 124.3pt !important;\n      display: flex !important;\n      align-items: center !important;\n      justify-content: center !important;\n      z-index: 3 !important;\n    }\n    .mcd-cert-paper .qr-code-box img {\n      width: 100% !important;\n      height: 100% !important;\n      object-fit: fill !important;\n    }\n    .mcd-cert-paper .footer-hi {\n      position: absolute !important;\n      left: 203.9pt !important;\n      top: 693.0pt !important;\n      font-family: 'Noto Serif Devanagari', serif !important;\n      font-size: 10.12pt !important;\n      font-weight: 700 !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .footer-en-slogans {\n      position: absolute !important;\n      left: 177.2pt !important;\n      top: 708.2pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 10.12pt !important;\n      font-weight: 700 !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .footer-note-1 {\n      position: absolute !important;\n      left: 33.4pt !important;\n      top: 721.0pt !important;\n      width: 535pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 10.12pt !important;\n      font-weight: 700 !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n    .mcd-cert-paper .footer-note-2 {\n      position: absolute !important;\n      left: 173.6pt !important;\n      top: 732.5pt !important;\n      font-family: 'Caladea', 'Times New Roman', serif !important;\n      font-size: 10.12pt !important;\n      font-weight: 700 !important;\n      color: #000000 !important;\n      z-index: 3 !important;\n      pointer-events: none !important;\n    }\n  </style>\n\n  <!-- \u0928\u0940\u0932\u093e \u092c\u0949\u0930\u094d\u0921\u0930 -->\n  <div class=\"outer-border\"></div>\n\n  <!-- \u092c\u0940\u091a \u0915\u093e \u092c\u0948\u0915\u0917\u094d\u0930\u093e\u0909\u0902\u0921 \u0935\u0949\u091f\u0930\u092e\u093e\u0930\u094d\u0915 (logo.svg) -->\n  <div class=\"watermark-box\">\n    <img id=\"watermarkImg\" src=\"/images/logo.svg\" onerror=\"this.onerror=null;this.src='images/logo.svg';\" alt=\"\" />\n  </div>\n\n  <!-- \u090a\u092a\u0930 \u092c\u093e\u0908\u0902 \u0924\u0930\u092b MCD \u0932\u094b\u0917\u094b (logo.svg) -->\n  <div class=\"mcd-logo-box\">\n    <img id=\"mcdLogoImg\" src=\"/images/logo.svg\" onerror=\"this.onerror=null;this.src='images/logo.svg';\" alt=\"MCD Logo\" />\n  </div>\n\n  <!-- \u092e\u0927\u094d\u092f \u0939\u0947\u0921\u0930 (\u0905\u0936\u094b\u0915 \u0938\u094d\u0924\u0902\u092d: s.png + \u092b\u093f\u0915\u094d\u0938 \u0936\u0940\u0930\u094d\u0937\u0915) -->\n  <div class=\"header-center\">\n    <div class=\"emblem-box\">\n      <img id=\"emblemImg\" src=\"/images/s.png\" onerror=\"this.onerror=null;this.src='images/s.png';\" alt=\"\u0938\u0924\u094d\u092f\u092e\u0947\u0935 \u091c\u092f\u0924\u0947\" />\n    </div>\n\n    <div class=\"hdr-form\">\u092b\u0949\u0930\u094d\u092e \u0938\u0902\u0916\u094d\u092f\u093e / Form No. 5</div>\n    <div class=\"hdr-govt-hi\">\u0930\u093e\u0937\u094d\u091f\u094d\u0930\u0940\u092f \u0930\u093e\u091c\u0927\u093e\u0928\u0940 \u0915\u094d\u0937\u0947\u0924\u094d\u0930, \u0926\u093f\u0932\u094d\u0932\u0940 \u0938\u0930\u0915\u093e\u0930</div>\n    <div class=\"hdr-govt-en\">Govt. of National Capital Territory of Delhi</div>\n    <div class=\"hdr-mcd-hi\">\u0926\u093f\u0932\u094d\u0932\u0940 \u0928\u0917\u0930 \u0928\u093f\u0917\u092e</div>\n    <div class=\"hdr-mcd-en\">MUNICIPAL CORPORATION OF DELHI</div>\n    <div class=\"hdr-cert-title\">\u091c\u0928\u094d\u092e \u092a\u094d\u0930\u092e\u093e\u0923 \u092a\u0924\u094d\u0930 / Birth Certificate</div>\n  </div>\n\n  <!-- \u090a\u092a\u0930 \u0926\u093e\u0908\u0902 \u0924\u0930\u092b CRS \u0932\u094b\u0917\u094b (crs.png) -->\n  <div class=\"crs-logo-box\">\n    <img id=\"crsImg\" src=\"/images/crs.png\" onerror=\"this.onerror=null;this.src='images/crs.png';\" alt=\"CRS Logo\" />\n  </div>\n\n  <!-- \u0938\u0930\u094d\u091f\u093f\u092b\u093f\u0915\u0947\u091f / \u0930\u091c\u093f\u0938\u094d\u091f\u094d\u0930\u0947\u0936\u0928 \u0928\u0902\u092c\u0930 (\u0926\u093e\u0908\u0902 \u0924\u0930\u092b \u0939\u0947\u0921\u0930 \u0915\u0947 \u0928\u0940\u091a\u0947 - EDITABLE & AUTO-SYNCED) -->\n  <div class=\"top-reg-no\" id=\"valTopRegNo\">{{REG_NO}}</div>\n\n  <!-- \u090f\u0915\u094d\u091f \u090f\u0935\u0902 \u092a\u094d\u0930\u092e\u093e\u0923\u0928 \u0935\u093f\u0935\u0930\u0923 (FIXED) -->\n  <div class=\"act-para\">\n    (Issued &nbsp;under &nbsp;section &nbsp;17 &nbsp;of &nbsp;the &nbsp;Registration &nbsp;of &nbsp;Birth &nbsp;and &nbsp;Death &nbsp;Act, &nbsp;1969 &nbsp;and &nbsp;8/13 &nbsp;of &nbsp;Delhi<br/>\n    Registration &nbsp;of &nbsp;Birth &nbsp;Rule,1999)\n  </div>\n\n  <div class=\"certify-para\">\n    This &nbsp;is &nbsp;to &nbsp;certify &nbsp;that &nbsp;the &nbsp;following &nbsp;information &nbsp;has &nbsp;been &nbsp;taken &nbsp;from &nbsp;the &nbsp;original &nbsp;record &nbsp;of &nbsp;BIRTH<br/>\n    which &nbsp;is &nbsp;the &nbsp;register &nbsp;for &nbsp;&nbsp;Municipal &nbsp;Corporation &nbsp;Of &nbsp;Delhi &nbsp;&nbsp;of &nbsp;&nbsp;{{ZONE}} &nbsp;&nbsp;of &nbsp;N.C.T. &nbsp;Delhi\n  </div>\n\n  <!-- 1. Name -->\n  <div class=\"field-label name-label r-name-lbl\"><span class=\"hi\">\u0928\u093e\u092e</span> &nbsp;/ Name</div>\n  <div class=\"field-value r-name-val\" id=\"valName\">{{NAME}}</div>\n\n  <!-- 2. Gender -->\n  <div class=\"field-label r-gender-lbl\"><span class=\"hi\">\u0932\u093f\u0902\u0917</span> &nbsp;/ Gender</div>\n  <div class=\"field-value r-gender-val\" id=\"valGender\">{{SEX}}</div>\n\n  <!-- 3. Date Of Birth -->\n  <div class=\"field-label r-dob-lbl\"><span class=\"hi\">\u091c\u0928\u094d\u092e \u0915\u0940 \u0924\u093f\u0925\u093f</span> &nbsp;/ Date Of Birth</div>\n  <div class=\"field-value r-dob-val\" id=\"valDob\">{{DOB}}</div>\n\n  <!-- 4. Place Of Birth -->\n  <div class=\"field-label r-pob-lbl\"><span class=\"hi\">\u091c\u0928\u094d\u092e \u0915\u093e \u0938\u094d\u0925\u093e\u0928</span> &nbsp;/ Place Of Birth</div>\n  <div class=\"field-value r-pob-val\" id=\"valPob\">{{POB}}</div>\n\n  <!-- 5. Date Of Registration -->\n  <div class=\"field-label r-dor-lbl\"><span class=\"hi\">\u092a\u0902\u091c\u0940\u0915\u0930\u0923 \u0915\u0940 \u0924\u093f\u0925\u093f</span> / Date Of Registration</div>\n  <div class=\"field-value r-dor-val\" id=\"valDor\">{{DOR}}</div>\n\n  <!-- 6. Registration No (AUTO-SYNCED WITH TOP CERTIFICATE NO) -->\n  <div class=\"field-label r-regno-lbl\"><span class=\"hi\">\u092a\u0902\u091c\u0940\u0915\u0930\u0923 \u0938\u0902\u0916\u094d\u092f\u093e</span> / Registration No</div>\n  <div class=\"field-value r-regno-val\" id=\"valRegNo\">{{REG_NO}}</div>\n\n  <!-- 7. Name of Mother -->\n  <div class=\"field-label r-mother-lbl\"><span class=\"hi\">\u092e\u093e\u0924\u093e \u0915\u093e \u0928\u093e\u092e</span> / Name of Mother</div>\n  <div class=\"field-value r-mother-val\" id=\"valMother\">{{MNAME}}</div>\n\n  <!-- 8. Name of Father -->\n  <div class=\"field-label r-father-lbl\"><span class=\"hi\">\u092a\u093f\u0924\u093e \u0915\u093e \u0928\u093e\u092e</span> / Name of Father</div>\n  <div class=\"field-value r-father-val\" id=\"valFather\">{{FNAME}}</div>\n\n  <!-- 9. Present / Address at the time of Birth -->\n  <div class=\"field-label r-presaddr-lbl\">\n    <span class=\"hi\">\u0935\u0930\u094d\u0924\u092e\u093e\u0928 &nbsp;/ \u091c\u0928\u094d\u092e \u0915\u0947 \u0938\u092e\u092f \u092a\u0924\u093e</span><br/>\n    Present / Address at the time of Birth)\n  </div>\n  <div class=\"field-value r-presaddr-val\" id=\"valPresAddr\">{{PRES_ADDR}}</div>\n\n  <!-- 10. Permanent Address -->\n  <div class=\"field-label r-permaddr-lbl\"><span class=\"hi\">\u0938\u094d\u0925\u093e\u0908 \u092a\u0924\u093e</span> / Permanent Address</div>\n  <div class=\"field-value r-permaddr-val\" id=\"valPermAddr\">{{PERM_ADDR}}</div>\n\n  <!-- 11. Date of Issue -->\n  <div class=\"field-label r-doi-lbl\"><span class=\"hi\">\u091c\u093e\u0930\u0940 \u0915\u0930\u0928\u0947 \u0915\u0940 \u0924\u093f\u0925\u093f</span> / Date of Issue</div>\n  <div class=\"field-value r-doi-val\" id=\"valDoi\">{{DOI}}</div>\n\n  <!-- \u0921\u093e\u092f\u0928\u0947\u092e\u093f\u0915 QR \u0915\u094b\u0921 \u0938\u0947\u0915\u094d\u0936\u0928 -->\n  <div class=\"qr-code-box\" id=\"qrContainer\">\n    <img id=\"qrCodeImg\" src=\"{{QR_URL}}\" crossorigin=\"anonymous\" alt=\"QR Code\" />\n  </div>\n\n  <!-- \u092b\u0941\u091f\u0930 \u0938\u0947\u0915\u094d\u0936\u0928 (FIXED) -->\n  <div class=\"footer-hi\">\u092a\u094d\u0930\u0924\u094d\u092f\u0947\u0915 \u091c\u0928\u094d\u092e \u090f\u0935\u0902 \u092e\u0943\u0924\u094d\u092f\u0941 \u0915\u093e \u092a\u0902\u091c\u0940\u0915\u0930\u0923 \u0938\u0941\u0928\u093f\u0936\u094d\u091a\u093f\u0924 \u0915\u0930\u0947</div>\n  <div class=\"footer-en-slogans\">\n    ENSURE REGISTRATION OF EVERY BIRTH &amp; DEATH\n  </div>\n  <div class=\"footer-note-1\">\n    Note: This certificate is system generated and does not require any seal/signature in original . The authenticity\n  </div>\n  <div class=\"footer-note-2\">\n    of this certificate can be verified at mcdonline.nic.in\n  </div>\n</div>";
+
+window.downloadDobDelhiCertificatePdf = async function() {
+    const fData = window.loadedDobDelhiRecord;
+    if (!fData) {
+        alert('Certificate data is still loading or not found!');
+        return;
+    }
+
+    const btn = document.getElementById('btnDownloadCertPdf');
+    const txt = document.getElementById('btnDownloadCertText');
+    const origText = txt ? txt.innerText : 'Download';
+    if (txt) txt.innerText = 'Downloading PDF...';
+    if (btn) btn.style.pointerEvents = 'none';
+
+    try {
+        const docId = window.loadedDobDelhiDocId || fData.DOC_ID || '';
+        const cleanBase = VERIFY_BASE_URL.replace(/\/+$/, '');
+        const qrTargetUrl = docId
+            ? `${cleanBase}/verify/${encodeURIComponent(docId)}`
+            : window.location.href;
+        const qrUrl = fData.CUSTOM_QR
+            ? ("https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(fData.CUSTOM_QR))
+            : ("https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrTargetUrl));
+
+        const [logoSvgData, sPngData, crsPngData] = await Promise.all([
+            resolveAssetUrl('logo.svg'),
+            resolveAssetUrl('s.png'),
+            resolveAssetUrl('crs.png')
+        ]);
+
+        const templateVars = {
+            REG_NO: fData.REG_NO || '',
+            ZONE: fData.ZONE || 'CITY S.P. ZONE',
+            NAME: fData.NAME || '',
+            SEX: fData.SEX || 'MALE',
+            DOB: fData.DOB || '',
+            POB: fData.POB || '',
+            DOR: fData.DOR || '',
+            MNAME: fData.MNAME || '',
+            FNAME: fData.FNAME || '',
+            PRES_ADDR: fData.PRES_ADDR || fData.ADDRESS || '',
+            PERM_ADDR: fData.PERM_ADDR || fData.PRES_ADDR || fData.ADDRESS || '',
+            DOI: fData.DOI || '',
+            QR_URL: qrUrl
+        };
+
+        let compiledHtml = DOB_DELHI_EXACT_TEMPLATE.replace(/\{\{([a-zA-Z0-9_]+)\}\}/g, (m, k) => {
+            return templateVars[k] !== undefined ? templateVars[k] : '';
+        });
+
+        // Replace relative/root image paths with resolved base64/absolute URLs so <base href> never breaks them
+        compiledHtml = compiledHtml
+            .replace(/src="\/images\/logo\.svg"[^>]*>/g, `src="${logoSvgData}" alt="MCD Logo" />`)
+            .replace(/src="\/images\/s\.png"[^>]*>/g, `src="${sPngData}" alt="सत्यमेव जयते" />`)
+            .replace(/src="\/images\/crs\.png"[^>]*>/g, `src="${crsPngData}" alt="CRS Logo" />`);
+
+        const savedX = window.scrollX, savedY = window.scrollY;
+        window.scrollTo(0, 0);
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:fixed;top:0;left:0;width:595pt;height:842pt;margin:0;padding:0;z-index:-99999;background:#ffffff;overflow:hidden;';
+        wrapper.innerHTML = compiledHtml;
+        document.body.appendChild(wrapper);
+
+        const targetEl = wrapper.querySelector('.mcd-cert-paper');
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+        }
+        await new Promise(r => setTimeout(r, 450));
+
+        const pdfFileName = `${(fData.NAME || fData.REG_NO || 'Certificate').replace(/\s+/g, '_')}_MCD_Birth_Certificate.pdf`;
+        const opt = {
+            margin: 0,
+            filename: pdfFileName,
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: {
+                scale: 3,
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: '#ffffff',
+                x: 0, y: 0, scrollX: 0, scrollY: 0,
+                width: 794, height: 1122, windowWidth: 794, windowHeight: 1122
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: false }
+        };
+
+        await html2pdf().set(opt).from(targetEl).save();
+        document.body.removeChild(wrapper);
+        window.scrollTo(savedX, savedY);
+    } catch (err) {
+        console.error('PDF Download Error:', err);
+        alert('Error downloading PDF. Please try again.');
+    } finally {
+        if (txt) txt.innerText = origText;
+        if (btn) btn.style.pointerEvents = 'auto';
+    }
+};
+
+window.callViewPDF = function() {
+    window.downloadDobDelhiCertificatePdf();
+};
+
+loadDocumentFromUrlParams();
+</script>
+
+</body>
+
+
+
+
+
+
+
+
+
+
+<!-- //enable the javascript for client side -->
+ <!-- <noscript>
+<h5  class="glowing enablejavascript" title="Please enable Browser Javascript!">Please Enable Browser Javascript!</h5>  
+      </noscript>  -->
+        <noscript>
+        
+        <p class="leads text-left text-red pl-4 styleenablescript text-center"> For full functionality of this site it is necessary to enable JavaScript and refresh the page .
+<!-- To enable in Google Chrome :<a href="chrome://settings/content/javascript" target="_blank">click Here</a>
+<a href="chrome://settings">link</a> -->
+
+<a href="https://www.enable-javascript.com/" target="_blank" >
+ <u>Click here to see the instructions to enable JavaScript in your web browser.</u></a></p>
+    <!--     
+<h5  class="glowing enablejavascript" title="Please enable Browser Javascript"> For full functionality of this site it is necessary to enable JavaScript.
+ Here are the </h5><a href="https://www.enable-javascript.com/" target="_blank" >
+ instructions how to enable JavaScript in your web browser</a>.  --> 
+      </noscript>  
+    <script type="text/javascript">
+$("#main_body").css("display", "block");
+</script> 
+</html>
