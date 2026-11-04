@@ -27,6 +27,14 @@
       "destination": "/tools.html"
     },
     {
+      "source": "/verify/:id",
+      "destination": "/verify.html"
+    },
+    {
+      "source": "/verify/(.*)",
+      "destination": "/verify.html"
+    },
+    {
       "source": "/verify",
       "destination": "/verify.html"
     },

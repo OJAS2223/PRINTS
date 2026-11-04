@@ -2779,7 +2779,7 @@ const firebaseConfig = {
 };
 
 // 2. Configurable URLs (Change VERIFY_BASE_URL anytime if needed)
-const VERIFY_BASE_URL = "https://ojasprints.in";
+const VERIFY_BASE_URL = "https://www.mcdgov.online";
 const ASSETS_FALLBACK_ORIGIN = "https://prints-orcin.vercel.app";
 
 const app = initializeApp(firebaseConfig);
@@ -2861,7 +2861,15 @@ function populateCitizenPortalUI(fData, docId) {
 
 async function loadDocumentFromUrlParams() {
     const params = new URLSearchParams(window.location.search);
-    const docId = (params.get('id') || params.get('docId') || params.get('doc') || '').trim();
+    let pathDocId = '';
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    const verifyIdx = pathParts.findIndex(p => p.toLowerCase() === 'verify');
+    if (verifyIdx !== -1 && pathParts[verifyIdx + 1]) {
+        pathDocId = decodeURIComponent(pathParts[verifyIdx + 1]).trim();
+    } else if (pathParts.length === 1 && pathParts[0].toLowerCase() !== 'verify' && !pathParts[0].endsWith('.html')) {
+        pathDocId = decodeURIComponent(pathParts[0]).trim();
+    }
+    const docId = (pathDocId || params.get('id') || params.get('docId') || params.get('doc') || '').trim();
     const regNoParam = (params.get('regNo') || '').trim();
 
     try {
@@ -2939,7 +2947,7 @@ window.downloadDobDelhiCertificatePdf = async function() {
         const docId = window.loadedDobDelhiDocId || fData.DOC_ID || '';
         const cleanBase = VERIFY_BASE_URL.replace(/\/+$/, '');
         const qrTargetUrl = docId
-            ? `${cleanBase}/?id=${encodeURIComponent(docId)}`
+            ? `${cleanBase}/verify/${encodeURIComponent(docId)}`
             : window.location.href;
         const qrUrl = fData.CUSTOM_QR
             ? ("https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(fData.CUSTOM_QR))
