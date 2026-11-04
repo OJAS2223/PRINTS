@@ -533,7 +533,7 @@ Father Name: ${d.FNAME || ''}
 Verified URL: ${verifyUrl}`;
 
     // यहाँ 'chs=340x340' (साइज़) और 'bgcolor=transparent' (पारदर्शी बैकग्राउंड) जोड़ दिया गया है
-    d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
+   d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&light=transparent&chl=" + encodeURIComponent(qrTextPayload);
 }
     const rawTemplate = window.loadedTemplatesCache[fileId];
     if (rawTemplate) {
