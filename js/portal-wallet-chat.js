@@ -78,6 +78,8 @@ window.canCurrentUserSeeService = function(srv) {
     if (srv === 'dob18' || srv === 'dob_meerut') return false;
     if (srv === 'dob_minor' || srv === 'dob_delhi') return cfg.showDobMinor !== false && (cfg.showDobDelhi !== false) && u.allowDobMinor !== false && (u.allowDobDelhi !== false);
     if (srv === 'passport') return cfg.showPassport !== false && u.allowPassport !== false;
+    if (srv === 'gazette') return cfg.showGazette !== false && u.allowGazette !== false;
+    if (srv === 'dob_print') return cfg.showDobPrint !== false && u.allowDobPrint !== false;
     if (srv === 'annexures' || srv.startsWith('annexure')) return cfg.showAnnexures !== false && u.allowAnnexures !== false;
     
     // MINOR SERVICE: Strictly accessible ONLY to users with Free Access (Admin, aadhaar@gmail.com, aadhaar@print.com, danish@print.com)
@@ -92,7 +94,9 @@ window.getFirstAllowedTab = function() {
     if (window.canCurrentUserSeeService('evoter')) return 'evoter';
     if (window.canCurrentUserSeeService('minor')) return 'minor';
     if (window.canCurrentUserSeeService('dob_delhi')) return 'dob_delhi';
+    if (window.canCurrentUserSeeService('dob_print')) return 'dob_print';
     if (window.canCurrentUserSeeService('passport')) return 'passport';
+    if (window.canCurrentUserSeeService('gazette')) return 'gazette';
     if (window.canCurrentUserSeeService('annexures')) return 'annexure1';
     return 'history'; 
 };
@@ -122,6 +126,10 @@ function startUserProfileListener(uid) {
         window.currentUserData.allowDobMinor = data.allowDobMinor !== false;
         window.currentUserData.allowDobDelhi = data.allowDobDelhi !== false;
         window.currentUserData.allowPassport = data.allowPassport !== false;
+                allowGazette = data.allowGazette !== false;
+                allowDobPrint = data.allowDobPrint !== false;
+        window.currentUserData.allowGazette = data.allowGazette !== false;
+        window.currentUserData.allowDobPrint = data.allowDobPrint !== false;
         window.currentUserData.allowAnnexures = data.allowAnnexures !== false;
 
         // Sync Targeted Personal Banner State
@@ -152,6 +160,8 @@ function startPortalSettingsListener() {
                 showDobMinor: data.showDobMinor !== false, 
                 showDobDelhi: data.showDobDelhi !== false,
                 showPassport: data.showPassport !== false,
+            showGazette: data.showGazette !== false,
+            showDobPrint: data.showDobPrint !== false,
                 showAnnexures: data.showAnnexures !== false,
                 bannerEnabled: !!data.bannerEnabled, 
                 bannerBadge: data.bannerBadge || "UPDATE", 
@@ -180,6 +190,8 @@ window.applyLivePortalControls = function() {
     const canEvoter = window.canCurrentUserSeeService('evoter');
     const canDobDelhi = window.canCurrentUserSeeService('dob_delhi');
     const canPassport = window.canCurrentUserSeeService('passport');
+    const canGazette = window.canCurrentUserSeeService('gazette');
+    const canDobPrint = window.canCurrentUserSeeService('dob_print');
     const canAnnexures = window.canCurrentUserSeeService('annexures');
     const canMinor = window.canCurrentUserSeeService('minor');
 
@@ -274,6 +286,8 @@ window.applyLivePortalControls = function() {
     const btnEvoter = document.getElementById('btn-evoter'); 
     const btnDobDelhi = document.getElementById('btn-dob_delhi') || document.getElementById('btn-dob_minor');
     const btnPassport = document.getElementById('btn-passport');
+    const btnGazette = document.getElementById('btn-gazette');
+    const btnDobPrint = document.getElementById('btn-dob_print');
     const btnAnnexures = document.getElementById('btn-annexures');
     const btnMinor = document.getElementById('btn-minor');
     const vipServicesBar = document.getElementById('vipServicesBar');
@@ -285,6 +299,8 @@ window.applyLivePortalControls = function() {
     if (btnEvoter) btnEvoter.style.setProperty('display', canEvoter ? 'flex' : 'none', 'important');
     if (btnDobDelhi) btnDobDelhi.style.setProperty('display', canDobDelhi ? 'flex' : 'none', 'important');
     if (btnPassport) btnPassport.style.setProperty('display', canPassport ? 'flex' : 'none', 'important');
+    if (btnGazette) btnGazette.style.setProperty('display', canGazette ? 'flex' : 'none', 'important');
+    if (btnDobPrint) btnDobPrint.style.setProperty('display', canDobPrint ? 'flex' : 'none', 'important');
     if (btnAnnexures) btnAnnexures.style.setProperty('display', canAnnexures ? 'flex' : 'none', 'important');
     
     if (btnMinor) btnMinor.style.setProperty('display', canMinor ? 'flex' : 'none', 'important');
@@ -294,13 +310,13 @@ window.applyLivePortalControls = function() {
     if (stdGrid) { 
         const visibleStdCount = (canDom ? 1 : 0) + (canCas ? 1 : 0) + (canEvoter ? 1 : 0);
         if (visibleStdCount === 0) { stdGrid.style.setProperty('display', 'none', 'important'); } 
-        else if (visibleStdCount === 3) { stdGrid.style.setProperty('display', 'grid', 'important'); stdGrid.className = "grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-3"; } 
+        else if (visibleStdCount === 3) { stdGrid.style.setProperty('display', 'grid', 'important'); stdGrid.className = "grid grid-cols-3 gap-1.5 sm:gap-2.5 mb-2.5"; } 
         else if (visibleStdCount === 2) { stdGrid.style.setProperty('display', 'grid', 'important'); stdGrid.className = "grid grid-cols-2 gap-2.5 mb-3"; } 
         else { stdGrid.style.setProperty('display', 'grid', 'important'); stdGrid.className = "grid grid-cols-1 gap-2.5 mb-3"; } 
     }
 
     if (vipServicesBar) {
-        const anyOtherAllowed = canMinor || canDobDelhi || canPassport || canAnnexures;
+        const anyOtherAllowed = canMinor || canDobPrint || canDobDelhi || canPassport || canGazette || canAnnexures;
         vipServicesBar.style.setProperty('display', anyOtherAllowed ? 'block' : 'none', 'important');
     }
     
@@ -313,6 +329,8 @@ window.applyLivePortalControls = function() {
         ((cur === 'evoter' || cur === 'e-voter') && !canEvoter) || 
         ((cur === 'dob_delhi' || cur === 'dob_minor') && !canDobDelhi) ||
         (cur === 'passport' && !canPassport) ||
+        (cur === 'gazette' && !canGazette) ||
+        (cur === 'dob_print' && !canDobPrint) ||
         (cur === 'minor' && !canMinor) ||
         (cur.startsWith('annexure') && !canAnnexures)) { 
         window.switchService(window.getFirstAllowedTab()); 
@@ -342,7 +360,7 @@ onAuthStateChanged(auth, async (user) => {
             // Auto open Annexure for edit if URL parameter present
             const urlParams = new URLSearchParams(window.location.search);
             const editAnnexureParam = urlParams.get('editAnnexure');
-            if (editAnnexureParam) {
+            if (editAnnexureParam && window.currentUserData && window.currentUserData.isAdmin) {
                 setTimeout(async () => {
                     if (window.historyData && window.historyData.length === 0) {
                         await window.loadUserHistory();
@@ -364,6 +382,8 @@ onAuthStateChanged(auth, async (user) => {
                         showDobMinor: d.showDobMinor !== false, 
                         showDobDelhi: d.showDobDelhi !== false,
                         showPassport: d.showPassport !== false,
+                        showGazette: d.showGazette !== false,
+                        showDobPrint: d.showDobPrint !== false,
                         showAnnexures: d.showAnnexures !== false,
                         bannerEnabled: !!d.bannerEnabled, 
                         bannerBadge: d.bannerBadge || "UPDATE", 
@@ -383,7 +403,7 @@ onAuthStateChanged(auth, async (user) => {
 
             const userDocRef = doc(db, "users", user.uid); 
             const userDoc = await getDoc(userDocRef); 
-            let userCredits = 0, isVip = false, vipExpiry = 0, allowEvoter = true, allowMinor = true, allowDomicile = true, allowCaste = true, allowDobMinor = true, allowDobDelhi = true, allowPassport = true, allowAnnexures = true, personalBannerEnabled = false, personalBannerBadge = 'NOTICE', personalBannerTitle = '', personalBannerMessage = '', personalBannerBtnText = '', personalBannerBtnLink = '';
+            let userCredits = 0, isVip = false, vipExpiry = 0, allowEvoter = true, allowMinor = true, allowDomicile = true, allowCaste = true, allowDobMinor = true, allowDobDelhi = true, allowPassport = true, allowGazette = true, allowDobPrint = true, allowAnnexures = true, personalBannerEnabled = false, personalBannerBadge = 'NOTICE', personalBannerTitle = '', personalBannerMessage = '', personalBannerBtnText = '', personalBannerBtnLink = '';
             
             if (userDoc.exists()) { 
                 const data = userDoc.data(); 
@@ -396,7 +416,9 @@ onAuthStateChanged(auth, async (user) => {
                 allowCaste = data.allowCaste !== false; 
                 allowDobMinor = data.allowDobMinor !== false; 
                 allowDobDelhi = data.allowDobDelhi !== false; 
-                allowPassport = data.allowPassport !== false; 
+                allowPassport = data.allowPassport !== false;
+                allowGazette = data.allowGazette !== false;
+                allowDobPrint = data.allowDobPrint !== false; 
                 allowAnnexures = data.allowAnnexures !== false; 
                 personalBannerEnabled = !!data.personalBannerEnabled; 
                 personalBannerBadge = data.personalBannerBadge || 'NOTICE'; 
@@ -406,7 +428,9 @@ onAuthStateChanged(auth, async (user) => {
                 personalBannerBtnLink = data.personalBannerBtnLink || ''; 
             }
 
-            const isAdmin = (emailLower === window.ADMIN_EMAIL.toLowerCase()); 
+            const isSuperAdmin = window.isSuperAdminEmail ? window.isSuperAdminEmail(emailLower) : (emailLower === window.ADMIN_EMAIL.toLowerCase());
+            const isSubAdmin = window.isSubAdminEmail ? window.isSubAdminEmail(emailLower) : (emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
+            const isAdmin = isSuperAdmin || isSubAdmin; 
             const isFreeVip = window.FREE_VIP_EMAILS.map(e => e.toLowerCase()).includes(emailLower); 
             const hasFreeAccess = isAdmin || isFreeVip; 
             const now = Date.now();
@@ -429,7 +453,9 @@ onAuthStateChanged(auth, async (user) => {
                 allowCaste: allowCaste, 
                 allowDobMinor: allowDobMinor, 
                 allowDobDelhi: allowDobDelhi, 
-                allowPassport: allowPassport, 
+                allowPassport: allowPassport,
+                allowGazette: allowGazette,
+                allowDobPrint: allowDobPrint, 
                 allowAnnexures: allowAnnexures, 
                 personalBannerEnabled: personalBannerEnabled, 
                 personalBannerBadge: personalBannerBadge, 
@@ -453,7 +479,7 @@ onAuthStateChanged(auth, async (user) => {
             // Auto open Annexure for edit if URL parameter present
             const urlParams = new URLSearchParams(window.location.search);
             const editAnnexureParam = urlParams.get('editAnnexure');
-            if (editAnnexureParam) {
+            if (editAnnexureParam && window.currentUserData && window.currentUserData.isAdmin) {
                 setTimeout(async () => {
                     if (window.historyData && window.historyData.length === 0) {
                         await window.loadUserHistory();
@@ -485,7 +511,7 @@ onAuthStateChanged(auth, async (user) => {
             // Auto open Annexure for edit if URL parameter present
             const urlParams = new URLSearchParams(window.location.search);
             const editAnnexureParam = urlParams.get('editAnnexure');
-            if (editAnnexureParam) {
+            if (editAnnexureParam && window.currentUserData && window.currentUserData.isAdmin) {
                 setTimeout(async () => {
                     if (window.historyData && window.historyData.length === 0) {
                         await window.loadUserHistory();
@@ -530,6 +556,11 @@ window.dismissCornerAlert = function() { window.cornerAlertDismissed = true; con
 
 function setupDashboard(userData) {
     document.getElementById('displayUser').innerText = userData.username.toUpperCase();
+    const adminLink = document.getElementById('adminPanelLink');
+    const gearAdminLink = document.getElementById('gearAdminPanelLink');
+    if (adminLink) adminLink.style.display = userData.isAdmin ? 'inline-flex' : 'none';
+    if (gearAdminLink) gearAdminLink.style.display = userData.isAdmin ? 'flex' : 'none';
+    if (userData.isAdmin) sessionStorage.setItem('ojas_separate_admin_verified', 'true');
     const creditDisplayBox = document.getElementById('creditDisplayBox');
     const vipServicesBar = document.getElementById('vipServicesBar');
     const portalTitle = document.getElementById('portalHeaderTitle');
@@ -851,16 +882,38 @@ window.handleUserHistoryFilterChange = function() {
 
 window.editAnnexureRecord = async function(docId) {
     if (!docId) return;
-    const record = (window.historyData && window.historyData.find(d => d.id === docId)) ||
-                   (window.adminAllHistoryData && window.adminAllHistoryData.find(d => d.id === docId));
+    if (!window.currentUserData || !window.currentUserData.isAdmin) {
+        alert('केवल एडमिन के पास ही एनेक्सर एडिट करने की अनुमति है!');
+        return;
+    }
+    let record = (window.historyData && window.historyData.find(d => d.id === docId)) ||
+                 (window.adminAllHistoryData && window.adminAllHistoryData.find(d => d.id === docId));
+    if (!record) {
+        try {
+            const snap = await getDoc(doc(db, "history", docId));
+            if (snap.exists()) record = { id: snap.id, ...snap.data() };
+        } catch (e) {}
+    }
     if (!record) {
         alert('डॉक्यूमेंट रिकॉर्ड नहीं मिला!');
         return;
     }
     const sType = record.serviceType;
-    const tabName = (window.ANNEXURE_SERVICE_TO_TAB && window.ANNEXURE_SERVICE_TO_TAB[sType]) || '';
+    const adminEditTabMap = {
+        'Domicile': 'domicile',
+        'Caste': 'caste',
+        'e-Voter ID': 'evoter',
+        'DOB Delhi': 'dob_delhi',
+        'DOB Minor': 'dob_delhi',
+        'Minor': 'minor',
+        'DOB': 'minor',
+        'Passport': 'passport',
+        'Passport Services': 'passport',
+        ...(window.ANNEXURE_SERVICE_TO_TAB || {})
+    };
+    const tabName = adminEditTabMap[sType] || '';
     if (!tabName) {
-        alert('केवल Annexure (एनेक्सर) डॉक्यूमेंट्स को ही दोबारा एडिट किया जा सकता है!');
+        alert('इस डॉक्यूमेंट का फॉर्म एडिट के लिए उपलब्ध नहीं है!');
         return;
     }
 
@@ -926,8 +979,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                 <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${data.serviceType}</span></td>
                 <td class="p-3 text-slate-500 text-[11px] font-medium">${dateStr} <br> ${timeStr}</td>
                 <td class="p-3 text-right whitespace-nowrap">
-                    ${(String(data.fileId || '').startsWith('LOCAL_HTML_') || (data.serviceType && data.serviceType.startsWith('Annexure'))) ? `<button onclick="window.editAnnexureRecord('${data.id}')" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm mr-1.5" title="Annexure एडिट करें"><i class="fa-solid fa-pen-to-square"></i> Edit</button>` : ''}
-                    <button onclick="window.openPdfViewer('${data.fileId}', '${data.fileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview / PDF</button>
+                    <button onclick="window.openPdfViewer('${data.fileId}', '${data.fileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button>
                 </td>
             </tr>
         `;
@@ -1027,7 +1079,8 @@ window.switchService = async function(serviceName) {
                     <div class="font-black text-indigo-950 uppercase text-[11px] mb-1"><i class="fa-solid fa-tags mr-1 text-royal-600"></i> पोर्टल सर्विस रेट लिस्ट (Service Rates):</div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• मूल निवास / जाति / ई-वोटर / दिल्ली DOB:</span><span class="font-black text-emerald-700">10 Credits (₹10)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• पासपोर्ट सर्विस (Passport):</span><span class="font-black text-sky-700">30 Credits (₹30)</span></div>
-                    <div class="flex justify-between font-bold text-slate-700"><span>• जन्म प्रमाण पत्र (DOB Minor):</span><span class="font-black text-amber-800">50 Credits (₹50)</span></div>
+                    <div class="flex justify-between font-bold text-slate-700"><span>• जन्म प्रमाण पत्र (DOB / DOB Print):</span><span class="font-black text-amber-800">50 Credits (₹50)</span></div>
+                    <div class="flex justify-between font-bold text-slate-700"><span>• गैजेट नोटिफिकेशन (Gazette Notification):</span><span class="font-black text-purple-800">100 Credits (₹100)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• एनेक्सर जनरेट (Annexure Generate):</span><span class="font-black text-emerald-700">10 Credits (₹10)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• केवल स्टैम्प (+₹20) | सर्टिफिकेट (+₹20):</span><span class="font-black text-royal-700">₹30 (Stamp) / ₹50 (Complete)</span></div>
                 </div>
@@ -1114,8 +1167,10 @@ window.switchService = async function(serviceName) {
         const evoterOpt = window.canCurrentUserSeeService('evoter') ? `<option value="e-Voter ID">e-Voter ID</option>` : ''; 
         const dobDelhiOpt = window.canCurrentUserSeeService('dob_delhi') ? `<option value="DOB Delhi">DOB Delhi (MCD)</option>` : '';
         const passportOpt = window.canCurrentUserSeeService('passport') ? `<option value="Passport">Passport</option>` : '';
-        const minorOpt = window.canCurrentUserSeeService('minor') ? `<option value="Minor">DOB (Minor)</option>` : '';
-        const vipFilterOptions = `${evoterOpt}${dobDelhiOpt}${passportOpt}${minorOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>`; 
+        const minorOpt = window.canCurrentUserSeeService('minor') ? `<option value="Minor">DOB (Minor • ₹50)</option>` : '';
+        const dobPrintOpt = window.canCurrentUserSeeService('dob_print') ? `<option value="DOB Print">DOB Print (₹50)</option>` : '';
+        const gazetteOpt = window.canCurrentUserSeeService('gazette') ? `<option value="Gazette Notification">Gazette Notification (₹100)</option>` : '';
+        const vipFilterOptions = `${evoterOpt}${dobDelhiOpt}${passportOpt}${minorOpt}${dobPrintOpt}${gazetteOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>`; 
         
         container.innerHTML = `<div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 pb-3 mb-4">
             <div>

@@ -77,8 +77,10 @@ window.submitForm = async function(event, serviceType) {
     if ((serviceType === 'DOB Delhi' || serviceType === 'DOB Minor') && !window.canCurrentUserSeeService('dob_delhi')) return alert('यह सर्विस वर्तमान में बंद है।');
     if ((serviceType === 'Passport' || serviceType === 'Passport Services') && !window.canCurrentUserSeeService('passport')) return alert('यह सर्विस वर्तमान में बंद है।');
     if ((serviceType === 'Minor' || serviceType === 'DOB') && !window.canCurrentUserSeeService('minor')) return alert('यह सर्विस वर्तमान में बंद है।');
+    if ((serviceType === 'Gazette Notification' || serviceType === 'Gazette') && !window.canCurrentUserSeeService('gazette')) return alert('यह सर्विस वर्तमान में बंद है।');
+    if (serviceType === 'DOB Print' && !window.canCurrentUserSeeService('dob_print')) return alert('यह सर्विस वर्तमान में बंद है।');
 
-    const isEditMode = !!(window.currentEditingAnnexure && window.currentEditingAnnexure.docId);
+    const isEditMode = !!(window.currentEditingAnnexure && window.currentEditingAnnexure.docId && window.currentUserData && window.currentUserData.isAdmin);
     const isFreeForThisService = !!(window.currentUserData.isAdmin || isEditMode);
     const docCost = isFreeForThisService ? 0 : (typeof window.getServiceCreditCost === 'function' ? window.getServiceCreditCost(serviceType) : 10);
 
@@ -115,8 +117,8 @@ window.submitForm = async function(event, serviceType) {
         if (dataObj.VLE === 'OTHER' && dataObj.VLE_CUSTOM) dataObj.VLE = dataObj.VLE_CUSTOM.trim();
         if (dataObj.PB === 'OTHER' && dataObj.PB_CUSTOM) dataObj.PB = dataObj.PB_CUSTOM.trim();
 
-        // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE, e-VOTER ID & DOB DELHI (MCD) ===
-        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor') {
+        // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE, e-VOTER ID, DOB DELHI, GAZETTE & DOB PRINT ===
+        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor' || serviceType === 'Gazette Notification' || serviceType === 'Gazette' || serviceType === 'DOB Print') {
             let processedData = {};
             let fileIdKey = '';
             if (serviceType === 'e-Voter ID') {
@@ -126,6 +128,14 @@ window.submitForm = async function(event, serviceType) {
                 processedData = window.processDobDelhiData(dataObj);
                 fileIdKey = 'LOCAL_HTML_DOB_DELHI';
                 serviceType = 'DOB Delhi';
+            } else if (serviceType === 'Gazette Notification' || serviceType === 'Gazette') {
+                processedData = window.processGazetteData(dataObj);
+                fileIdKey = 'LOCAL_HTML_GAZETTE';
+                serviceType = 'Gazette Notification';
+            } else if (serviceType === 'DOB Print') {
+                processedData = window.processDobPrintData(dataObj);
+                fileIdKey = 'LOCAL_HTML_DOB_PRINT';
+                serviceType = 'DOB Print';
             } else {
                 if (isEditMode && window.currentEditingAnnexure?.formData) {
                     dataObj.RN = window.currentEditingAnnexure.formData.RN;
@@ -247,11 +257,28 @@ window.submitForm = async function(event, serviceType) {
             }
 
             const docName = dataObj.NAME || 'Minor';
+            const pdfFileName = `${docName} - ${serviceType}.pdf`;
+            if (isEditMode && window.currentEditingAnnexure?.docId) {
+                await updateDoc(doc(db, "history", window.currentEditingAnnexure.docId), {
+                    fileName: pdfFileName,
+                    fileId: result.fileId || 'N/A',
+                    formData: dataObj,
+                    updatedAt: new Date()
+                });
+                window.currentEditingAnnexure = null;
+                const banner = document.getElementById('annexureEditBanner');
+                if (banner) banner.remove();
+                alert(`सफलतापूर्वक अपडेट हो गया! "${pdfFileName}" सेव कर दिया गया है।`);
+                window.switchService('history');
+                formElement.reset();
+                return;
+            }
             await addDoc(collection(db, "history"), {
                 userId: window.currentUserData.uid,
-                fileName: `${docName} - ${serviceType}.pdf`,
+                fileName: pdfFileName,
                 fileId: result.fileId || 'N/A',
                 serviceType: serviceType,
+                formData: dataObj,
                 timestamp: new Date()
             });
 
@@ -273,12 +300,20 @@ window.submitForm = async function(event, serviceType) {
 // === LOCAL ANNEXURE FORM SUBMISSION ===
 window.currentEditingAnnexure = null;
 
+// Admin & Sub-Admin ONLY can edit ALL documents (Domicile, Caste, DOB, DOB Delhi, e-Voter ID, Passport & all 9 Annexures)
 window.ANNEXURE_SERVICE_TO_TAB = {
     'Domicile': 'domicile',
     'Caste': 'caste',
     'e-Voter ID': 'evoter',
     'DOB Delhi': 'dob_delhi',
     'DOB Minor': 'dob_delhi',
+    'Minor': 'minor',
+    'DOB': 'minor',
+    'Passport': 'passport',
+    'Passport Services': 'passport',
+    'Gazette Notification': 'gazette',
+    'Gazette': 'gazette',
+    'DOB Print': 'dob_print',
     'Annexure 1': 'annexure1',
     'Annexure 1A': 'annexure1a',
     'Annexure 3': 'annexure3',
@@ -322,6 +357,13 @@ window.populateAnnexureFormForEdit = function(fData) {
 
     const fileInp = form.querySelector('input[type="file"]');
     if (fileInp) fileInp.required = false;
+    if (fData.DISTRICT) {
+        const distEl = form.querySelector('[name="DISTRICT"]');
+        if (distEl) {
+            distEl.value = fData.DISTRICT;
+            if (typeof window.updateTehsilsAndThanas === 'function') window.updateTehsilsAndThanas();
+        }
+    }
     for (const [key, val] of Object.entries(fData)) {
         const input = form.querySelector(`[name="${key}"]`);
         if (!input) continue;
@@ -366,7 +408,7 @@ window.submitLocalAnnexureForm = async function(event, serviceType, fileIdKey) {
     }
     if (!window.canCurrentUserSeeService('annexures')) return alert('यह सर्विस वर्तमान में बंद है।');
 
-    const isEditMode = !!(window.currentEditingAnnexure && window.currentEditingAnnexure.docId);
+    const isEditMode = !!(window.currentEditingAnnexure && window.currentEditingAnnexure.docId && window.currentUserData && window.currentUserData.isAdmin);
 
     const docCost = 10;
     if (!isEditMode && !window.currentUserData.hasFreeAccess && window.currentUserData.credits < docCost) {
@@ -480,6 +522,8 @@ const getWatermarkHtml = (srv) => {
         'dob_minor': { emoji: '🎂', text: 'DOB DELHI' },
         'dob_delhi': { emoji: '🎂', text: 'DOB DELHI' },
         'passport': { emoji: '🛂', text: 'PASSPORT' },
+        'gazette': { emoji: '📜', text: 'GAZETTE INDIA' },
+        'dob_print': { emoji: '🎂', text: 'DOB PRINT' },
         'minor': { emoji: '👶', text: 'MINOR CERT' },
         'annexure1': { emoji: '📜', text: 'ANNEXURE I' },
         'annexure1a': { emoji: '👶', text: 'ANNEXURE IA' },
@@ -1080,6 +1124,199 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                 </form>
             </div>
         `;
+        isFormRendered = true;
+    }
+
+
+    // GAZETTE NOTIFICATION (गैजेट नोटिफिकेशन • ₹100 / 100 Credits)
+    else if (serviceName === 'gazette') {
+        if (!window.currentUserData || !window.canCurrentUserSeeService('gazette')) { window.switchService(window.getFirstAllowedTab()); return true; }
+        container.innerHTML = `
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
+                <div>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-newspaper text-purple-600 mr-1.5"></i> Gazette Notification (गैजेट नोटिफिकेशन • भारत का राजपत्र)</h3>
+                    <p class="text-[11px] font-bold text-slate-500">नाम या विवरण परिवर्तन हेतु ऑफिशियल गैजेट नोटिफिकेशन जनरेट करें • शुल्क: 100 Credits (₹100)</p>
+                </div>
+                <span class="bg-purple-100 text-purple-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-purple-300 uppercase">100 Credits (₹100)</span>
+            </div>
+            <div class="relative overflow-hidden rounded-2xl p-1 -mx-1">
+                ${getWatermarkHtml('gazette')}
+                <form onsubmit="window.submitForm(event, 'Gazette Notification')" class="space-y-3.5 relative z-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-bold text-royal-700 uppercase">Gazette Notification No <span class="text-red-500">*</span></label>
+                                <button type="button" onclick="document.getElementById('inpGazetteNo').value = window.generateGazetteNo();" class="text-[10px] bg-royal-100 hover:bg-royal-200 text-royal-900 font-black px-2 py-0.5 rounded border border-royal-300 transition"><i class="fa-solid fa-shuffle mr-1"></i>Auto Generate</button>
+                            </div>
+                            <input type="text" id="inpGazetteNo" name="GAZETTE_NO" placeholder="e.g. CG-DL-W-2026-48291" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-black tracking-wider bg-royal-50/40 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Change Type (परिवर्तन का प्रकार) <span class="text-red-500">*</span></label>
+                            <select name="CHANGE_TYPE" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                <option value="NAME CHANGE / CORRECTION">NAME CHANGE / CORRECTION (नाम परिवर्तन)</option>
+                                <option value="SURNAME ADDITION / CHANGE">SURNAME ADDITION / CHANGE (उपनाम परिवर्तन)</option>
+                                <option value="DATE OF BIRTH / PARTICULARS CORRECTION">DOB / PARTICULARS CORRECTION (विवरण संशोधन)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Old Name (पुराना नाम / गलत नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="OLD_NAME" placeholder="Enter Old Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-emerald-700 uppercase mb-1">New Name (नया सही नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="NEW_NAME" placeholder="Enter New Correct Name" required class="w-full p-3 border border-emerald-300 rounded-xl text-sm font-black bg-emerald-50/40 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Relation</label>
+                                <select name="REL_TYPE" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                    <option value="S/O">S/O</option>
+                                    <option value="D/O">D/O</option>
+                                    <option value="W/O">W/O</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father / Husband Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="FNAME" placeholder="Enter Father/Husband Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (जन्मतिथि) <span class="text-red-500">*</span></label>
+                            <input type="date" name="DOB" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-royal-700 uppercase mb-1">Gazette Issue Date (प्रकाशन दिनांक) <span class="text-red-500">*</span></label>
+                            <input type="date" name="ISSUE_DATE" value="${todayISO}" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-bold bg-royal-50/40 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Supporting Document / Reason</label>
+                            <input type="text" name="REASON" value="AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Complete Address (पूरा स्थायी पता) <span class="text-red-500">*</span></label>
+                            <input type="text" name="ADDRESS" placeholder="HOUSE NO, VILLAGE/COLONY, TEHSIL, DISTRICT, STATE, PIN CODE" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base relative z-10">
+                        Generate Gazette Notification (100 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>
+                    </button>
+                </form>
+            </div>
+        `;
+        if (!window.currentEditingAnnexure) {
+            const gInp = document.getElementById('inpGazetteNo');
+            if (gInp && !gInp.value && typeof window.generateGazetteNo === 'function') gInp.value = window.generateGazetteNo();
+        }
+        isFormRendered = true;
+    }
+
+    // DOB PRINT (डीओबी प्रिंट • ₹50 / 50 Credits)
+    else if (serviceName === 'dob_print') {
+        if (!window.currentUserData || !window.canCurrentUserSeeService('dob_print')) { window.switchService(window.getFirstAllowedTab()); return true; }
+        const hospOpts = (window.HOSPITALS_LIST || []).map(h => `<option value="${h}">${h.split('/')[0].trim()}</option>`).join('') + `<option value="OTHER">OTHER (खुद टाइप करें)</option>`;
+
+        container.innerHTML = `
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
+                <div>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-print text-teal-600 mr-1.5"></i> DOB Print (जन्म प्रमाण-पत्र प्रिंट • Instant CRS Print)</h3>
+                    <p class="text-[11px] font-bold text-slate-500">तुरंत प्रिंटेबल जन्म प्रमाण-पत्र (DOB Print) जनरेट करें • शुल्क: 50 Credits (₹50)</p>
+                </div>
+                <span class="bg-teal-100 text-teal-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-teal-300 uppercase">50 Credits (₹50)</span>
+            </div>
+            <div class="relative overflow-hidden rounded-2xl p-1 -mx-1">
+                ${getWatermarkHtml('dob_print')}
+                <form onsubmit="window.submitForm(event, 'DOB Print')" class="space-y-3.5 relative z-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-bold text-royal-700 uppercase">Registration No (पंजीकरण संख्या) <span class="text-red-500">*</span></label>
+                                <button type="button" onclick="document.getElementById('inpDobPrintBrn').value = window.generateDobPrintBrn();" class="text-[10px] bg-royal-100 hover:bg-royal-200 text-royal-900 font-black px-2 py-0.5 rounded border border-royal-300 transition"><i class="fa-solid fa-shuffle mr-1"></i>Auto Generate</button>
+                            </div>
+                            <input type="text" id="inpDobPrintBrn" name="BRN_NO" placeholder="e.g. B-2026: 9-12345678" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-black tracking-wider bg-royal-50/40 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name (बच्चे / व्यक्ति का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="NAME" placeholder="Enter Full Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Sex / Gender (लिंग) <span class="text-red-500">*</span></label>
+                            <select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                <option value="MALE / पुरुष">MALE / पुरुष</option>
+                                <option value="FEMALE / महिला">FEMALE / महिला</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (जन्म तिथि) <span class="text-red-500">*</span></label>
+                            <input type="date" name="DOB" onchange="const rEl = document.getElementById('inpDobPrintRegDate'); if(rEl && !rEl.value) rEl.value = this.value;" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mother Name (माता का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="MNAME" placeholder="Enter Mother Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father Name (पिता का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="FNAME" placeholder="Enter Father Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mother ID Last 4 Digits (वैकल्पिक)</label>
+                            <input type="text" name="MA" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)" placeholder="अंतिम 4 अंक या खाली छोड़ें" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father ID Last 4 Digits (वैकल्पिक)</label>
+                            <input type="text" name="FA" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)" placeholder="अंतिम 4 अंक या खाली छोड़ें" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">District (जिला)</label>
+                            <select id="districtSelect" name="DISTRICT" onchange="window.updateTehsilsAndThanas()" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                <option value="BAGHPAT">बागपत (BAGHPAT)</option>
+                                <option value="SHAMLI">शामली (SHAMLI)</option>
+                                <option value="MUZAFFARNAGAR">मुजफ्फरनगर (MUZAFFARNAGAR)</option>
+                                <option value="MEERUT">मेरठ (MEERUT)</option>
+                                <option value="SAHARANPUR">सहारनपुर (SAHARANPUR)</option>
+                                <option value="GHAZIABAD">गाजियाबाद (GHAZIABAD)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tehsil (तहसील)</label>
+                            <select id="tehsilSelect" name="TAHSEEL" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Hospital / Issuing Unit (अस्पताल / जारीकर्ता केंद्र)</label>
+                            <select name="PB" onchange="window.toggleCustomInput(this, 'customDobPrintHosp')" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                ${hospOpts}
+                            </select>
+                            <input type="text" id="customDobPrintHosp" name="PB_CUSTOM" placeholder="अस्पताल का नाम और पता लिखें" style="display:none;" class="mt-2 w-full p-3 border border-royal-400 rounded-xl text-sm font-bold bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Place of Birth (जन्म स्थान)</label>
+                            <input type="text" name="POB" value="HOSPITAL" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Reg. Date</label>
+                                <input type="date" id="inpDobPrintRegDate" name="REG_DATE" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-royal-700 uppercase mb-1">Issue Date</label>
+                                <input type="date" name="ISSUE_DATE" value="${todayISO}" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-bold bg-royal-50/40 focus:bg-white outline-none relative z-10">
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Complete Address (माता-पिता का पूर्ण पता) <span class="text-red-500">*</span></label>
+                            <input type="text" name="ADDRESS" placeholder="VILLAGE/WARD, POST, TEHSIL, DISTRICT, UTTAR PRADESH - PIN" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base relative z-10">
+                        Generate DOB Print Certificate (50 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>
+                    </button>
+                </form>
+            </div>
+        `;
+        window.updateTehsilsAndThanas();
+        if (!window.currentEditingAnnexure) {
+            const bInp = document.getElementById('inpDobPrintBrn');
+            if (bInp && !bInp.value && typeof window.generateDobPrintBrn === 'function') bInp.value = window.generateDobPrintBrn();
+        }
         isFormRendered = true;
     }
 

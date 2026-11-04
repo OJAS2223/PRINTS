@@ -70,8 +70,23 @@ window.alert = function(message) {
 };
 
 window.ADMIN_EMAIL = "hkosiun1221@gmail.com";
+window.SUB_ADMIN_EMAILS = ["prince@gmail.com", "prince@print.com"];
 window.ADMIN_SECRET_PIN = "1221";
 window.FREE_VIP_EMAILS = []; // No VIP system; all users are normal users
+
+window.isSuperAdminEmail = function(email) {
+    if (!email) return false;
+    return String(email).trim().toLowerCase() === window.ADMIN_EMAIL.toLowerCase();
+};
+
+window.isSubAdminEmail = function(email) {
+    if (!email) return false;
+    return window.SUB_ADMIN_EMAILS.includes(String(email).trim().toLowerCase());
+};
+
+window.isAnyAdminEmail = function(email) {
+    return window.isSuperAdminEmail(email) || window.isSubAdminEmail(email);
+};
 window.MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // ================= UPDATED SERVICE CREDIT RATES =================
@@ -95,6 +110,9 @@ window.SERVICE_RATES = {
     'Passport Services': 30,
     'Minor': 50,
     'DOB': 50,
+    'DOB Print': 50,
+    'Gazette Notification': 100,
+    'Gazette': 100,
     'Annexure 1': 10,
     'Annexure 1A': 10,
     'Annexure 3': 10,
@@ -110,7 +128,8 @@ window.getServiceCreditCost = function(serviceType) {
     if (!serviceType) return 10;
     if (window.SERVICE_RATES[serviceType] !== undefined) return window.SERVICE_RATES[serviceType];
     const sLower = String(serviceType).toLowerCase();
-    if (sLower === 'minor' || sLower === 'dob') return 50;
+    if (sLower.includes('gazette')) return 100;
+    if (sLower === 'minor' || sLower === 'dob' || sLower === 'dob print' || sLower === 'dob_print') return 50;
     if (sLower.includes('passport')) return 30;
     return 10;
 };
@@ -124,7 +143,7 @@ window.extractUserDisplayName = function(email, username) {
 window.isAllowedPortalEmail = function(email) {
     if (!email) return false;
     const cleanEmail = String(email).trim().toLowerCase();
-    if (cleanEmail === window.ADMIN_EMAIL || window.FREE_VIP_EMAILS.includes(cleanEmail)) return true;
+    if (window.isAnyAdminEmail(cleanEmail) || window.FREE_VIP_EMAILS.includes(cleanEmail)) return true;
     return cleanEmail.endsWith("@print.com");
 };
 

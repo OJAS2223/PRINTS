@@ -149,8 +149,41 @@ window.getStampDataUrlByName = function(fileName) {
 };
 
 window.unlockAdminWorkspace = async function(user) {
-    window.currentUserData = { uid: user.uid, email: user.email };
+    const emailLower = user.email.trim().toLowerCase();
+    const isSuper = window.isSuperAdminEmail ? window.isSuperAdminEmail(emailLower) : (emailLower === ADMIN_EMAIL.toLowerCase());
+    const isSub = window.isSubAdminEmail ? window.isSubAdminEmail(emailLower) : (emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
+
+    window.currentUserData = {
+        uid: user.uid,
+        email: user.email,
+        isAdmin: true,
+        isSuperAdmin: isSuper,
+        isSubAdmin: isSub
+    };
     sessionStorage.setItem('ojas_separate_admin_verified', 'true');
+
+    // Update Header Title & Apply Sub-Admin Restrictions for prince@gmail.com
+    const headerTitleEl = document.getElementById('adminHeaderRoleTitle');
+    const tabCreateUser = document.getElementById('tab-create_user');
+    const secCreateUser = document.getElementById('section-create_user');
+    const btnDeleteUser = document.getElementById('btnDeleteUserAccount');
+    const boxManualCredit = document.getElementById('manualCreditAdjustBox');
+    const navBar = document.getElementById('adminNavTabsBar');
+
+    if (isSub && !isSuper) {
+        if (headerTitleEl) headerTitleEl.innerHTML = `Sub-Admin <span class="text-royal-400">Prince</span>`;
+        if (tabCreateUser) tabCreateUser.style.display = 'none';
+        if (secCreateUser) secCreateUser.style.display = 'none';
+        if (btnDeleteUser) btnDeleteUser.style.display = 'none';
+        if (boxManualCredit) boxManualCredit.style.display = 'none';
+        if (navBar) navBar.className = "grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 bg-white p-1.5 sm:p-2 rounded-2xl shadow-card border border-slate-200/80 sticky top-[52px] md:top-[68px] z-30";
+    } else {
+        if (headerTitleEl) headerTitleEl.innerHTML = `Admin <span class="text-royal-400">Harish Kumar</span>`;
+        if (tabCreateUser) tabCreateUser.style.display = 'flex';
+        if (btnDeleteUser) btnDeleteUser.style.display = 'flex';
+        if (boxManualCredit) boxManualCredit.style.display = 'block';
+    }
+
     const emailEl = document.getElementById('secAdminEmail');
     const passEl = document.getElementById('secAdminPass');
     if (emailEl) emailEl.value = '';
@@ -168,7 +201,8 @@ window.unlockAdminWorkspace = async function(user) {
     await window.loadAllUsersForDropdown(); 
     await window.loadPortalSettingsForAdmin();
     window.startLiveSupportListener(); 
-    const savedTab = sessionStorage.getItem('ojas_admin_active_tab') || 'payments';
+    let savedTab = sessionStorage.getItem('ojas_admin_active_tab') || 'payments';
+    if (isSub && savedTab === 'create_user') savedTab = 'payments';
     window.switchAdminMainTab(savedTab);
 };
 
@@ -176,13 +210,15 @@ window.handleSeparateAdminLogin = async function(event) {
     event.preventDefault();
     const emailEl = document.getElementById('secAdminEmail');
     const passEl = document.getElementById('secAdminPass');
-    const emailInp = (emailEl?.value || '').trim().toLowerCase();
+    const rawInp = (emailEl?.value || '').trim().toLowerCase();
+    const emailInp = rawInp.includes('@') ? rawInp : `${rawInp}@print.com`;
     const passInp = (passEl?.value || '').trim();
     const errBox = document.getElementById('secAdminLoginError');
     const btn = document.getElementById('btnSecAdminLogin');
     errBox.style.display = 'none';
 
-    if (emailInp !== ADMIN_EMAIL.toLowerCase()) {
+    const isAllowedAdmin = window.isAnyAdminEmail ? window.isAnyAdminEmail(emailInp) : (emailInp === ADMIN_EMAIL.toLowerCase() || emailInp === 'prince@gmail.com' || emailInp === 'prince@print.com');
+    if (!isAllowedAdmin) {
         errBox.innerText = 'Access Denied: Unauthorized Admin ID!';
         errBox.style.display = 'block';
         if (passEl) passEl.value = '';
@@ -215,7 +251,10 @@ onAuthStateChanged(auth, async (user) => {
     if (passEl) passEl.value = '';
 
     const isSeparateVerified = sessionStorage.getItem('ojas_separate_admin_verified') === 'true';
-    if (user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && isSeparateVerified) {
+    const emailLower = user?.email ? user.email.trim().toLowerCase() : '';
+    const isAllowedAdmin = window.isAnyAdminEmail ? window.isAnyAdminEmail(emailLower) : (emailLower === ADMIN_EMAIL.toLowerCase() || emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
+
+    if (user && isAllowedAdmin && isSeparateVerified) {
         await window.unlockAdminWorkspace(user);
     } else {
         document.getElementById('loadingScreen').classList.add('hidden');
@@ -291,6 +330,7 @@ window.toggleUserAccess = async function(field, allowed) {
 };
 
 window.deleteSelectedUserAccount = async function() {
+    if (window.currentUserData?.isSubAdmin) return alert('यूज़र अकाउंट डिलीट करने का अधिकार केवल Super Admin के पास है!');
     const uid = document.getElementById('userSelectDropdown').value;
     if (!uid || !window.usersDataList[uid]) return alert('कृपया पहले ड्रॉपडाउन से उस यूज़र को सेलेक्ट करें जिसे आप डिलीट करना चाहते हैं!');
     const uData = window.usersDataList[uid];
@@ -474,7 +514,7 @@ window.loadPortalSettingsForAdmin = async function() {
     try { 
         const snap = await getDoc(doc(db, "settings", "portalConfig")); 
         let cfg = { 
-            showDomicile: true, showCaste: true, showEvoter: true, showMinor: true, showDobMinor: true, 
+            showDomicile: true, showCaste: true, showEvoter: true, showMinor: true, showDobPrint: true, showGazette: true, showDobMinor: true, 
             showDobDelhi: true, showPassport: true, showAnnexures: true,
             bannerEnabled: false, bannerBadge: "UPDATE", bannerTitle: "", bannerMessage: "", bannerBtnText: "", bannerBtnLink: "", 
             banner2Enabled: false, banner2Badge: "NOTICE", banner2Title: "", banner2Message: "", banner2BtnText: "", banner2BtnLink: "",
@@ -487,7 +527,9 @@ window.loadPortalSettingsForAdmin = async function() {
         if(document.getElementById('chkShowEvoter')) document.getElementById('chkShowEvoter').checked = cfg.showEvoter !== false;
         if(document.getElementById('chkShowMinor')) document.getElementById('chkShowMinor').checked = cfg.showMinor !== false; 
         const dobMinorEl = document.getElementById('chkShowDobMinor'); if(dobMinorEl) dobMinorEl.checked = cfg.showDobMinor !== false;
+        const dobPrEl = document.getElementById('chkShowDobPrint'); if(dobPrEl) dobPrEl.checked = cfg.showDobPrint !== false;
         const passEl = document.getElementById('chkShowPassport'); if(passEl) passEl.checked = cfg.showPassport !== false;
+        const gazEl = document.getElementById('chkShowGazette'); if(gazEl) gazEl.checked = cfg.showGazette !== false;
         const annexEl = document.getElementById('chkShowAnnexures'); if(annexEl) annexEl.checked = cfg.showAnnexures !== false;
         
         // Banner 1
@@ -519,7 +561,9 @@ window.updateStealthStatusPill = function() {
 };
 
 window.quickToggleAllCerts = async function(makeVisible) { document.getElementById('chkShowDomicile').checked = makeVisible; document.getElementById('chkShowCaste').checked = makeVisible; if(document.getElementById('chkShowEvoter')) document.getElementById('chkShowEvoter').checked = makeVisible;
-    if(document.getElementById('chkShowMinor')) document.getElementById('chkShowMinor').checked = makeVisible; const dobMinorEl = document.getElementById('chkShowDobMinor'); if(dobMinorEl) dobMinorEl.checked = makeVisible; await window.savePortalSettings(); };
+    if(document.getElementById('chkShowMinor')) document.getElementById('chkShowMinor').checked = makeVisible;
+    if(document.getElementById('chkShowDobPrint')) document.getElementById('chkShowDobPrint').checked = makeVisible;
+    if(document.getElementById('chkShowGazette')) document.getElementById('chkShowGazette').checked = makeVisible; const dobMinorEl = document.getElementById('chkShowDobMinor'); if(dobMinorEl) dobMinorEl.checked = makeVisible; await window.savePortalSettings(); };
 
 window.savePortalSettings = async function(event) {
     if (event) event.preventDefault(); 
@@ -538,7 +582,9 @@ window.savePortalSettings = async function(event) {
         showMinor: document.getElementById('chkShowMinor') ? document.getElementById('chkShowMinor').checked : true, 
         showDobMinor: document.getElementById('chkShowDobMinor') ? document.getElementById('chkShowDobMinor').checked : true, 
         showDobDelhi: document.getElementById('chkShowDobMinor') ? document.getElementById('chkShowDobMinor').checked : true,
+        showDobPrint: document.getElementById('chkShowDobPrint') ? document.getElementById('chkShowDobPrint').checked : true,
         showPassport: document.getElementById('chkShowPassport') ? document.getElementById('chkShowPassport').checked : true,
+        showGazette: document.getElementById('chkShowGazette') ? document.getElementById('chkShowGazette').checked : true,
         showAnnexures: document.getElementById('chkShowAnnexures') ? document.getElementById('chkShowAnnexures').checked : true,
         
         // Banner 1
@@ -1220,8 +1266,9 @@ window.renderAdminHistory = function() {
             </div>
         ` : '');
 
-        const editAnnexureBtnHtml = isLocalDoc ? `
-            <a href="/portal?editAnnexure=${data.id}" target="_blank" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="डॉक्यूमेंट एडिट करें"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+        const canAdminEditDoc = isLocalDoc || (data.formData && Object.keys(data.formData).length > 0);
+        const editAnnexureBtnHtml = canAdminEditDoc ? `
+            <a href="/portal?editAnnexure=${data.id}" target="_blank" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="डॉक्यूमेंट एडिट करें (केवल एडमिन)"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
         ` : '';
 
         container.innerHTML += `
@@ -1381,7 +1428,8 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
 window.closePdfViewer = function() { const modal = document.getElementById('pdfViewerModal'); if (modal) { modal.style.display = 'none'; modal.classList.add('hidden'); } const iframe = document.getElementById('pdfIframe'); if (iframe) iframe.src = ''; const htmlContainer = document.getElementById('htmlDocPreviewContainer'); if (htmlContainer) htmlContainer.innerHTML = ''; document.body.style.overflow = 'auto'; };
 
 // === ADMIN TAB SWITCH & USERS / SETTINGS DATA ===
-window.switchAdminMainTab = function(tabName) { 
+window.switchAdminMainTab = function(tabName) {
+    if (tabName === 'create_user' && window.currentUserData?.isSubAdmin) { alert('नया यूज़र बनाने का अधिकार केवल Super Admin के पास है!'); return; } 
     if (!tabName) tabName = "payments";
     sessionStorage.setItem("ojas_admin_active_tab", tabName);
     const tabs = ['payments', 'users', 'create_user', 'support', 'history', 'controls']; 
@@ -1438,7 +1486,9 @@ window.handleUserSelection = function() {
     if(document.getElementById('userMinorToggle')) document.getElementById('userMinorToggle').checked = uData.allowMinor !== false; 
     if(document.getElementById('userDobDelhiToggle')) document.getElementById('userDobDelhiToggle').checked = (uData.allowDobDelhi !== false && uData.allowDobMinor !== false);
     if(document.getElementById('userDobMinorToggle')) document.getElementById('userDobMinorToggle').checked = (uData.allowDobDelhi !== false && uData.allowDobMinor !== false);
+    if(document.getElementById('userDobPrintToggle')) document.getElementById('userDobPrintToggle').checked = uData.allowDobPrint !== false;
     if(document.getElementById('userPassportToggle')) document.getElementById('userPassportToggle').checked = uData.allowPassport !== false;
+    if(document.getElementById('userGazetteToggle')) document.getElementById('userGazetteToggle').checked = uData.allowGazette !== false;
     if(document.getElementById('userAnnexuresToggle')) document.getElementById('userAnnexuresToggle').checked = uData.allowAnnexures !== false;
 
     // Load Personal Banner Config for Selected User
@@ -1638,6 +1688,7 @@ window.adminUpdateVipDays = async function(daysToAdd) {
     } catch (err) { alert('Error: ' + err.message); }
 };
 window.adjustCredits = async function(action) {
+    if (window.currentUserData?.isSubAdmin) return alert('एक्स्ट्रा क्रेडिट्स मैन्युअली बढ़ाने या घटाने का अधिकार केवल Super Admin के पास है! आप केवल Payments टैब से पेमेंट रिक्वेस्ट Approve कर सकते हैं।');
     const uid = document.getElementById('userSelectDropdown').value;
     if (!uid || !window.usersDataList[uid]) return alert('कृपया पहले यूज़र चुनें!');
     const amtVal = parseInt(document.getElementById('creditAdjustmentAmount').value);
@@ -1692,7 +1743,9 @@ window.createNewUserByAdmin = async function(e) { e.preventDefault(); const emai
     allowDobMinor: true, 
     allowDomicile: true, 
     allowCaste: true, 
-    allowPassport: true, 
+    allowDobPrint: true,
+    allowPassport: true,
+    allowGazette: true, 
     allowAnnexures: true, 
     userPass: pass, 
     adminResetPass: pass, 

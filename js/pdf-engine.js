@@ -10,6 +10,8 @@ window.TEMPLATE_FILES_MAP = {
     'LOCAL_HTML_DOMICILE': 'domicile.html',
     'LOCAL_HTML_EVOTER': 'evoter.html',
     'LOCAL_HTML_DOB_DELHI': 'dob-delhi.html',
+    'LOCAL_HTML_GAZETTE': 'gazette.html',
+    'LOCAL_HTML_DOB_PRINT': 'dob-print.html',
     'LOCAL_HTML_ANNEXURE_1': 'annexure-1.html',
     'LOCAL_HTML_ANNEXURE_1A': 'annexure-1a.html',
     'LOCAL_HTML_ANNEXURE_3': 'annexure-3.html',
@@ -279,6 +281,132 @@ window.syncMcdPreviewFields = function(sourceType, newVal) {
     }
 };
 
+// ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹50) PROCESSORS =================
+window.generateGazetteNo = function() {
+    const year = new Date().getFullYear();
+    const rand5 = Math.floor(10000 + Math.random() * 90000);
+    return `CG-DL-W-${year}-${rand5}`;
+};
+
+window.processGazetteData = function(rawFormObj) {
+    const formatToDMY = (dStr) => {
+        if (!dStr) return '';
+        const s = String(dStr).trim();
+        if (s.includes('-')) {
+            const p = s.split('-');
+            if (p.length === 3 && p[0].length === 4) return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        return s;
+    };
+    const now = new Date();
+    const todayDMY = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+
+    const gazetteNo = (rawFormObj.GAZETTE_NO || '').toString().trim().toUpperCase() || window.generateGazetteNo();
+    const oldName = (rawFormObj.OLD_NAME || '').toString().trim().toUpperCase();
+    const newName = (rawFormObj.NEW_NAME || rawFormObj.NAME || '').toString().trim().toUpperCase();
+    const fname = (rawFormObj.FNAME || '').toString().trim().toUpperCase();
+    const relType = (rawFormObj.REL_TYPE || 'S/O').toString().trim().toUpperCase();
+    const dob = formatToDMY(rawFormObj.DOB) || todayDMY;
+    const issueDate = formatToDMY(rawFormObj.ISSUE_DATE) || todayDMY;
+    const address = (rawFormObj.ADDRESS || '').toString().trim().toUpperCase();
+    const changeType = (rawFormObj.CHANGE_TYPE || 'NAME CHANGE / CORRECTION').toString().trim().toUpperCase();
+    const reason = (rawFormObj.REASON || 'AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER').toString().trim().toUpperCase();
+
+    const qrText = `GAZETTE OF INDIA | No: ${gazetteNo} | Old Name: ${oldName} | New Name: ${newName} | ${relType}: ${fname} | DOB: ${dob} | Issue Date: ${issueDate}`;
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(qrText);
+
+    return {
+        SERVICE_TYPE: 'Gazette Notification',
+        GAZETTE_NO: gazetteNo,
+        NAME: newName || oldName,
+        OLD_NAME: oldName,
+        NEW_NAME: newName,
+        REL_TYPE: relType,
+        FNAME: fname,
+        DOB: dob,
+        ISSUE_DATE: issueDate,
+        ADDRESS: address,
+        CHANGE_TYPE: changeType,
+        REASON: reason,
+        QR_URL: qrUrl
+    };
+};
+
+window.generateDobPrintBrn = function() {
+    const year = new Date().getFullYear();
+    const rand8 = Math.floor(10000000 + Math.random() * 90000000);
+    return `B-${year}: 9-${rand8}`;
+};
+
+window.processDobPrintData = function(rawFormObj) {
+    const formatToDMY = (dStr) => {
+        if (!dStr) return '';
+        const s = String(dStr).trim();
+        if (s.includes('-')) {
+            const p = s.split('-');
+            if (p.length === 3 && p[0].length === 4) return `${p[2]}-${p[1]}-${p[0]}`;
+        }
+        return s;
+    };
+    const now = new Date();
+    const todayDMY = `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+
+    const brnNo = (rawFormObj.BRN_NO || '').toString().trim().toUpperCase() || window.generateDobPrintBrn();
+    const name = (rawFormObj.NAME || '').toString().trim().toUpperCase();
+    const sex = (rawFormObj.SEX || 'MALE / पुरुष').toString().trim().toUpperCase();
+    const dob = formatToDMY(rawFormObj.DOB) || todayDMY;
+    const dobWords = (rawFormObj.DOB_WORDS || dob).toString().trim().toUpperCase();
+    const pob = (rawFormObj.POB || 'HOSPITAL / घर').toString().trim().toUpperCase();
+    const mname = (rawFormObj.MNAME || '').toString().trim().toUpperCase();
+    const fname = (rawFormObj.FNAME || '').toString().trim().toUpperCase();
+
+    const cleanMA = (rawFormObj.MA || '').toString().replace(/\D/g, '').slice(-4);
+    const maFormatted = cleanMA.length === 4 ? `XXXXXXXX${cleanMA}` : 'NA';
+    const cleanFA = (rawFormObj.FA || '').toString().replace(/\D/g, '').slice(-4);
+    const faFormatted = cleanFA.length === 4 ? `XXXXXXXX${cleanFA}` : 'NA';
+
+    const address = (rawFormObj.ADDRESS || '').toString().trim().toUpperCase();
+    const permAddress = (rawFormObj.PERM_ADDRESS || address).toString().trim().toUpperCase();
+    const regDate = formatToDMY(rawFormObj.REG_DATE) || dob;
+    const issueDate = formatToDMY(rawFormObj.ISSUE_DATE) || todayDMY;
+    const hospitalUnit = (rawFormObj.PB === 'OTHER' && rawFormObj.PB_CUSTOM ? rawFormObj.PB_CUSTOM : (rawFormObj.HOSPITAL_UNIT || rawFormObj.PB || 'CHC BARAUT, BAGHPAT')).toString().trim().toUpperCase();
+    const tehsil = (rawFormObj.TAHSEEL || 'BARAUT').toString().trim().toUpperCase();
+    const district = (rawFormObj.DISTRICT || 'BAGHPAT').toString().trim().toUpperCase();
+    const stateName = (rawFormObj.STATE_NAME || 'UTTAR PRADESH').toString().trim().toUpperCase();
+    const remarks = (rawFormObj.REMARKS || 'NONE').toString().trim().toUpperCase();
+
+    const qrText = `CRS BIRTH CERTIFICATE | Reg No: ${brnNo} | Name: ${name} | Sex: ${sex} | DOB: ${dob} | Mother: ${mname} | Father: ${fname} | Unit: ${hospitalUnit}`;
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(qrText);
+
+    return {
+        SERVICE_TYPE: 'DOB Print',
+        BRN_NO: brnNo,
+        NAME: name,
+        SEX: sex,
+        DOB: dob,
+        DOB_WORDS: dobWords,
+        POB: pob,
+        MNAME: mname,
+        FNAME: fname,
+        MA: maFormatted,
+        FA: faFormatted,
+        ADDRESS: address,
+        PERM_ADDRESS: permAddress,
+        REG_DATE: regDate,
+        ISSUE_DATE: issueDate,
+        HOSPITAL_UNIT: hospitalUnit,
+        PB: hospitalUnit,
+        TAHSEEL: tehsil,
+        TEHSIL: tehsil,
+        DISTRICT: district,
+        STATE_NAME: stateName,
+        STATE_GOVT_HI: 'उत्तर प्रदेश सरकार',
+        STATE_GOVT_EN: 'GOVERNMENT OF UTTAR PRADESH',
+        REMARKS: remarks,
+        QR_URL: qrUrl
+    };
+};
+
 // ================= e-VOTER ID PROCESSOR =================
 window.generateRandomEpicNo = function() {
     const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -491,7 +619,7 @@ window.directPrintDocument = async function(fileId, formDataObj, fileName, withS
                     @page { size: A4; margin: 0; }
                     html, body { margin: 0; padding: 0; background: #ffffff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
                     .affidavit-paper { position: relative !important; font-family: 'Times New Roman', Times, serif; width: 794px; height: 1122px; padding: 46px 62px; background: #ffffff; color: #000000; font-size: 15px; line-height: 1.55; box-sizing: border-box; display: block !important; margin: 0 !important; overflow: hidden; }
-                    .affidavit-paper > div:last-child { position: absolute !important; bottom: 46px !important; left: 62px !important; right: 62px !important; }
+                    .affidavit-paper:not(.mcd-cert-paper) > div:last-child { position: absolute !important; bottom: 46px !important; left: 62px !important; right: 62px !important; }
                     .filled-val { font-weight: bold !important; color: #000000 !important; text-decoration: underline !important; text-underline-offset: 3px !important; }
                     .stamp-overlay-layer { position: absolute; top: 0; left: 0; width: 794px; height: 1122px; pointer-events: none; z-index: 30; mix-blend-mode: normal !important; overflow: hidden; }
                     .stamp-overlay-layer img { width: 794px; height: 1122px; object-fit: contain; object-position: top center; mix-blend-mode: normal !important; display: block; }
