@@ -242,22 +242,16 @@
       align-items: center !important;
       justify-content: center !important;
       z-index: 3 !important;
+      background: transparent !important;
+      background-color: transparent !important;
     }
     .mcd-cert-paper .qr-code-box img {
       width: 100% !important;
       height: 100% !important;
       object-fit: fill !important;
+      background: transparent !important;
+      background-color: transparent !important;
     }
-    
- .mcd-cert-paper .qr-code-box {
-    background: transparent !important;
-}
-
-.mcd-cert-paper .qr-code-box img {
-    background: transparent !important;
-    background-color: transparent !important;
-    mix-blend-mode: multiply !important; /* यह सफ़ेद बैकग्राउंड को पीछे के कागज़/वाटरमार्क के साथ ट्रांसपेरेंट कर देगा */
-}
     .mcd-cert-paper .footer-hi {
       position: absolute !important;
       left: 203.9pt !important;
@@ -310,12 +304,12 @@
 
   <!-- बीच का बैकग्राउंड वॉटरमार्क (logo.svg) -->
   <div class="watermark-box">
-    <img id="watermarkImg" src="/images/logo.svg" onerror="this.onerror=null;this.src='images/logo.jpg';" alt="" />
+    <img id="watermarkImg" src="/images/logo.svg" onerror="this.onerror=null;this.src='images/logo.svg';" alt="" />
   </div>
 
   <!-- ऊपर बाईं तरफ MCD लोगो (logo.svg) -->
   <div class="mcd-logo-box">
-    <img id="mcdLogoImg" src="/images/logo.svg" onerror="this.onerror=null;this.src='images/logo.jpg';" alt="MCD Logo" />
+    <img id="mcdLogoImg" src="/images/logo.svg" onerror="this.onerror=null;this.src='images/logo.svg';" alt="MCD Logo" />
   </div>
 
   <!-- मध्य हेडर (अशोक स्तंभ: s.png + फिक्स शीर्षक) -->
