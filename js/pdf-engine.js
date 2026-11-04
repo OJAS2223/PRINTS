@@ -518,12 +518,23 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
         </div>
     ` : '';
 
-    if (fileId === 'LOCAL_HTML_DOB_DELHI' && d && d.DOC_ID && !d.CUSTOM_QR) {
-        const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
-        const verifyUrl = `${baseUrl}/verify/${encodeURIComponent(d.DOC_ID)}`;
-        d.VERIFY_URL = verifyUrl;
-        d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(verifyUrl);
-    }
+   if (fileId === 'LOCAL_HTML_DOB_DELHI' && d && d.DOC_ID && !d.CUSTOM_QR) {
+    const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
+    const verifyUrl = `${baseUrl}/verify/${encodeURIComponent(d.DOC_ID)}`;
+    d.VERIFY_URL = verifyUrl;
+
+    // QR कोड के लिए पूरा टेक्स्ट फॉर्मेट तैयार किया गया है
+    const qrTextPayload = 
+`Name Of The Child - ${d.NAME || ''}
+Registration No - ${d.REG_NO || ''}
+Registration Date - ${d.DOR || ''}
+DOB. - ${d.DOB || ''}
+Father Name: ${d.FNAME || ''}
+Verified URL: ${verifyUrl}`;
+
+    // अब QR कोड में URL की जगह यह पूरा टेक्स्ट एन्कोड होकर जाएगा
+    d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrTextPayload);
+}
 
     const rawTemplate = window.loadedTemplatesCache[fileId];
     if (rawTemplate) {
