@@ -64,7 +64,7 @@ window.restoreFormDataFromSession = function(serviceName) {
 // === SERVICES SUBMISSION (Caste, Domicile & e-Voter ID Local Instant HTML; Minor on Google Drive & Free) ===
 window.submitForm = async function(event, serviceType) {
     event.preventDefault();
-    const { db, doc, updateDoc, collection, addDoc } = window.fb;
+    const { db, doc, setDoc, updateDoc, collection, addDoc } = window.fb;
 
     if (!window.currentUserData) return alert('Please login first!');
     if (!window.isAllowedPortalEmail(window.currentUserData.email)) {
@@ -119,13 +119,18 @@ window.submitForm = async function(event, serviceType) {
 
         // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE, e-VOTER ID, DOB DELHI, GAZETTE & DOB PRINT ===
         if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor' || serviceType === 'Gazette Notification' || serviceType === 'Gazette' || serviceType === 'DOB Print') {
+            const preGenDocRef = isEditMode
+                ? doc(db, "history", window.currentEditingAnnexure.docId)
+                : doc(collection(db, "history"));
+            const targetDocId = preGenDocRef.id;
+
             let processedData = {};
             let fileIdKey = '';
             if (serviceType === 'e-Voter ID') {
                 processedData = window.processEvoterData(dataObj);
                 fileIdKey = 'LOCAL_HTML_EVOTER';
             } else if (serviceType === 'DOB Delhi' || serviceType === 'DOB Minor') {
-                processedData = window.processDobDelhiData(dataObj);
+                processedData = window.processDobDelhiData(dataObj, targetDocId);
                 fileIdKey = 'LOCAL_HTML_DOB_DELHI';
                 serviceType = 'DOB Delhi';
             } else if (serviceType === 'Gazette Notification' || serviceType === 'Gazette') {
@@ -144,13 +149,13 @@ window.submitForm = async function(event, serviceType) {
                 processedData = window.processCasteOrDomicileData(dataObj, serviceType);
                 fileIdKey = serviceType === 'Caste' ? 'LOCAL_HTML_CASTE' : 'LOCAL_HTML_DOMICILE';
             }
+            processedData.DOC_ID = targetDocId;
 
             const docName = processedData.NAME || serviceType;
             const pdfFileName = `${docName} - ${serviceType}.pdf`;
 
             if (isEditMode) {
-                const editDocId = window.currentEditingAnnexure.docId;
-                await updateDoc(doc(db, "history", editDocId), {
+                await updateDoc(preGenDocRef, {
                     fileName: pdfFileName,
                     formData: processedData,
                     updatedAt: new Date()
@@ -165,7 +170,7 @@ window.submitForm = async function(event, serviceType) {
             }
 
             const isAutoStampedCert = (serviceType === 'Caste' || serviceType === 'Domicile');
-            await addDoc(collection(db, "history"), {
+            await setDoc(preGenDocRef, {
                 userId: window.currentUserData.uid,
                 fileName: pdfFileName,
                 fileId: fileIdKey,
@@ -400,7 +405,7 @@ window.cancelAnnexureEdit = function() {
 
 window.submitLocalAnnexureForm = async function(event, serviceType, fileIdKey) {
     event.preventDefault();
-    const { db, doc, updateDoc, collection, addDoc } = window.fb;
+    const { db, doc, setDoc, updateDoc, collection, addDoc } = window.fb;
 
     if (!window.currentUserData) return alert('Please login first!');
     if (!window.isAllowedPortalEmail(window.currentUserData.email)) {

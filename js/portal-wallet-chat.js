@@ -829,7 +829,7 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
         if (modalStampCheckbox) modalStampCheckbox.checked = initialWithStamp;
 
         const record = (window.historyData && window.historyData[historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[historyIndex]);
-        const fData = record?.formData || {};
+        const fData = record?.formData || {}; if (record?.id && !fData.DOC_ID) fData.DOC_ID = record.id;
         spinner.style.display = 'none';
         
         if (initialCertFileId) {

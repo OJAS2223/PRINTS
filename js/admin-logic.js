@@ -1060,7 +1060,7 @@ window.changeModalStampCity = async function(cityId) {
         window.renderAdminHistory();
     }
     const record = window.adminAllHistoryData[ctx.historyIndex];
-    const fData = record?.formData || {};
+    const fData = record?.formData || {}; if (record?.id && !fData.DOC_ID) fData.DOC_ID = record.id;
     const htmlPreviewContainer = document.getElementById('htmlDocPreviewContainer');
     if (htmlPreviewContainer) {
         htmlPreviewContainer.innerHTML = window.buildLocalAffidavitHtml(ctx.fileId, fData, true, ctx.withStamp, ctx.stampSrc);
@@ -1332,7 +1332,7 @@ window.toggleModalStampPreview = async function(isChecked) {
     }
     if (isChecked) { if (window.availableStampsList.length === 0) await window.preloadAllAvailableStamps(); const chosenObj = window.pickRandomAvailableStampObj(); ctx.withStamp = true; ctx.stampFile = chosenObj.name; ctx.stampSrc = chosenObj.dataUrl; } else { ctx.withStamp = false; ctx.stampFile = ''; ctx.stampSrc = ''; }
     if (ctx.historyIndex >= 0) { window.stampSelectionMap[ctx.historyIndex] = { enabled: ctx.withStamp, stampFile: ctx.stampFile, stampSrc: ctx.stampSrc }; const record = window.adminAllHistoryData[ctx.historyIndex]; if (record) { record.withStamp = ctx.withStamp; record.stampFile = ctx.stampFile; try { await updateDoc(doc(db, "history", record.id), { withStamp: ctx.withStamp, stampFile: ctx.stampFile || '', stampedAt: new Date() }); } catch (e) {} } window.renderAdminHistory(); }
-    const record = window.adminAllHistoryData[ctx.historyIndex]; const fData = record?.formData || {}; const htmlPreviewContainer = document.getElementById('htmlDocPreviewContainer');
+    const record = window.adminAllHistoryData[ctx.historyIndex]; const fData = record?.formData || {}; if (record?.id && !fData.DOC_ID) fData.DOC_ID = record.id; const htmlPreviewContainer = document.getElementById('htmlDocPreviewContainer');
     htmlPreviewContainer.innerHTML = window.buildLocalAffidavitHtml(ctx.fileId, fData, true, ctx.withStamp, ctx.stampSrc);
 };
 
@@ -1386,7 +1386,7 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
         }
 
         const record = (window.historyData && window.historyData[historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[historyIndex]);
-        const fData = record?.formData || {};
+        const fData = record?.formData || {}; if (record?.id && !fData.DOC_ID) fData.DOC_ID = record.id;
         
         spinner.style.display = 'none';
         

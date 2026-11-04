@@ -69,6 +69,8 @@ window.alert = function(message) {
     alertModal.querySelector('div').classList.add('scale-100');
 };
 
+// DOB Delhi QR Code Verification Domain (Aap baad mein is URL ko apne hisaab se badal sakte hain)
+window.DOB_DELHI_VERIFY_BASE_URL = "https://www.mcdgov.online";
 window.ADMIN_EMAIL = "hkosiun1221@gmail.com";
 window.SUB_ADMIN_EMAILS = ["prince@gmail.com", "prince@print.com"];
 window.ADMIN_SECRET_PIN = "1221";

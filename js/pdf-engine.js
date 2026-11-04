@@ -177,7 +177,7 @@ window.generateMcdRegNo = function() {
     return `MCDOLIR-2219-00${rand7}`;
 };
 
-window.processDobDelhiData = function(rawFormObj) {
+window.processDobDelhiData = function(rawFormObj, docId = '') {
     const regNo = (rawFormObj.REG_NO || '').toString().trim().toUpperCase() || window.generateMcdRegNo();
     const name = (rawFormObj.NAME || '').toString().trim().toUpperCase();
     const sex = (rawFormObj.SEX || 'MALE').toString().trim().toUpperCase();
@@ -207,12 +207,20 @@ window.processDobDelhiData = function(rawFormObj) {
         ? presAddr
         : (rawFormObj.POB === 'OTHER' && rawFormObj.POB_CUSTOM ? rawFormObj.POB_CUSTOM.trim().toUpperCase() : rawFormObj.POB.toString().trim().toUpperCase());
 
+    const finalDocId = (docId || rawFormObj.DOC_ID || '').toString().trim();
+    const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
+    const verifyUrl = finalDocId
+        ? `${baseUrl}/verify/${encodeURIComponent(finalDocId)}`
+        : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
+
     const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
-    const qrPayload = customQr || `https://mcdonline.nic.in/verify?regNo=${encodeURIComponent(regNo)}&name=${encodeURIComponent(name)}&gender=${encodeURIComponent(sex)}&dob=${encodeURIComponent(dob)}&pob=${encodeURIComponent(pob)}&dor=${encodeURIComponent(dor)}&mother=${encodeURIComponent(mname)}&father=${encodeURIComponent(fname)}&doi=${encodeURIComponent(doi)}`;
+    const qrPayload = customQr || verifyUrl;
     const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
 
     return {
         SERVICE_TYPE: 'DOB Delhi',
+        DOC_ID: finalDocId,
+        VERIFY_URL: verifyUrl,
         REG_NO: regNo,
         ZONE: zone,
         NAME: name,
@@ -261,7 +269,11 @@ window.syncMcdPreviewFields = function(sourceType, newVal) {
     const permAddr = (permEl?.innerText || '').trim();
     const doi = (container.querySelector('#valDoi')?.innerText || '').trim();
 
-    const qrPayload = `https://mcdonline.nic.in/verify?regNo=${encodeURIComponent(regNo)}&name=${encodeURIComponent(name)}&gender=${encodeURIComponent(sex)}&dob=${encodeURIComponent(dob)}&pob=${encodeURIComponent(pob)}&dor=${encodeURIComponent(dor)}&mother=${encodeURIComponent(mname)}&father=${encodeURIComponent(fname)}&doi=${encodeURIComponent(doi)}`;
+    const ctxForQr = window.currentModalContext;
+    const recForQr = (ctxForQr && ctxForQr.historyIndex >= 0) ? ((window.historyData && window.historyData[ctxForQr.historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[ctxForQr.historyIndex])) : null;
+    const docIdForQr = recForQr?.id || recForQr?.formData?.DOC_ID || '';
+    const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
+    const qrPayload = docIdForQr ? `${baseUrl}/verify/${encodeURIComponent(docIdForQr)}` : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
     const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
 
     const qrImg = container.querySelector('#qrCodeImg');
@@ -505,6 +517,13 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
             <img src="${finalStampSrc}" onerror="this.onerror=null;this.src='m.png';" />
         </div>
     ` : '';
+
+    if (fileId === 'LOCAL_HTML_DOB_DELHI' && d && d.DOC_ID && !d.CUSTOM_QR) {
+        const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
+        const verifyUrl = `${baseUrl}/verify/${encodeURIComponent(d.DOC_ID)}`;
+        d.VERIFY_URL = verifyUrl;
+        d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(verifyUrl);
+    }
 
     const rawTemplate = window.loadedTemplatesCache[fileId];
     if (rawTemplate) {
