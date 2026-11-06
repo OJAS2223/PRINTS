@@ -55,8 +55,9 @@ window.currentActiveOrderId = null;
 window.currentUserChatData = { messages: [], unreadByUser: false };
 
 window.portalConfigState = {
-    showDomicile: true, showCaste: true, showDob18: true, showDobMinor: true,
-    showDobDelhi: true, showPassport: true, showAnnexures: true,
+    showDomicile: true, showCaste: true, showEvoter: true, showMinor: true,
+    showDobMinor: true, showDobDelhi: true, showDobPrint: true, showPassport: true,
+    showGazette: true, showAnnexures: true,
     bannerEnabled: false, bannerBadge: "UPDATE", bannerTitle: "",
     bannerMessage: "", bannerBtnText: "", bannerBtnLink: "",
     banner2Enabled: false, banner2Badge: "NOTICE", banner2Title: "",
@@ -156,7 +157,8 @@ function startPortalSettingsListener() {
             window.portalConfigState = { 
                 showDomicile: data.showDomicile !== false, 
                 showCaste: data.showCaste !== false, 
-                showEvoter: data.showEvoter !== false, 
+                showEvoter: data.showEvoter !== false,
+                showMinor: data.showMinor !== false, 
                 showDobMinor: data.showDobMinor !== false, 
                 showDobDelhi: data.showDobDelhi !== false,
                 showPassport: data.showPassport !== false,
@@ -432,7 +434,7 @@ onAuthStateChanged(auth, async (user) => {
             const isSubAdmin = window.isSubAdminEmail ? window.isSubAdminEmail(emailLower) : (emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
             const isAdmin = isSuperAdmin || isSubAdmin; 
             const isFreeVip = window.FREE_VIP_EMAILS.map(e => e.toLowerCase()).includes(emailLower); 
-            const hasFreeAccess = isAdmin || isFreeVip; 
+            const hasFreeAccess = isSuperAdmin; 
             const now = Date.now();
 
             if (!hasFreeAccess && isVip && vipExpiry > 0 && vipExpiry <= now) { 
@@ -703,7 +705,8 @@ window.generateQR = async function() {
     try {
         const res = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: window.currentUserData.uid, email: window.currentUserData.email, username: window.currentUserData.username, totalPayable: window.currentTotalPayable, creditsRequested: window.currentRechargeCredits, wantsVip: window.currentWantsVip, vipDaysRequested: window.currentVipDays, vipPlanFee: window.currentVipPlanFee }) });
         const orderData = await res.json();
-        if (orderData.status && orderData.orderId) {
+        if (orderData.status && (orderData.orderId || orderData.order_id)) {
+            window.currentRzpOrderData = orderData;
             window.currentActiveOrderId = orderData.orderId;
             if (orderData.upi_string) { universalUpiUrl = orderData.upi_string; qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(universalUpiUrl)}`; }
             if (orderData.qr_code && orderData.qr_code.startsWith('http')) qrUrl = orderData.qr_code;
@@ -770,19 +773,86 @@ window.cancelAndBackToPaymentStep1 = async function() {
 window.togglePaymentTicketBox = function() { const box = document.getElementById('paymentIssueTicketBox'); if (!box) return; box.style.display = box.style.display === 'none' ? 'block' : 'none'; };
 
 window.submitPaymentIssueTicket = async function() {
-    const rawUtr = document.getElementById('ticketUtrInput')?.value.trim() || ''; const utr = rawUtr.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    const resMsg = document.getElementById('paymentTicketResultMsg'); const btn = document.getElementById('btnRaisePaymentTicket');
-    if (!utr || utr.length < 10) return alert("कृपया अपना 12-अंकों का सही UTR / Reference नंबर दर्ज करें!");
-    const origHtml = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> टिकट सबमिट हो रहा है...';
+    const rawUtr = document.getElementById('ticketUtrInput')?.value.trim() || '';
+    const utr = rawUtr.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
+    const issueNote = document.getElementById('ticketIssueNoteInput')?.value.trim() || 'पेमेंट फेल / पेंडिंग हो गया है, कृपया वेरीफाई करके क्रेडिट्स अप्रूव करें।';
+    const resMsg = document.getElementById('paymentTicketResultMsg');
+    const btn = document.getElementById('btnRaisePaymentTicket');
+    if (!utr || utr.length < 6) return alert("कृपया अपना 12-अंकों का सही UTR / Reference नंबर या Transaction ID दर्ज करें!");
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> टिकट सबमिट हो रहा है...';
 
-    const ticketMsgText = `💳 [PAYMENT UTR TICKET]\nAmount: ₹${window.currentTotalPayable}\nCredits: +${window.currentRechargeCredits} Cr${window.currentVipDays > 0 ? ` | VIP: +${window.currentVipDays}d` : ''}\nUTR No: ${utr}\nOrder ID: ${window.currentActiveOrderId || 'N/A'}\nNote: ऑनलाइन पेमेंट ऑटो-वेरीफाई नहीं हुआ, कृपया चेक करके क्रेडिट जोड़ें।`;
+    const ticketMsgText = `💳 [PAYMENT FAILED / PENDING TICKET - 24 TO 48 HOURS]\nAmount: ₹${window.currentTotalPayable}\nCredits: +${window.currentRechargeCredits} Cr\nUTR / Ref No: ${utr}\nOrder ID: ${window.currentActiveOrderId || 'N/A'}\nNote: ${issueNote}`;
     try {
-        if (window.currentActiveOrderId) { try { await updateDoc(doc(db, "payments", window.currentActiveOrderId), { utrNumber: utr, status: "Pending (Ticket Raised)", ticketRaisedAt: new Date() }); } catch (e) {} }
-        const uid = window.currentUserData.uid; const chatRef = doc(db, "supportTickets", uid); const existingMsgs = Array.isArray(window.currentUserChatData?.messages) ? [...window.currentUserChatData.messages] : []; existingMsgs.push({ sender: 'user', text: ticketMsgText, time: Date.now() });
-        await setDoc(chatRef, { type: 'PAYMENT_ISSUE_TICKET', userId: uid, userIdentifier: window.currentUserData.email, username: window.currentUserData.username, message: `💳 Payment UTR Ticket: ₹${window.currentTotalPayable} (UTR: ${utr})`, status: 'Open', unreadByAdmin: true, unreadByUser: false, timestamp: new Date(), updatedAtMs: Date.now(), messages: existingMsgs }, { merge: true });
-        notifyAdminSecurely({ type: "PAYMENT_UTR_TICKET", user: window.currentUserData.email, amount: window.currentTotalPayable, utr: utr });
-        resMsg.className = "p-3.5 rounded-xl bg-green-50 border border-green-300 text-green-900 text-xs font-bold text-center space-y-1 mt-2"; resMsg.innerHTML = `<div><i class="fa-solid fa-circle-check text-green-600 text-base mr-1"></i> आपका पेमेंट टिकट सफलतापूर्वक रेज़ हो गया है!</div><p class="text-[11px] text-green-800">आपका UTR नंबर (<strong>${utr}</strong>) दर्ज कर लिया गया है।</p>`; resMsg.style.display = 'block'; document.getElementById('ticketUtrInput').value = '';
-    } catch (err) { alert("टिकट रेज़ करने में समस्या आई: " + err.message); } finally { btn.disabled = false; btn.innerHTML = origHtml; }
+        if (window.currentActiveOrderId) {
+            try {
+                await updateDoc(doc(db, "payments", window.currentActiveOrderId), {
+                    utrNumber: utr,
+                    status: "Pending (Ticket Raised - 24-48h)",
+                    note: issueNote,
+                    ticketRaisedAt: new Date()
+                });
+            } catch (e) {}
+        } else {
+            const newPayDoc = await addDoc(collection(db, "payments"), {
+                userId: window.currentUserData.uid,
+                email: window.currentUserData.email,
+                amountPaid: window.currentTotalPayable || 100,
+                creditsRequested: window.currentRechargeCredits || 100,
+                wantsVip: false,
+                vipDaysRequested: 0,
+                vipPlanFee: 0,
+                utrNumber: utr,
+                note: issueNote,
+                status: "Pending (Ticket Raised - 24-48h)",
+                timestamp: new Date()
+            });
+            window.currentActiveOrderId = newPayDoc.id;
+        }
+        const uid = window.currentUserData.uid;
+        const chatRef = doc(db, "supportTickets", uid);
+        const existingMsgs = Array.isArray(window.currentUserChatData?.messages) ? [...window.currentUserChatData.messages] : [];
+        existingMsgs.push({ sender: 'user', text: ticketMsgText, time: Date.now() });
+        await setDoc(chatRef, {
+            type: 'PAYMENT_ISSUE_TICKET',
+            userId: uid,
+            userIdentifier: window.currentUserData.email,
+            username: window.currentUserData.username,
+            message: `💳 Payment Ticket (24-48h): ₹${window.currentTotalPayable} (UTR: ${utr})`,
+            status: 'Open',
+            unreadByAdmin: true,
+            unreadByUser: false,
+            timestamp: new Date(),
+            updatedAtMs: Date.now(),
+            messages: existingMsgs
+        }, { merge: true });
+
+        notifyAdminSecurely({
+            type: "PAYMENT_UTR_TICKET",
+            user: window.currentUserData.email,
+            amount: window.currentTotalPayable,
+            utr: utr,
+            orderId: window.currentActiveOrderId || 'N/A',
+            note: issueNote
+        });
+
+        resMsg.className = "p-4 rounded-xl bg-green-50 border-2 border-green-400 text-green-900 text-xs font-bold text-center space-y-1.5 mt-3";
+        resMsg.innerHTML = `
+            <div class="text-sm font-black text-green-800"><i class="fa-solid fa-circle-check text-green-600 mr-1"></i> आपका पेमेंट टिकट सफलतापूर्वक जनरेट हो गया है!</div>
+            <p class="text-[11px] text-green-800 leading-relaxed">
+                UTR / Ref No: <strong>${utr}</strong> दर्ज कर लिया गया है और एडमिन को Telegram पर अलर्ट भेज दिया गया है।<br>
+                ⏳ <strong>24 से 48 घंटे (24–48 Hours)</strong> के भीतर एडमिन द्वारा वेरीफाई करके आपके वॉलेट में क्रेडिट्स अप्रूव कर दिए जाएंगे।
+            </p>`;
+        resMsg.style.display = 'block';
+        document.getElementById('ticketUtrInput').value = '';
+        if (document.getElementById('ticketIssueNoteInput')) document.getElementById('ticketIssueNoteInput').value = '';
+    } catch (err) {
+        alert("टिकट रेज़ करने में समस्या आई: " + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+    }
 };
 
 window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
@@ -973,13 +1043,36 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
         if (data.adminStampCharged) { badgesHtml += `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Stamp</span>`; }
         if (data.adminCertCharged) { badgesHtml += `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Cert</span>`; }
         
+        const isServerDobPrint = (data.fileId === 'SERVER_API_DOB_PRINT');
+        const apiStatus = String(data.formData?.API_STATUS || 'pending').toLowerCase();
+        const hasPdf = Boolean(data.formData?.HAS_PDF);
+        const safeFileName = String(data.fileName || 'Document.pdf').replace(/'/g, "\\'");
+
+        if (isServerDobPrint) {
+            badgesHtml += `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">Ref: ${data.formData?.APPLICATION_REF || 'N/A'}</span>`;
+            if (hasPdf || apiStatus === 'approved') {
+                badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-check-circle mr-0.5"></i>APPROVED</span>`;
+            } else {
+                badgesHtml += `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5 animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>${apiStatus.toUpperCase()}</span>`;
+            }
+        }
+
+        const actionBtnsHtml = isServerDobPrint
+            ? ((hasPdf || apiStatus === 'approved')
+                ? `<div class="inline-flex items-center gap-1.5">
+                       <button onclick="window.openServerDobPrintPdf('${data.id}', '${safeFileName}')" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button>
+                       <button onclick="window.downloadServerDobPrintPdf('${data.id}')" class="inline-flex items-center gap-1 bg-green-600 text-white hover:bg-green-700 px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-download"></i> Download PDF</button>
+                   </div>`
+                : `<button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>`)
+            : `<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button>`;
+
         historyContainer.innerHTML += `
             <tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
                 <td class="p-3 font-bold text-slate-800">${data.fileName}${badgesHtml}</td>
-                <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${data.serviceType}</span></td>
+                <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType}</span></td>
                 <td class="p-3 text-slate-500 text-[11px] font-medium">${dateStr} <br> ${timeStr}</td>
                 <td class="p-3 text-right whitespace-nowrap">
-                    <button onclick="window.openPdfViewer('${data.fileId}', '${data.fileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button>
+                    ${actionBtnsHtml}
                 </td>
             </tr>
         `;
@@ -991,11 +1084,15 @@ window.switchService = async function(serviceName) {
 
     if (window.currentUserData?.hasFreeAccess && (serviceName === 'add_credit' || serviceName === 'payments_history')) serviceName = window.getFirstAllowedTab();
     
-    // Validate Document Tab Access
+    // Validate Document Tab Access (Global Stealth + Per-User Stealth)
     if (serviceName === 'domicile' && !window.canCurrentUserSeeService('domicile')) serviceName = window.getFirstAllowedTab(); 
     else if (serviceName === 'caste' && !window.canCurrentUserSeeService('caste')) serviceName = window.getFirstAllowedTab(); 
     else if ((serviceName === 'evoter' || serviceName === 'e-voter') && !window.canCurrentUserSeeService('evoter')) serviceName = window.getFirstAllowedTab();
-    else if (serviceName === 'dob_minor' && !window.canCurrentUserSeeService('dob_minor')) serviceName = window.getFirstAllowedTab();
+    else if ((serviceName === 'dob_minor' || serviceName === 'dob_delhi') && !window.canCurrentUserSeeService('dob_delhi')) serviceName = window.getFirstAllowedTab();
+    else if (serviceName === 'dob_print' && !window.canCurrentUserSeeService('dob_print')) serviceName = window.getFirstAllowedTab();
+    else if (serviceName === 'passport' && !window.canCurrentUserSeeService('passport')) serviceName = window.getFirstAllowedTab();
+    else if (serviceName === 'gazette' && !window.canCurrentUserSeeService('gazette')) serviceName = window.getFirstAllowedTab();
+    else if (serviceName.startsWith('annexure') && !window.canCurrentUserSeeService('annexures')) serviceName = window.getFirstAllowedTab();
     else if (serviceName === 'minor' && !window.canCurrentUserSeeService('minor')) serviceName = window.getFirstAllowedTab();
 
     window.currentActiveTab = serviceName;
@@ -1079,7 +1176,8 @@ window.switchService = async function(serviceName) {
                     <div class="font-black text-indigo-950 uppercase text-[11px] mb-1"><i class="fa-solid fa-tags mr-1 text-royal-600"></i> पोर्टल सर्विस रेट लिस्ट (Service Rates):</div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• मूल निवास / जाति / ई-वोटर / दिल्ली DOB:</span><span class="font-black text-emerald-700">10 Credits (₹10)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• पासपोर्ट सर्विस (Passport):</span><span class="font-black text-sky-700">30 Credits (₹30)</span></div>
-                    <div class="flex justify-between font-bold text-slate-700"><span>• जन्म प्रमाण पत्र (DOB / DOB Print):</span><span class="font-black text-amber-800">50 Credits (₹50)</span></div>
+                    <div class="flex justify-between font-bold text-slate-700"><span>• जन्म प्रमाण पत्र (DOB Certificate):</span><span class="font-black text-amber-800">50 Credits (₹50)</span></div>
+                    <div class="flex justify-between font-bold text-slate-700"><span>• डेट ऑफ बर्थ PDF ओरिजिनल (DOB Original PDF):</span><span class="font-black text-teal-800">140 Credits (₹140)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• गैजेट नोटिफिकेशन (Gazette Notification):</span><span class="font-black text-purple-800">100 Credits (₹100)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• एनेक्सर जनरेट (Annexure Generate):</span><span class="font-black text-emerald-700">10 Credits (₹10)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• केवल स्टैम्प (+₹20) | सर्टिफिकेट (+₹20):</span><span class="font-black text-royal-700">₹30 (Stamp) / ₹50 (Complete)</span></div>
@@ -1113,24 +1211,65 @@ window.switchService = async function(serviceName) {
                         <img id="upiQRCode" src="" alt="Payment QR Code" class="w-52 h-52 object-contain mx-auto">
                     </div>
 
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mb-4">
-                        Google Pay, PhonePe, Paytm या किसी भी UPI ऐप से यह QR कोड स्कैन करके पेमेंट पूरा करें।
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mb-3">
+                        QR कोड स्कैन करें या मोबाइल पर नीचे दिए गए ऐप बटन पर 1-Click टैप करके सीधा पेमेंट करें:
                     </p>
+
+                    <!-- 1-CLICK MOBILE UPI APP BUTTONS (Google Pay, PhonePe, Paytm) -->
+                    <div class="space-y-2 mb-4 text-left">
+                        <span class="block text-[10px] font-black text-slate-400 uppercase text-center tracking-wider">📱 1-Click Mobile UPI Instant Pay</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" onclick="window.openUpiApp('gpay')" class="upi-app-btn bg-white hover:bg-blue-50 text-slate-800 border-2 border-blue-500/40 rounded-xl py-2.5 px-2 text-xs font-black flex flex-col items-center justify-center gap-1 shadow-sm">
+                                <i class="fa-brands fa-google-pay text-2xl text-blue-600"></i>
+                                <span class="text-[10px]">Google Pay</span>
+                            </button>
+                            <button type="button" onclick="window.openUpiApp('phonepe')" class="upi-app-btn bg-white hover:bg-purple-50 text-slate-800 border-2 border-purple-500/40 rounded-xl py-2.5 px-2 text-xs font-black flex flex-col items-center justify-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-mobile-screen-button text-xl text-purple-600"></i>
+                                <span class="text-[10px]">PhonePe</span>
+                            </button>
+                            <button type="button" onclick="window.openUpiApp('paytm')" class="upi-app-btn bg-white hover:bg-sky-50 text-slate-800 border-2 border-sky-500/40 rounded-xl py-2.5 px-2 text-xs font-black flex flex-col items-center justify-center gap-1 shadow-sm">
+                                <i class="fa-solid fa-wallet text-xl text-sky-600"></i>
+                                <span class="text-[10px]">Paytm</span>
+                            </button>
+                        </div>
+                        <a id="btnDirectUpiPay" href="javascript:void(0);" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
+                            <i class="fa-solid fa-bolt"></i> Open Any UPI App (1-Click)
+                        </a>
+                        <button type="button" onclick="window.openRazorpayModalNow()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-glow">
+                            <i class="fa-solid fa-shield-halved"></i> Pay via Razorpay (UPI / Card / NetBanking)
+                        </button>
+                    </div>
 
                     <button type="button" onclick="window.cancelAndBackToPaymentStep1()" class="w-full bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 font-black py-3 rounded-xl transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-ban"></i> Cancel Payment &amp; Go Back
                     </button>
                 </div>
 
-                <div class="text-center">
-                    <button type="button" onclick="window.togglePaymentTicketBox()" class="text-xs font-bold text-royal-600 dark:text-royal-400 hover:underline">
-                        पेमेंट कट गया पर क्रेडिट नहीं मिला? यहाँ क्लिक करें
+                <!-- FAILED OR STUCK PAYMENT TICKET GENERATOR (24-48 HOURS RESOLUTION) -->
+                <div class="w-full max-w-sm mx-auto text-center">
+                    <button type="button" onclick="window.togglePaymentTicketBox()" class="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-xs font-black text-amber-900 transition flex items-center justify-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-ticket text-amber-600"></i> पेमेंट फेल हो गया या क्रेडिट नहीं मिला? Ticket जनरेट करें
                     </button>
                 </div>
-                <div id="paymentIssueTicketBox" style="display:none;" class="bg-indigo-50 dark:bg-slate-800 p-4 rounded-2xl border border-indigo-200 dark:border-slate-700 w-full max-w-sm mx-auto">
-                    <label class="block text-[11px] font-black text-indigo-900 dark:text-indigo-300 uppercase mb-2">12-Digit UTR / Ref Number</label>
-                    <input type="text" id="ticketUtrInput" placeholder="e.g. 312345678901" class="w-full p-3 border border-indigo-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 mb-2 outline-none">
-                    <button type="button" id="btnRaisePaymentTicket" onclick="window.submitPaymentIssueTicket()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 rounded-xl text-xs transition">Submit UTR</button>
+                <div id="paymentIssueTicketBox" style="display:none;" class="bg-indigo-50 dark:bg-slate-800 p-4 rounded-2xl border-2 border-indigo-300 dark:border-slate-700 w-full max-w-sm mx-auto space-y-2.5">
+                    <div class="flex items-center justify-between border-b border-indigo-200 pb-2">
+                        <span class="text-xs font-black text-indigo-950 uppercase"><i class="fa-solid fa-headset mr-1 text-indigo-600"></i> Raise Payment Ticket</span>
+                        <span class="bg-amber-200 text-amber-950 text-[9px] font-black px-2 py-0.5 rounded-full">24–48 Hours Resolution</span>
+                    </div>
+                    <p class="text-[11px] font-semibold text-slate-600 leading-relaxed">
+                        यदि आपका पेमेंट कट गया है या फेल दिखा रहा है, तो नीचे 12-अंकों का UTR / Ref नंबर डालकर टिकट जनरेट करें। एडमिन 24 से 48 घंटे में इसे अप्रूव कर देंगे।
+                    </p>
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-900 dark:text-indigo-300 uppercase mb-1">12-Digit UTR / Transaction Ref No. <span class="text-red-500">*</span></label>
+                        <input type="text" id="ticketUtrInput" placeholder="e.g. 412345678901" class="w-full p-2.5 border border-indigo-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-indigo-900 dark:text-indigo-300 uppercase mb-1">समस्या का विवरण (Optional Note)</label>
+                        <input type="text" id="ticketIssueNoteInput" placeholder="e.g. Google Pay से ₹200 कट गए हैं, कृपया अप्रूव करें" class="w-full p-2.5 border border-indigo-300 dark:border-slate-600 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 outline-none">
+                    </div>
+                    <button type="button" id="btnRaisePaymentTicket" onclick="window.submitPaymentIssueTicket()" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3 rounded-xl text-xs shadow-glow transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-paper-plane"></i> Submit Ticket (24–48h Approval)
+                    </button>
                     <div id="paymentTicketResultMsg" style="display:none;"></div>
                 </div>
             </div>
@@ -1168,7 +1307,7 @@ window.switchService = async function(serviceName) {
         const dobDelhiOpt = window.canCurrentUserSeeService('dob_delhi') ? `<option value="DOB Delhi">DOB Delhi (MCD)</option>` : '';
         const passportOpt = window.canCurrentUserSeeService('passport') ? `<option value="Passport">Passport</option>` : '';
         const minorOpt = window.canCurrentUserSeeService('minor') ? `<option value="Minor">DOB (Minor • ₹50)</option>` : '';
-        const dobPrintOpt = window.canCurrentUserSeeService('dob_print') ? `<option value="DOB Print">DOB Print (₹50)</option>` : '';
+        const dobPrintOpt = window.canCurrentUserSeeService('dob_print') ? `<option value="DOB Print">DOB Original PDF (₹140)</option>` : '';
         const gazetteOpt = window.canCurrentUserSeeService('gazette') ? `<option value="Gazette Notification">Gazette Notification (₹100)</option>` : '';
         const vipFilterOptions = `${evoterOpt}${dobDelhiOpt}${passportOpt}${minorOpt}${dobPrintOpt}${gazetteOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>`; 
         
@@ -1279,4 +1418,155 @@ window.loadUserPayments = async function() {
     } catch (err) { 
         tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 text-xs">Failed to load payment history.</td></tr>`; 
     }
+};
+
+
+window.currentRzpOrderData = null;
+
+window.openRazorpayModalNow = function() {
+    const orderData = window.currentRzpOrderData;
+    if (!orderData || !orderData.order_id) {
+        return alert('कृपया पहले Proceed to Pay पर क्लिक करें।');
+    }
+    if (typeof window.Razorpay === 'undefined') {
+        return alert('Razorpay SDK लोड नहीं हो सका। कृपया नीचे दिए गए Google Pay / PhonePe बटन या QR कोड से पेमेंट करें।');
+    }
+
+    const options = {
+        key: orderData.key_id || 'rzp_test_TwxsYylNMNurst',
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'Ojas Print Service (ogasprints.in)',
+        description: `Wallet Recharge (+${window.currentRechargeCredits} Credits)`,
+        image: '/images/logo.png',
+        order_id: orderData.order_id,
+        prefill: {
+            name: window.currentUserData?.username || '',
+            email: window.currentUserData?.email || ''
+        },
+        theme: {
+            color: '#4f46e5'
+        },
+        handler: async function (response) {
+            try {
+                const verifyRes = await fetch('/api/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                });
+                const verifyData = await verifyRes.json();
+                if (!verifyRes.ok || !verifyData.status) {
+                    throw new Error(verifyData.message || 'Signature verification failed');
+                }
+                if (verifyData.updatedCredits !== undefined) {
+                    window.currentUserData.credits = verifyData.updatedCredits;
+                    const crEl = document.getElementById('displayCredits');
+                    if (crEl) crEl.innerText = verifyData.updatedCredits;
+                }
+                const walletUI = document.getElementById('walletMainUI');
+                if (walletUI) {
+                    walletUI.innerHTML = `
+                        <div class="p-6 bg-green-50 rounded-2xl border-2 border-green-400 text-center space-y-2">
+                            <i class="fa-solid fa-circle-check text-5xl text-green-600 mb-2 animate-bounce"></i>
+                            <h2 class="text-xl font-black text-green-900">पेमेंट सफल! (Auto-Verified)</h2>
+                            <p class="text-xs font-bold text-green-700">आपका ₹${window.currentTotalPayable} का पेमेंट तुरंत वेरीफाई हो गया है और आपके अकाउंट में +${verifyData.creditsAdded} Credits जोड़ दिए गए हैं!</p>
+                            <p class="text-[11px] font-mono text-slate-500">Payment ID: ${response.razorpay_payment_id}</p>
+                            <div class="pt-3">
+                                <button onclick="window.switchService('payments_history')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2.5 px-6 rounded-xl text-xs shadow">पेमेंट हिस्ट्री देखें</button>
+                            </div>
+                        </div>`;
+                }
+            } catch (err) {
+                alert('पेमेंट वेरिफिकेशन में समस्या आई: ' + err.message + '\nयदि आपके पैसे कट गए हैं, तो कृपया नीचे Payment Ticket रेज़ करें।');
+                const tBox = document.getElementById('paymentIssueTicketBox');
+                if (tBox) tBox.style.display = 'block';
+            }
+        }
+    };
+
+    const rzp = new window.Razorpay(options);
+    rzp.on('payment.failed', function (response) {
+        const errDesc = response?.error?.description || 'Payment failed.';
+        alert(`❌ पेमेंट पूरा नहीं हो सका: ${errDesc}\n\nयदि आपके अकाउंट से पैसे कट गए हैं, तो नीचे दिए गए बॉक्स में UTR / Transaction ID डालकर Ticket जनरेट करें (24 से 48 घंटे में समाधान)।`);
+        const tBox = document.getElementById('paymentIssueTicketBox');
+        if (tBox) tBox.style.display = 'block';
+    });
+    rzp.open();
+};
+
+window.checkDobPrintOrderStatus = async function(docId, btnEl, silent = false) {
+    if (!docId || !window.fb.auth.currentUser) return;
+    const origHtml = btnEl ? btnEl.innerHTML : '';
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+    }
+    try {
+        const idToken = await window.fb.auth.currentUser.getIdToken(true);
+        const res = await fetch('/api/dob-print', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ action: 'check_status', docId })
+        });
+        const data = await res.json();
+        if (!silent) {
+            alert(data.message || 'Status updated.');
+        }
+        if (data.hasPdf || data.apiStatus === 'approved' || !silent) {
+            await window.loadUserHistory();
+        }
+    } catch (err) {
+        if (!silent) alert('Error checking status: ' + err.message);
+    } finally {
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = origHtml;
+        }
+    }
+};
+
+window.openServerDobPrintPdf = async function(docId, fileName) {
+    if (!window.fb.auth.currentUser) return;
+    const idToken = await window.fb.auth.currentUser.getIdToken();
+    const proxyViewUrl = `/api/dob-print?action=proxy_pdf&docId=${encodeURIComponent(docId)}&token=${encodeURIComponent(idToken)}`;
+    const proxyDownloadUrl = `${proxyViewUrl}&download=1`;
+
+    document.getElementById('pdfViewerTitle').innerText = fileName || 'DOB Original PDF';
+    const iframe = document.getElementById('pdfIframe');
+    const htmlPreviewContainer = document.getElementById('htmlDocPreviewContainer');
+    const spinner = document.getElementById('pdfLoadingSpinner');
+    const printBtn = document.getElementById('modalPrintBtn');
+
+    htmlPreviewContainer.style.display = 'none';
+    htmlPreviewContainer.innerHTML = '';
+    iframe.style.display = 'block';
+    spinner.style.display = 'flex';
+    iframe.src = proxyViewUrl;
+
+    if (printBtn) {
+        printBtn.onclick = function() {
+            window.open(proxyDownloadUrl, '_blank');
+        };
+    }
+
+    const modal = document.getElementById('pdfViewerModal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    }
+    document.body.style.overflow = 'hidden';
+};
+
+window.downloadServerDobPrintPdf = async function(docId) {
+    if (!window.fb.auth.currentUser) return;
+    const idToken = await window.fb.auth.currentUser.getIdToken();
+    const proxyDownloadUrl = `/api/dob-print?action=proxy_pdf&docId=${encodeURIComponent(docId)}&token=${encodeURIComponent(idToken)}&download=1`;
+    window.open(proxyDownloadUrl, '_blank');
 };

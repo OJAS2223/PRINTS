@@ -551,7 +551,7 @@ window.loadPortalSettingsForAdmin = async function() {
         const supWaEl = document.getElementById('inpSupportWhatsapp'); 
         if (supWaEl) supWaEl.value = cfg.supportWhatsapp || '919306437623'; 
         window.adminSupportWhatsapp = cfg.supportWhatsapp || '919306437623'; 
-        window.updateStealthStatusPill();
+        window.updateStealthStatusPill(); if (typeof window.loadDobPrintSecretApiConfig === 'function') window.loadDobPrintSecretApiConfig();
     } catch (err) {}
 };
 
@@ -609,7 +609,7 @@ window.savePortalSettings = async function(event) {
     try { 
         await setDoc(doc(db, "settings", "portalConfig"), payload, { merge: true }); 
         window.adminSupportWhatsapp = cleanSupWa; 
-        window.updateStealthStatusPill(); 
+        window.updateStealthStatusPill(); if (typeof window.loadDobPrintSecretApiConfig === 'function') window.loadDobPrintSecretApiConfig(); 
         if (msg) { 
             msg.className = "p-3 bg-green-50 text-green-800 border border-green-300 rounded-xl text-xs font-black text-center"; 
             msg.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> पोर्टल सेटिंग्स और दोनों बैनर सफलतापूर्वक अपडेट हो गए हैं!`; 
@@ -1752,3 +1752,35 @@ window.createNewUserByAdmin = async function(e) { e.preventDefault(); const emai
     userPhone: phone, 
     createdAt: new Date() 
 }); await window.loadAllUsersForDropdown(); msg.className = "p-3.5 bg-green-50 text-green-900 border border-green-300 rounded-xl text-xs font-black text-center"; msg.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> यूज़र <strong>${email}</strong> सफलतापूर्वक बन गया है!`; e.target.reset(); setTimeout(() => msg.classList.add('hidden'), 5000); } catch (err) { msg.className = "p-3 bg-red-50 text-red-800 border border-red-300 rounded-xl text-xs font-bold text-center"; msg.innerText = "Error: " + err.message; } };
+
+
+window.loadDobPrintSecretApiConfig = async function() {
+    try {
+        const snap = await getDoc(doc(db, "adminSecrets", "dobPrintConfig"));
+        if (snap.exists()) {
+            const d = snap.data();
+            if (document.getElementById('inpSecretDobApiUrl')) document.getElementById('inpSecretDobApiUrl').value = d.baseUrl || 'https://rtyu.run.place/api/v1/index.php';
+            if (document.getElementById('inpSecretDobApiKey')) document.getElementById('inpSecretDobApiKey').value = d.apiKey || 'sk_2e7fc8baf4a1998c9382c1f961bdd64c';
+            if (document.getElementById('inpSecretDobApplyService')) document.getElementById('inpSecretDobApplyService').value = d.applyService || 'b-number-pdf-apply';
+            if (document.getElementById('inpSecretDobStatusService')) document.getElementById('inpSecretDobStatusService').value = d.statusService || 'b-number-pdf-status';
+            if (document.getElementById('inpSecretDobCreditCost')) document.getElementById('inpSecretDobCreditCost').value = d.creditCost || 140;
+        }
+    } catch (e) {}
+};
+
+window.saveDobPrintSecretApiConfig = async function() {
+    try {
+        const payload = {
+            baseUrl: document.getElementById('inpSecretDobApiUrl').value.trim(),
+            apiKey: document.getElementById('inpSecretDobApiKey').value.trim(),
+            applyService: document.getElementById('inpSecretDobApplyService').value.trim() || 'b-number-pdf-apply',
+            statusService: document.getElementById('inpSecretDobStatusService').value.trim() || 'b-number-pdf-status',
+            creditCost: parseInt(document.getElementById('inpSecretDobCreditCost').value) || 140,
+            updatedAt: new Date()
+        };
+        await setDoc(doc(db, "adminSecrets", "dobPrintConfig"), payload, { merge: true });
+        alert('✅ DOB Original PDF Secret API settings saved securely on the server!');
+    } catch (err) {
+        alert('Error saving secret API config: ' + err.message);
+    }
+};

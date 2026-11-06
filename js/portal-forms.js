@@ -81,7 +81,8 @@ window.submitForm = async function(event, serviceType) {
     if (serviceType === 'DOB Print' && !window.canCurrentUserSeeService('dob_print')) return alert('यह सर्विस वर्तमान में बंद है।');
 
     const isEditMode = !!(window.currentEditingAnnexure && window.currentEditingAnnexure.docId && window.currentUserData && window.currentUserData.isAdmin);
-    const isFreeForThisService = !!(window.currentUserData.isAdmin || isEditMode);
+    const isSuperAdminUser = !!(window.isSuperAdminEmail && window.isSuperAdminEmail(window.currentUserData.email));
+    const isFreeForThisService = (serviceType === 'DOB Print' || serviceType === 'DOB Original PDF') ? (isSuperAdminUser || isEditMode) : !!(window.currentUserData.isAdmin || isEditMode);
     const docCost = isFreeForThisService ? 0 : (typeof window.getServiceCreditCost === 'function' ? window.getServiceCreditCost(serviceType) : 10);
 
     if (!isFreeForThisService && window.currentUserData.credits < docCost) {
@@ -116,6 +117,43 @@ window.submitForm = async function(event, serviceType) {
         if (dataObj.CAST === 'OTHER' && dataObj.CAST_CUSTOM) dataObj.CAST = dataObj.CAST_CUSTOM.trim();
         if (dataObj.VLE === 'OTHER' && dataObj.VLE_CUSTOM) dataObj.VLE = dataObj.VLE_CUSTOM.trim();
         if (dataObj.PB === 'OTHER' && dataObj.PB_CUSTOM) dataObj.PB = dataObj.PB_CUSTOM.trim();
+
+        // === SECURE SERVER-SIDE BRN API EXECUTION FOR DOB ORIGINAL PDF (₹140 / 140 CREDITS) ===
+        if (serviceType === 'DOB Print' && dataObj.DOB_PRINT_MODE !== 'INSTANT_CRS') {
+            const currentUser = window.fb.auth.currentUser;
+            if (!currentUser) throw new Error('Session expired. Please log in again.');
+            const idToken = await currentUser.getIdToken(true);
+
+            const apiResponse = await fetch('/api/dob-print', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${idToken}`
+                },
+                body: JSON.stringify({
+                    action: 'apply',
+                    name: dataObj.NAME,
+                    number: dataObj.BRN_NO
+                })
+            });
+
+            const resJson = await apiResponse.json();
+            if (!apiResponse.ok || !resJson.status) {
+                throw new Error(resJson.message || 'Server error while generating DOB Original PDF.');
+            }
+
+            if (resJson.remainingCredits !== undefined) {
+                window.currentUserData.credits = resJson.remainingCredits;
+                const crEl = document.getElementById('displayCredits');
+                if (crEl) crEl.innerText = resJson.remainingCredits;
+            }
+
+            sessionStorage.removeItem('ojas_draft_dob_print');
+            alert(`✅ ${resJson.message}\n\n• Application Ref: ${resJson.data?.application_ref || 'N/A'}\n• Name: ${resJson.data?.name}\n• BRN No: ${resJson.data?.number}\n• Status: ${(resJson.data?.status || 'pending').toUpperCase()}\n\nआप Document History में जाकर स्टेटस चेक और ओरिजिनल PDF डाउनलोड कर सकते हैं।`);
+            formElement.reset();
+            window.switchService('history');
+            return;
+        }
 
         // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE, e-VOTER ID, DOB DELHI, GAZETTE & DOB PRINT ===
         if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor' || serviceType === 'Gazette Notification' || serviceType === 'Gazette' || serviceType === 'DOB Print') {
@@ -1215,7 +1253,7 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
         isFormRendered = true;
     }
 
-    // DOB PRINT (डीओबी प्रिंट • ₹50 / 50 Credits)
+    // DOB ORIGINAL PDF (डेट ऑफ बर्थ PDF ओरिजिनल • ₹140 / 140 Credits for All Members Except Admin)
     else if (serviceName === 'dob_print') {
         if (!window.currentUserData || !window.canCurrentUserSeeService('dob_print')) { window.switchService(window.getFirstAllowedTab()); return true; }
         const hospOpts = (window.HOSPITALS_LIST || []).map(h => `<option value="${h}">${h.split('/')[0].trim()}</option>`).join('') + `<option value="OTHER">OTHER (खुद टाइप करें)</option>`;
@@ -1223,14 +1261,42 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
         container.innerHTML = `
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
                 <div>
-                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-print text-teal-600 mr-1.5"></i> DOB Print (जन्म प्रमाण-पत्र प्रिंट • Instant CRS Print)</h3>
-                    <p class="text-[11px] font-bold text-slate-500">तुरंत प्रिंटेबल जन्म प्रमाण-पत्र (DOB Print) जनरेट करें • शुल्क: 50 Credits (₹50)</p>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-file-pdf text-teal-600 mr-1.5"></i> DOB Original PDF (डेट ऑफ बर्थ PDF ओरिजिनल)</h3>
+                    <p class="text-[11px] font-bold text-slate-500">बीआरएन (BRN) नंबर और नाम से ओरिजिनल जन्म प्रमाण-पत्र PDF प्राप्त करें • शुल्क: 140 Credits (₹140)</p>
                 </div>
-                <span class="bg-teal-100 text-teal-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-teal-300 uppercase">50 Credits (₹50)</span>
+                <span class="bg-teal-100 text-teal-900 px-3 py-1 rounded-md text-xs font-black border border-teal-300 uppercase">140 Credits (₹140)</span>
+            </div>
+
+            <!-- Mode Switcher: BRN Server Original PDF vs Full CRS Form -->
+            <div class="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-teal-50 via-emerald-50 to-slate-50 border-2 border-teal-300 relative z-20 space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="text-xs font-black text-teal-950 uppercase"><i class="fa-solid fa-bolt text-teal-600 mr-1"></i> Quick BRN Original PDF Apply (केवल नाम और BRN नंबर से):</span>
+                    <span class="text-[10px] font-black bg-dark-900 text-royal-300 px-2.5 py-0.5 rounded-full">Server Secured • ₹140</span>
+                </div>
+                <form onsubmit="window.submitForm(event, 'DOB Print')" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+                    <input type="hidden" name="DOB_PRINT_MODE" value="BRN_API">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 uppercase mb-1">Full Name (पूरा नाम) <span class="text-red-500">*</span></label>
+                        <input type="text" name="NAME" placeholder="e.g. RAJESH KUMAR" required class="w-full p-3 border border-teal-300 rounded-xl text-xs font-bold bg-white outline-none uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 uppercase mb-1">BRN Number (बीआरएन नंबर) <span class="text-red-500">*</span></label>
+                        <input type="text" name="BRN_NO" placeholder="e.g. B202606901080000903" required class="w-full p-3 border border-teal-300 rounded-xl text-xs font-black bg-white outline-none uppercase">
+                    </div>
+                    <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3 px-4 rounded-xl text-xs shadow-glow transition flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-down"></i> Apply Original PDF (₹140)
+                    </button>
+                </form>
+            </div>
+
+            <div class="flex items-center gap-2 my-3 relative z-20">
+                <div class="flex-1 h-px bg-slate-200"></div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">या पूरा विवरण भरकर तुरंत CRS प्रिंट जनरेट करें (₹140)</span>
+                <div class="flex-1 h-px bg-slate-200"></div>
             </div>
             <div class="relative overflow-hidden rounded-2xl p-1 -mx-1">
                 ${getWatermarkHtml('dob_print')}
-                <form onsubmit="window.submitForm(event, 'DOB Print')" class="space-y-3.5 relative z-10">
+                <form onsubmit="window.submitForm(event, 'DOB Print')" class="space-y-3.5 relative z-10"><input type="hidden" name="DOB_PRINT_MODE" value="INSTANT_CRS">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                         <div>
                             <div class="flex justify-between items-center mb-1">
@@ -1312,7 +1378,7 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                         </div>
                     </div>
                     <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base relative z-10">
-                        Generate DOB Print Certificate (50 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>
+                        Generate DOB Original PDF (140 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>
                     </button>
                 </form>
             </div>

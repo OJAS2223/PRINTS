@@ -112,7 +112,8 @@ window.SERVICE_RATES = {
     'Passport Services': 30,
     'Minor': 50,
     'DOB': 50,
-    'DOB Print': 50,
+    'DOB Print': 140,
+    'DOB Original PDF': 140,
     'Gazette Notification': 100,
     'Gazette': 100,
     'Annexure 1': 10,
@@ -131,7 +132,8 @@ window.getServiceCreditCost = function(serviceType) {
     if (window.SERVICE_RATES[serviceType] !== undefined) return window.SERVICE_RATES[serviceType];
     const sLower = String(serviceType).toLowerCase();
     if (sLower.includes('gazette')) return 100;
-    if (sLower === 'minor' || sLower === 'dob' || sLower === 'dob print' || sLower === 'dob_print') return 50;
+    if (sLower === 'dob print' || sLower === 'dob_print' || sLower.includes('dob original')) return 140;
+    if (sLower === 'minor' || sLower === 'dob') return 50;
     if (sLower.includes('passport')) return 30;
     return 10;
 };
@@ -213,3 +215,5 @@ window.getOrdinalDay = function(n) { const s = ["th", "st", "nd", "rd"]; const v
 window.initVerificationDefaults = function() { const now = new Date(); const dayEl = document.getElementById('inpDay'); const myEl = document.getElementById('inpMonthYear'); if (dayEl) dayEl.value = window.getOrdinalDay(now.getDate()); if (myEl) myEl.value = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase(); };
 window.syncAnnexureENames = function() { const appName = document.getElementById('inpApplicantName')?.value.trim().toUpperCase() || ''; const rec1Input = document.getElementById('inpRecorded1'); const rec2Input = document.getElementById('inpRecorded2'); const retainInput = document.getElementById('inpRetainName'); const removeInput = document.getElementById('inpRemoveName'); if (appName && document.activeElement?.id === 'inpApplicantName') { const urfSplit = appName.split(/\s+(?:URF|ALIAS|उर्फ|उर्फ़)\s+/i); if (urfSplit.length >= 2) { const firstName = urfSplit[0].trim(); const aliasName = urfSplit.slice(1).join(' ').trim(); if (rec1Input) rec1Input.value = firstName; if (rec2Input) rec2Input.value = aliasName; if (retainInput) retainInput.value = firstName; if (removeInput) removeInput.value = aliasName; } else { if (rec1Input) rec1Input.value = appName; if (retainInput) retainInput.value = appName; } } else if (document.activeElement?.id === 'inpRecorded1' && retainInput) { retainInput.value = rec1Input.value.toUpperCase(); } else if (document.activeElement?.id === 'inpRecorded2' && removeInput) { removeInput.value = rec2Input.value.toUpperCase(); } };
 window.swapAnnexureERetainRemove = function() { const retainInput = document.getElementById('inpRetainName'); const removeInput = document.getElementById('inpRemoveName'); if (!retainInput || !removeInput) return; const temp = retainInput.value; retainInput.value = removeInput.value; removeInput.value = temp; };
+
+window.SITE_DOMAIN = 'https://ogasprints.in';
