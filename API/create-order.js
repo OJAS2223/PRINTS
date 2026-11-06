@@ -1,4 +1,5 @@
 import admin from 'firebase-admin';
+import Razorpay from 'razorpay';
 
 if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
   const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -20,7 +21,21 @@ export default async function handler(req, res) {
     return res.status(405).json({ status: false, message: 'Method Not Allowed' });
   }
 
+  const keyId = process.env.RAZORPAY_KEY_ID || 'rzp_test_TwxsYylNMNurst';
+  const keySecret = process.env.RAZORPAY_KEY_SECRET || 'XBPoakp3drWN1LdGEEb6SQ2n';
+
   try {
+    // Optional Firebase Auth Token check
+    const authHeader = req.headers.authorization || '';
+    if (authHeader.startsWith('Bearer ') && admin.apps.length) {
+      const idToken = authHeader.slice(7).trim();
+      try {
+        await admin.auth().verifyIdToken(idToken);
+      } catch (authErr) {
+        return res.status(401).json({ status: false, message: 'Unauthorized session token' });
+      }
+    }
+
     const {
       userId,
       email,
@@ -28,7 +43,8 @@ export default async function handler(req, res) {
       totalPayable,
       creditsRequested,
       wantsVip,
-      vipDaysRequested
+      vipDaysRequested,
+      currency = 'INR'
     } = req.body || {};
 
     const cleanUserId = String(userId || '').trim();
@@ -39,7 +55,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ status: false, message: 'Invalid user or VIP plan selection' });
     }
 
-    // Enforce minimum recharge rules on server side
+    // Enforce minimum recharge rules on server side (₹100 = 10,000 paise)
     if (!wantsVip && cleanCredits < 100) {
       return res.status(400).json({ status: false, message: 'Minimum credit recharge is ₹100' });
     }
@@ -49,22 +65,66 @@ export default async function handler(req, res) {
 
     const serverVipFee = VALID_VIP_PLANS[cleanVipDays];
     const serverTotalPayable = cleanCredits + serverVipFee;
+    const amountInPaise = Math.round(serverTotalPayable * 100);
 
     // Reject if client-sent totalPayable does not match server-calculated total
-    if (serverTotalPayable < 100 || Number(totalPayable) !== serverTotalPayable) {
+    if (amountInPaise < 100 || Number(totalPayable) !== serverTotalPayable) {
       return res.status(400).json({ status: false, message: 'Security validation failed: Amount mismatch' });
     }
 
-    const orderId = `OJAS_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+    const receiptId = `OJAS_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
     const productInfo = cleanVipDays > 0 ? `Ojas VIP ${cleanVipDays}d + ${cleanCredits} Cr` : `Ojas ${cleanCredits} Credits`;
 
+    let rzpOrderId = receiptId;
+    let rzpAmount = amountInPaise;
+    let rzpCurrency = currency;
+
+    // 1. Create Order in Razorpay
+    if (keyId && keySecret) {
+      try {
+        const razorpay = new Razorpay({
+          key_id: keyId,
+          key_secret: keySecret
+        });
+        const rzpOrder = await razorpay.orders.create({
+          amount: amountInPaise,
+          currency: currency,
+          receipt: receiptId,
+          notes: {
+            userId: cleanUserId,
+            email: String(email || '').trim().toLowerCase(),
+            username: String(username || 'Ojas User'),
+            creditsRequested: String(cleanCredits),
+            vipDaysRequested: String(cleanVipDays),
+            domain: 'ogasprints.in'
+          }
+        });
+        if (rzpOrder && rzpOrder.id) {
+          rzpOrderId = rzpOrder.id;
+          rzpAmount = rzpOrder.amount;
+          rzpCurrency = rzpOrder.currency;
+        }
+      } catch (rzpErr) {
+        console.error('Razorpay Order Error:', rzpErr);
+      }
+    }
+
+    // 2. Build UPI Intent & QR String for 1-Click Mobile Apps (GPay, PhonePe, Paytm) & QR Scan
+    const upiQuery = `pa=8279650137@amazonpay&pn=${encodeURIComponent('Ojas Print Service')}&am=${serverTotalPayable}&cu=INR&tn=${encodeURIComponent(productInfo)}&tr=${encodeURIComponent(rzpOrderId)}`;
+    const upiString = `upi://pay?${upiQuery}`;
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiString)}`;
+
+    // 3. Save Pending Order in Firestore
     if (admin.apps.length) {
       const db = admin.firestore();
-      await db.collection('payments').doc(orderId).set({
-        orderId: orderId,
+      await db.collection('payments').doc(rzpOrderId).set({
+        orderId: rzpOrderId,
+        receiptId: receiptId,
         userId: cleanUserId,
         email: String(email || '').trim().toLowerCase(),
         amountPaid: serverTotalPayable,
+        amountPaise: rzpAmount,
+        currency: rzpCurrency,
         creditsRequested: cleanCredits,
         wantsVip: cleanVipDays > 0,
         vipDaysRequested: cleanVipDays,
@@ -75,40 +135,16 @@ export default async function handler(req, res) {
       });
     }
 
-    let gatewayData = {};
-    if (process.env.VYAPARGATEWAY_API_KEY) {
-      try {
-        const vgRes = await fetch('https://vyapargateway.com/api/v1/create_order', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-API-Key': process.env.VYAPARGATEWAY_API_KEY
-          },
-          body: JSON.stringify({
-            key: process.env.VYAPARGATEWAY_API_KEY,
-            client_txn_id: orderId,
-            amount: serverTotalPayable,
-            p_info: productInfo,
-            customer_name: username || 'Ojas User',
-            customer_email: email || 'user@print.com',
-            customer_mobile: '9999999999',
-            callback_url: `${req.headers.origin || 'https://upeprint.vercel.app'}/api/webhook`,
-            redirect_url: `${req.headers.origin || 'https://upeprint.vercel.app'}/portal`
-          })
-        });
-        gatewayData = await vgRes.json();
-      } catch (e) {
-        console.error('Gateway API Error:', e);
-      }
-    }
-
-    const resObj = gatewayData.data || gatewayData.result || gatewayData || {};
     return res.status(200).json({
       status: true,
-      orderId: orderId,
-      payment_url: resObj.payment_url || '',
-      upi_string: resObj.upi_string || resObj.upi_intent || '',
-      qr_code: resObj.qr_code || ''
+      order_id: rzpOrderId,
+      orderId: rzpOrderId,
+      receipt: receiptId,
+      amount: rzpAmount,
+      currency: rzpCurrency,
+      key_id: keyId,
+      upi_string: upiString,
+      qr_code: qrCodeUrl
     });
 
   } catch (error) {

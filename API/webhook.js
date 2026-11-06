@@ -16,15 +16,53 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
-    const eventData = body.data || body.result || body;
 
-    const orderId = String(eventData.client_txn_id || eventData.orderId || eventData.order_id || body.client_txn_id || body.order_id || '').trim();
-    const utr = String(eventData.utr || eventData.bank_ref_num || eventData.upi_txn_id || body.utr || orderId || '').trim();
-    const rawStatus = String(eventData.status || eventData.txnStatus || body.status || body.event || '').toUpperCase();
-    const paidAmount = Number(eventData.amount || body.amount || 0);
+    // Support Razorpay Webhook payload structure as well as standard UPI Gateway payload
+    const rzpPaymentEntity = body?.payload?.payment?.entity;
+    const eventData = rzpPaymentEntity || body.data || body.result || body;
 
-    if (!orderId || rawStatus.includes('TEST') || (!rawStatus.includes('SUCCESS') && !rawStatus.includes('COMPLETED') && !rawStatus.includes('PAID'))) {
-      return res.status(200).json({ message: 'Webhook received / Test OK' });
+    const orderId = String(
+      eventData.order_id ||
+      eventData.client_txn_id ||
+      eventData.orderId ||
+      body.client_txn_id ||
+      body.order_id ||
+      ''
+    ).trim();
+
+    const utr = String(
+      eventData.acquirer_data?.rrn ||
+      eventData.id ||
+      eventData.utr ||
+      eventData.bank_ref_num ||
+      eventData.upi_txn_id ||
+      body.utr ||
+      orderId ||
+      ''
+    ).trim();
+
+    const rawStatus = String(
+      body.event ||
+      eventData.status ||
+      eventData.txnStatus ||
+      body.status ||
+      ''
+    ).toUpperCase();
+
+    let paidAmount = Number(eventData.amount || body.amount || 0);
+    // Razorpay sends amount in paise
+    if (rzpPaymentEntity && paidAmount >= 10000) {
+      paidAmount = Math.round(paidAmount / 100);
+    }
+
+    const isSuccessStatus =
+      rawStatus.includes('SUCCESS') ||
+      rawStatus.includes('COMPLETED') ||
+      rawStatus.includes('PAID') ||
+      rawStatus.includes('CAPTURED');
+
+    if (!orderId || rawStatus.includes('TEST') || !isSuccessStatus) {
+      return res.status(200).json({ message: 'Webhook received / Ignored' });
     }
 
     if (!admin.apps.length) {
@@ -35,7 +73,6 @@ export default async function handler(req, res) {
     const paymentRef = db.collection('payments').doc(orderId);
     const utrRef = db.collection('usedUtrs').doc(utr);
 
-    // Atomic Firestore Transaction to prevent duplicate UTR replay & race conditions
     const txResult = await db.runTransaction(async (t) => {
       const paymentSnap = await t.get(paymentRef);
       if (!paymentSnap.exists) {
@@ -47,7 +84,6 @@ export default async function handler(req, res) {
         return { ok: false, reason: 'Already processed' };
       }
 
-      // Strict amount verification: if gateway sends amount, ensure it matches expected amountPaid
       const expectedAmount = Number(paymentData.amountPaid) || 0;
       if (paidAmount > 0 && expectedAmount > 0 && Math.abs(paidAmount - expectedAmount) > 1) {
         return { ok: false, reason: `Amount mismatch: expected ${expectedAmount}, got ${paidAmount}` };
@@ -116,7 +152,7 @@ export default async function handler(req, res) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN || "8586078140:AAG-ydpakzFDAwHFtJC8AUanxZAODpGZDOk";
     const chatId = process.env.TELEGRAM_CHAT_ID || "8942287807";
     const vipLine = txResult.wantsVip ? `\n👑 *VIP Activated:* +${txResult.vipDays} Days` : '';
-    const tgMessage = `✅ *Auto-Payment Verified!*\n*User:* ${txResult.email}\n*Amount Paid:* ₹${txResult.amountPaid}\n*Credits Added:* +${txResult.creditsToAdd} Cr${vipLine}\n*UTR:* \`${utr}\`\n*Order ID:* \`${orderId}\`\n\n*Status:* Auto-Approved via Secure Webhook ⚡`;
+    const tgMessage = `✅ *Auto-Payment Verified (ogasprints.in)!*\n👤 *User:* ${txResult.email}\n💰 *Amount Paid:* ₹${txResult.amountPaid}\n💎 *Credits Added:* +${txResult.creditsToAdd} Cr${vipLine}\n🧾 *UTR / Ref:* \`${utr}\`\n🆔 *Order ID:* \`${orderId}\`\n\n⚡ *Status:* Auto-Approved via Secure Webhook`;
 
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',
