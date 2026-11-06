@@ -1,36 +1,30 @@
-# Ojas Print Service & e-Services Studio (Modular Edition v4)
+# Ojas Print Service & e-Services Studio (ogasprints.in)
 
-## Clean Modular Architecture (छोटी-छोटी अलग-अलग फाइलें)
+## Complete Modular Architecture
 1. **Root (`/`)**:
-   - `index.html` (Main Landing & Tools Studio)
-   - `manifest.json`, `sw.js`, `vercel.json`, `package.json`
-2. **`/css/` Folder**:
-   - `css/theme.css` (Universal Day/Light & Night/Dark Theme Engine + Printable A4 Styles)
-3. **`/js/` Folder**:
-   - `js/theme.js` (Royal Indigo & Sapphire Theme Palette + Day/Night Switcher)
-   - `js/config.js` (Firebase `upeprint` Config, Service Credit Rates, District/Tehsil/SDM Data & Form Helpers)
-   - `js/pdf-engine.js` (Template Loader, Auto `m.png` Stamp for Caste/Domicile, e-Voter Processor & 3x HD PDF Export)
-   - `js/config-templates.js` (Barrel connector)
-   - `js/portal-forms.js` (All Service Forms & Submission Logic)
-   - `js/portal-wallet-chat.js` (User Auth, Wallet, Support Chat & History)
-   - `js/admin-logic.js` (Separate `/secret-admin` Login, ₹20 Stamp + ₹20 Cert Auto-Deduction & Portal Controls)
-   - `js/tools-logic.js` (8 Client-Side PDF & Photo Utilities)
-4. **`/pages/` Folder**:
-   - `pages/portal.html` (`/portal` User Dashboard)
-   - `pages/admin.html` (`/secret-admin` Dedicated Super Admin Panel)
-   - `pages/tools.html` (`/tools` Studio)
-5. **`/templates/` Folder**:
-   - `caste.html`, `domicile.html`, `evoter.html`, and all 9 `annexure-*.html` files.
-6. **`/api/` Folder**:
-   - `api/create-order.js` & `api/webhook.js`
-7. **`/images/` Folder**:
-   - Place `m.png` (Auto Stamp for Caste/Domicile), `logo.png`, `sealofup.jpg`, `GOVERNMENT_MONOGRAM.gif`, and city stamps here.
+   - `index.html` & `tools.html` (Main Landing & 8-in-1 PDF/Photo Tools Studio)
+   - `portal.html` (`/portal` User Dashboard)
+   - `ovi.html` (`/ovi` Dedicated Super Admin Gateway)
+   - `Citizen - Portal.html` & `verify.html` (`/verify/:id` QR Verification Portal)
+   - `manifest.json`, `sw.js`, `vercel.json`, `package.json`, `firestore.rules`, `.env.example`
+2. **`/api/` Backend Serverless Endpoints (100% Server-Locked)**:
+   - `api/create-order.js` (Creates Razorpay Order + Dynamic UPI QR + 1-Click Mobile UPI Intent URLs)
+   - `api/verify-payment.js` (Verifies Razorpay HMAC-SHA256 Signature, Auto-Credits Wallet & Sends Instant Telegram Bot Alert)
+   - `api/webhook.js` (Handles Razorpay & UPI Gateway Webhooks + Instant Telegram Bot Alert)
+   - `api/dob-print.js` (Hidden Server-Side BRN API for **DOB Original PDF** with ₹140 / 140 Credits atomic deduction & auto-refund on error)
+   - `api/notify-admin.js` (Sends Instant Telegram Bot Alerts for 24–48h Failed Payment Tickets & Password Reset Tickets)
+3. **`/css/` & `/js/` Folders**:
+   - `css/theme.css`, `js/theme.js`, `js/config.js`, `js/pdf-engine.js`, `js/config-templates.js`, `js/portal-forms.js`, `js/portal-wallet-chat.js`, `js/admin-logic.js`, `js/tools-logic.js`
+4. **`/templates/` Folder (All 15 Templates Included)**:
+   - `caste.html`, `domicile.html`, `evoter.html`, `dob-delhi.html`, `dob-print.html`, `gazette.html`, and all 9 `annexure-*.html` (`1`, `1a`, `3`, `3a`, `b`, `c`, `d`, `e`, `f`) files.
 
-## Updated Pricing (No VIP - All Normal Users)
+## Service Credit Rates (Anti-Tamper Server Enforced)
 - **Domicile / Caste / e-Voter ID / DOB Delhi**: ₹10 (10 Credits)
 - **Passport Services**: ₹30 (30 Credits)
 - **DOB (Minor Birth Certificate)**: ₹50 (50 Credits)
+- **Gazette Notification**: ₹100 (100 Credits)
+- **DOB Original PDF (डेट ऑफ बर्थ PDF ओरिजिनल)**: **₹140 (140 Credits)** (Mandatory for all members except Admin)
 - **Annexures (1 to F)**:
   - Generate Annexure = ₹10 (10 Credits)
   - Admin Stamp Attach = +₹20 (20 Credits) -> Total ₹30
-  - Admin Certificate Attach = +₹20 (20 Credits) -> Total ₹50 Complete (Annexure ₹10 + Stamp ₹20 + Cert ₹20)
+  - Admin Certificate Attach = +₹20 (20 Credits) -> Total ₹50 Complete

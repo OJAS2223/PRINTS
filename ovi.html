@@ -332,7 +332,7 @@
                                 </label>
                                 <!-- DOB Print (50 Credits) -->
                                 <label class="flex items-center justify-between cursor-pointer bg-teal-50 p-2.5 rounded-xl border border-teal-200 shadow-sm" title="DOB Print (50 Credits)">
-                                    <span class="text-[10px] font-black text-teal-900">DOB Print (₹50)</span>
+                                    <span class="text-[10px] font-black text-teal-900">DOB Original PDF (₹140)</span>
                                     <input type="checkbox" id="userDobPrintToggle" onchange="window.toggleUserAccess('allowDobPrint', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
                                 <!-- Passport Services -->
@@ -413,7 +413,7 @@
                             <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>Domicile / Caste:</span><strong class="text-emerald-700">₹10 (10 Cr)</strong></div>
                             <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>e-Voter / Delhi DOB:</span><strong class="text-emerald-700">₹10 (10 Cr)</strong></div>
                             <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>Passport Service:</span><strong class="text-sky-700">₹30 (30 Cr)</strong></div>
-                            <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>DOB / DOB Print:</span><strong class="text-amber-700">₹50 (50 Cr)</strong></div>
+                            <div class="bg-white p-2 rounded-xl border border-slate-200 flex justify-between"><span>DOB / Original PDF:</span><strong class="text-teal-700">₹50 / ₹140</strong></div>
                             <div class="col-span-2 bg-purple-50 p-2 rounded-xl border border-purple-200 flex justify-between text-purple-950"><span>Gazette Notification (गैजेट नोटिफिकेशन):</span><strong class="text-purple-800">₹100 (100 Cr)</strong></div>
                             <div class="col-span-2 bg-indigo-50 p-2.5 rounded-xl border border-indigo-200 text-indigo-950 flex flex-wrap justify-between gap-1">
                                 <span>Annexure: <strong>₹10</strong></span>
@@ -705,7 +705,7 @@
                             <option value="e-Voter ID">e-Voter ID</option>
                             <option value="Minor">DOB (Birth Certificate - ₹50)</option>
                             <option value="DOB Delhi">DOB Delhi</option>
-                            <option value="DOB Print">DOB Print (₹50)</option>
+                            <option value="DOB Print">DOB Original PDF (₹140)</option>
                             <option value="Passport">Passport Services (₹30)</option>
                             <option value="Gazette Notification">Gazette Notification (₹100)</option>
                             <option value="Annexure 1">Annexure 1</option>
@@ -818,7 +818,7 @@
                             <div class="flex items-center gap-2.5">
                                 <i class="fa-solid fa-print text-teal-500"></i>
                                 <div>
-                                    <div class="text-xs font-black text-dark-900">DOB Print (डीओबी प्रिंट • ₹50)</div>
+                                    <div class="text-xs font-black text-dark-900">DOB Original PDF (डेट ऑफ बर्थ PDF ओरिजिनल • ₹140)</div>
                                     <div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div>
                                 </div>
                             </div>
@@ -966,6 +966,48 @@
                         <i class="fa-solid fa-floppy-disk mr-1"></i> Save Portal &amp; Banner Settings
                     </button>
                 </form>
+            </div>
+            <!-- Secret DOB Original PDF API Gateway Control Card (Strictly Server/Admin Only) -->
+            <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 md:col-span-2">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center text-lg border border-teal-200">
+                            <i class="fa-solid fa-server"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-dark-900">DOB Original PDF Secret API Configuration (Server-Side Locked)</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">यह सेटिंग केवल सर्वर और एडमिन को दिखती है • यूज़र या हैकर से 100% छुपी हुई है</p>
+                        </div>
+                    </div>
+                    <span class="bg-teal-100 text-teal-900 border border-teal-300 px-2.5 py-1 rounded-full text-[10px] font-black uppercase">₹140 (140 Credits) / PDF</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">API Base URL</label>
+                        <input type="text" id="inpSecretDobApiUrl" value="https://rtyu.run.place/api/v1/index.php" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Secret API Key</label>
+                        <input type="password" id="inpSecretDobApiKey" value="sk_2e7fc8baf4a1998c9382c1f961bdd64c" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-mono font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Apply Service Parameter</label>
+                        <input type="text" id="inpSecretDobApplyService" value="b-number-pdf-apply" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Status Service Parameter</label>
+                        <input type="text" id="inpSecretDobStatusService" value="b-number-pdf-status" class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-bold bg-slate-50 focus:bg-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Per-Certificate Credit Cost (₹)</label>
+                        <input type="number" id="inpSecretDobCreditCost" value="140" min="1" class="w-full p-2.5 border border-teal-300 rounded-xl text-xs font-black bg-teal-50/40 focus:bg-white outline-none">
+                    </div>
+                </div>
+
+                <button type="button" onclick="window.saveDobPrintSecretApiConfig()" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3 rounded-xl text-xs shadow-glow transition">
+                    <i class="fa-solid fa-lock mr-1"></i> Save Secret DOB Original PDF API Settings
+                </button>
             </div>
         </div>
 

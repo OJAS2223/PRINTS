@@ -1,46 +1,28 @@
 {
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/admin",
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/admin.html",
-      "destination": "/",
-      "permanent": false
-    }
-  ],
   "rewrites": [
     {
       "source": "/portal",
-      "destination": "/portal.html"
+      "destination": "/pages/portal.html"
     },
     {
       "source": "/ovi",
-      "destination": "/ovi.html"
+      "destination": "/pages/admin.html"
+    },
+    {
+      "source": "/secret-admin",
+      "destination": "/pages/admin.html"
     },
     {
       "source": "/tools",
-      "destination": "/tools.html"
+      "destination": "/pages/tools.html"
     },
     {
       "source": "/verify/:id",
-      "destination": "/verify.html"
-    },
-    {
-      "source": "/verify/(.*)",
-      "destination": "/verify.html"
+      "destination": "/pages/verify.html?id=:id"
     },
     {
       "source": "/verify",
-      "destination": "/verify.html"
-    },
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "/pages/verify.html"
     }
   ]
 }
