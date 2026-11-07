@@ -1291,7 +1291,97 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
 
             <div class="flex items-center gap-2 my-3 relative z-20">
                 <div class="flex-1 h-px bg-slate-200"></div>
-               
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">या पूरा विवरण भरकर तुरंत CRS प्रिंट जनरेट करें (₹140)</span>
+                <div class="flex-1 h-px bg-slate-200"></div>
+            </div>
+            <div class="relative overflow-hidden rounded-2xl p-1 -mx-1">
+                ${getWatermarkHtml('dob_print')}
+                <form onsubmit="window.submitForm(event, 'DOB Print')" class="space-y-3.5 relative z-10"><input type="hidden" name="DOB_PRINT_MODE" value="INSTANT_CRS">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-[11px] font-bold text-royal-700 uppercase">Registration No (पंजीकरण संख्या) <span class="text-red-500">*</span></label>
+                                <button type="button" onclick="document.getElementById('inpDobPrintBrn').value = window.generateDobPrintBrn();" class="text-[10px] bg-royal-100 hover:bg-royal-200 text-royal-900 font-black px-2 py-0.5 rounded border border-royal-300 transition"><i class="fa-solid fa-shuffle mr-1"></i>Auto Generate</button>
+                            </div>
+                            <input type="text" id="inpDobPrintBrn" name="BRN_NO" placeholder="e.g. B-2026: 9-12345678" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-black tracking-wider bg-royal-50/40 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name (बच्चे / व्यक्ति का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="NAME" placeholder="Enter Full Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Sex / Gender (लिंग) <span class="text-red-500">*</span></label>
+                            <select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                <option value="MALE / पुरुष">MALE / पुरुष</option>
+                                <option value="FEMALE / महिला">FEMALE / महिला</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (जन्म तिथि) <span class="text-red-500">*</span></label>
+                            <input type="date" name="DOB" onchange="const rEl = document.getElementById('inpDobPrintRegDate'); if(rEl && !rEl.value) rEl.value = this.value;" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mother Name (माता का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="MNAME" placeholder="Enter Mother Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father Name (पिता का नाम) <span class="text-red-500">*</span></label>
+                            <input type="text" name="FNAME" placeholder="Enter Father Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mother ID Last 4 Digits (वैकल्पिक)</label>
+                            <input type="text" name="MA" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)" placeholder="अंतिम 4 अंक या खाली छोड़ें" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father ID Last 4 Digits (वैकल्पिक)</label>
+                            <input type="text" name="FA" maxlength="4" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)" placeholder="अंतिम 4 अंक या खाली छोड़ें" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">District (जिला)</label>
+                            <select id="districtSelect" name="DISTRICT" onchange="window.updateTehsilsAndThanas()" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                <option value="BAGHPAT">बागपत (BAGHPAT)</option>
+                                <option value="SHAMLI">शामली (SHAMLI)</option>
+                                <option value="MUZAFFARNAGAR">मुजफ्फरनगर (MUZAFFARNAGAR)</option>
+                                <option value="MEERUT">मेरठ (MEERUT)</option>
+                                <option value="SAHARANPUR">सहारनपुर (SAHARANPUR)</option>
+                                <option value="GHAZIABAD">गाजियाबाद (GHAZIABAD)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Tehsil (तहसील)</label>
+                            <select id="tehsilSelect" name="TAHSEEL" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Hospital / Issuing Unit (अस्पताल / जारीकर्ता केंद्र)</label>
+                            <select name="PB" onchange="window.toggleCustomInput(this, 'customDobPrintHosp')" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                ${hospOpts}
+                            </select>
+                            <input type="text" id="customDobPrintHosp" name="PB_CUSTOM" placeholder="अस्पताल का नाम और पता लिखें" style="display:none;" class="mt-2 w-full p-3 border border-royal-400 rounded-xl text-sm font-bold bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Place of Birth (जन्म स्थान)</label>
+                            <input type="text" name="POB" value="HOSPITAL" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Reg. Date</label>
+                                <input type="date" id="inpDobPrintRegDate" name="REG_DATE" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-royal-700 uppercase mb-1">Issue Date</label>
+                                <input type="date" name="ISSUE_DATE" value="${todayISO}" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-bold bg-royal-50/40 focus:bg-white outline-none relative z-10">
+                            </div>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Complete Address (माता-पिता का पूर्ण पता) <span class="text-red-500">*</span></label>
+                            <input type="text" name="ADDRESS" placeholder="VILLAGE/WARD, POST, TEHSIL, DISTRICT, UTTAR PRADESH - PIN" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base relative z-10">
+                        Generate DOB Original PDF (140 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>
+                    </button>
+                </form>
+            </div>
         `;
         window.updateTehsilsAndThanas();
         if (!window.currentEditingAnnexure) {

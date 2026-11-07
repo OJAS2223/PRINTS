@@ -1436,7 +1436,7 @@ window.openRazorpayModalNow = function() {
         key: orderData.key_id || 'rzp_test_TwxsYylNMNurst',
         amount: orderData.amount,
         currency: orderData.currency || 'INR',
-        name: 'Ojas Print Service (ogasprints.in)',
+        name: 'Ojas Print Service (ojasprints.in)',
         description: `Wallet Recharge (+${window.currentRechargeCredits} Credits)`,
         image: '/images/logo.png',
         order_id: orderData.order_id,
