@@ -1,7 +1,7 @@
 {
-  "name": "ogasprints-portal",
+  "name": "ojasprints-portal",
   "version": "3.0.0",
-  "description": "Ojas Print Service & e-Services Studio (ogasprints.in)",
+  "description": "Ojas Print Service & e-Services Studio (ojasprints.in)",
   "type": "module",
   "dependencies": {
     "firebase-admin": "^12.0.0",

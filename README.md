@@ -1,4 +1,4 @@
-# Ojas Print Service & e-Services Studio (ogasprints.in)
+# Ojas Print Service & e-Services Studio (ojasprints.in)
 
 ## Complete Modular Architecture
 1. **Root (`/`)**:

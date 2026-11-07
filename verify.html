@@ -2949,9 +2949,8 @@ window.downloadDobDelhiCertificatePdf = async function() {
         const qrTargetUrl = docId
             ? `${cleanBase}/verify/${encodeURIComponent(docId)}`
             : window.location.href;
-        const qrUrl = fData.CUSTOM_QR
-            ? ("https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(fData.CUSTOM_QR))
-            : ("https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrTargetUrl));
+        const qrTextPayload = fData.CUSTOM_QR || `Name Of The Child - ${fData.NAME || ''}\nRegistration No - ${fData.REG_NO || ''}\nRegistration Date - ${fData.DOR || ''}\nDOB. - ${fData.DOB || ''}\nFather Name: ${fData.FNAME || ''}\nVerified URL: ${qrTargetUrl}`;
+        const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
 
         const [logoSvgData, sPngData, crsPngData] = await Promise.all([
             resolveAssetUrl('logo.svg'),
