@@ -212,9 +212,10 @@ window.processDobDelhiData = function(rawFormObj, docId = '') {
     const verifyUrl = finalDocId
         ? `${baseUrl}/verify/${encodeURIComponent(finalDocId)}`
         : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
-     const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
-    // Yahan saari details aur verifyUrl ko mila kar multi-line text payload banaya gaya hai
-    const qrTextPayload =
+    const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
+
+    // Multi-line QR text payload with transparent background
+    const qrTextPayload = customQr || 
 `Name Of The Child - ${name}
 Registration No - ${regNo}
 Registration Date - ${dor}
@@ -308,8 +309,7 @@ Verified URL: ${verifyUrl}`;
     }
 };
 
-
-// ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹50) PROCESSORS =================
+// ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹140) PROCESSORS =================
 window.generateGazetteNo = function() {
     const year = new Date().getFullYear();
     const rand5 = Math.floor(10000 + Math.random() * 90000);
@@ -538,7 +538,14 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
         const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
         const verifyUrl = `${baseUrl}/verify/${encodeURIComponent(d.DOC_ID)}`;
         d.VERIFY_URL = verifyUrl;
-        d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(verifyUrl);
+        const qrTextPayload =
+`Name Of The Child - ${d.NAME || ''}
+Registration No - ${d.REG_NO || ''}
+Registration Date - ${d.DOR || ''}
+DOB. - ${d.DOB || ''}
+Father Name: ${d.FNAME || ''}
+Verified URL: ${verifyUrl}`;
+        d.QR_URL = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
     }
 
     const rawTemplate = window.loadedTemplatesCache[fileId];
