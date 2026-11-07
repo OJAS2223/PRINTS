@@ -172,7 +172,6 @@ window.processCasteOrDomicileData = function(rawFormObj, serviceType) {
 };
 
 // ================= MCD DOB DELHI (BIRTH.HTML) PROCESSOR & LIVE SYNC =================
-// ================= MCD DOB DELHI (BIRTH.HTML) PROCESSOR & LIVE SYNC =================
 window.generateMcdRegNo = function() {
     const rand7 = Math.floor(1000000 + Math.random() * 9000000);
     return `MCDOLIR-2219-00${rand7}`;
@@ -215,8 +214,17 @@ window.processDobDelhiData = function(rawFormObj, docId = '') {
         : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
 
     const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
-    const qrPayload = customQr || verifyUrl;
-    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
+    
+    // Yahan saari details aur verifyUrl ko mila kar multi-line text payload banaya gaya hai
+    const qrTextPayload = customQr || 
+`Name Of The Child - ${name}
+Registration No - ${regNo}
+Registration Date - ${dor}
+DOB. - ${dob}
+Father Name: ${fname}
+Verified URL: ${verifyUrl}`;
+
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
 
     return {
         SERVICE_TYPE: 'DOB Delhi',
@@ -274,13 +282,21 @@ window.syncMcdPreviewFields = function(sourceType, newVal) {
     const recForQr = (ctxForQr && ctxForQr.historyIndex >= 0) ? ((window.historyData && window.historyData[ctxForQr.historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[ctxForQr.historyIndex])) : null;
     const docIdForQr = recForQr?.id || recForQr?.formData?.DOC_ID || '';
     const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
-    const qrPayload = docIdForQr ? `${baseUrl}/verify/${encodeURIComponent(docIdForQr)}` : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
-    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&chl=" + encodeURIComponent(qrPayload);
+    const verifyUrl = docIdForQr ? `${baseUrl}/verify/${encodeURIComponent(docIdForQr)}` : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
+    
+    const qrTextPayload = 
+`Name Of The Child - ${name}
+Registration No - ${regNo}
+Registration Date - ${dor}
+DOB. - ${dob}
+Father Name: ${fname}
+Verified URL: ${verifyUrl}`;
+
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=340x340&margin=0&dark=000000&bgcolor=transparent&light=ffffff00&chl=" + encodeURIComponent(qrTextPayload);
 
     const qrImg = container.querySelector('#qrCodeImg');
     if (qrImg) qrImg.src = qrUrl;
 
-    // Update currentModalContext record in memory so Print & Download PDF use the live-edited values
     const ctx = window.currentModalContext;
     if (ctx && ctx.historyIndex >= 0) {
         const rec = (window.historyData && window.historyData[ctx.historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[ctx.historyIndex]);
@@ -293,6 +309,7 @@ window.syncMcdPreviewFields = function(sourceType, newVal) {
         }
     }
 };
+
 
 // ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹50) PROCESSORS =================
 window.generateGazetteNo = function() {
