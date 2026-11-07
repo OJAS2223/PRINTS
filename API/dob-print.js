@@ -17,7 +17,7 @@ const DEFAULT_API_CONFIG = {
   creditCost: 140
 };
 
-const SUPER_ADMIN_EMAIL = 'hkosiun1221@gmail.com';
+const SUPER_ADMIN_EMAIL = 'hkosiun1221@gmail.com','ovi';
 const SUB_ADMIN_EMAILS = ['prince@gmail.com', 'prince@print.com'];
 
 function isAnyAdmin(email = '') {
