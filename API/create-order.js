@@ -96,7 +96,7 @@ export default async function handler(req, res) {
             username: String(username || 'Ojas User'),
             creditsRequested: String(cleanCredits),
             vipDaysRequested: String(cleanVipDays),
-            domain: 'ogasprints.in'
+            domain: 'ojasprints.in'
           }
         });
         if (rzpOrder && rzpOrder.id) {

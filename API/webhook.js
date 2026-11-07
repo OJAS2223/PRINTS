@@ -152,7 +152,7 @@ export default async function handler(req, res) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN || "8586078140:AAG-ydpakzFDAwHFtJC8AUanxZAODpGZDOk";
     const chatId = process.env.TELEGRAM_CHAT_ID || "8942287807";
     const vipLine = txResult.wantsVip ? `\n👑 *VIP Activated:* +${txResult.vipDays} Days` : '';
-    const tgMessage = `✅ *Auto-Payment Verified (ogasprints.in)!*\n👤 *User:* ${txResult.email}\n💰 *Amount Paid:* ₹${txResult.amountPaid}\n💎 *Credits Added:* +${txResult.creditsToAdd} Cr${vipLine}\n🧾 *UTR / Ref:* \`${utr}\`\n🆔 *Order ID:* \`${orderId}\`\n\n⚡ *Status:* Auto-Approved via Secure Webhook`;
+    const tgMessage = `✅ *Auto-Payment Verified (ojasprints.in)!*\n👤 *User:* ${txResult.email}\n💰 *Amount Paid:* ₹${txResult.amountPaid}\n💎 *Credits Added:* +${txResult.creditsToAdd} Cr${vipLine}\n🧾 *UTR / Ref:* \`${utr}\`\n🆔 *Order ID:* \`${orderId}\`\n\n⚡ *Status:* Auto-Approved via Secure Webhook`;
 
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: 'POST',

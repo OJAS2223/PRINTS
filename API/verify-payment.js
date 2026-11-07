@@ -160,7 +160,7 @@ export default async function handler(req, res) {
       const botToken = process.env.TELEGRAM_BOT_TOKEN || "8586078140:AAG-ydpakzFDAwHFtJC8AUanxZAODpGZDOk";
       const chatId = process.env.TELEGRAM_CHAT_ID || "8942287807";
       const vipLine = txResult.wantsVip ? `\n👑 *VIP Activated:* +${txResult.vipDays} Days` : '';
-      const tgMessage = `✅ *New Payment Received (ogasprints.in)!*\n👤 *User:* ${txResult.email}\n💰 *Amount Paid:* ₹${txResult.amountPaid}\n💎 *Credits Added:* +${txResult.creditsAdded} Cr (Total: ${txResult.updatedCredits} Cr)${vipLine}\n🧾 *Payment ID:* \`${razorpay_payment_id}\`\n🆔 *Order ID:* \`${razorpay_order_id}\`\n\n⚡ *Status:* Auto-Approved via Razorpay Signature Verification`;
+      const tgMessage = `✅ *New Payment Received (ojasprints.in)!*\n👤 *User:* ${txResult.email}\n💰 *Amount Paid:* ₹${txResult.amountPaid}\n💎 *Credits Added:* +${txResult.creditsAdded} Cr (Total: ${txResult.updatedCredits} Cr)${vipLine}\n🧾 *Payment ID:* \`${razorpay_payment_id}\`\n🆔 *Order ID:* \`${razorpay_order_id}\`\n\n⚡ *Status:* Auto-Approved via Razorpay Signature Verification`;
 
       await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
