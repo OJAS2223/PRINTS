@@ -92,7 +92,9 @@ window.isAnyAdminEmail = function(email) {
 window.MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 // ================= UPDATED SERVICE CREDIT RATES =================
-// • Domicile, Caste, e-Voter ID, DOB Delhi: 10 Credits (₹10)
+// • Domicile, Caste, e-Voter ID: 10 Credits (₹10)
+// • DOB Delhi, DOB (Minor): 50 Credits (₹50)
+// • DOB Original PDF: 140 Credits (₹140)
 // • Passport: 30 Credits (₹30)
 // • DOB (Minor Birth Certificate): 50 Credits (₹50)
 // • Annexures (1 to F):
@@ -106,8 +108,8 @@ window.SERVICE_RATES = {
     'Domicile': 10,
     'Caste': 10,
     'e-Voter ID': 10,
-    'DOB Delhi': 10,
-    'DOB Minor': 10,
+    'DOB Delhi': 50,
+    'DOB Minor': 50,
     'Passport': 30,
     'Passport Services': 30,
     'Minor': 50,
@@ -133,7 +135,7 @@ window.getServiceCreditCost = function(serviceType) {
     const sLower = String(serviceType).toLowerCase();
     if (sLower.includes('gazette')) return 100;
     if (sLower === 'dob print' || sLower === 'dob_print' || sLower.includes('dob original')) return 140;
-    if (sLower === 'minor' || sLower === 'dob') return 50;
+    if (sLower === 'minor' || sLower === 'dob' || sLower.includes('delhi') || sLower === 'dob_minor' || sLower === 'dob_delhi') return 50;
     if (sLower.includes('passport')) return 30;
     return 10;
 };

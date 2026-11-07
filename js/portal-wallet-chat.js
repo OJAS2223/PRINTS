@@ -1174,9 +1174,9 @@ window.switchService = async function(serviceName) {
                 </div>
                 <div class="bg-indigo-50/70 p-4 rounded-2xl border border-indigo-200 space-y-1.5 text-xs">
                     <div class="font-black text-indigo-950 uppercase text-[11px] mb-1"><i class="fa-solid fa-tags mr-1 text-royal-600"></i> पोर्टल सर्विस रेट लिस्ट (Service Rates):</div>
-                    <div class="flex justify-between font-bold text-slate-700"><span>• मूल निवास / जाति / ई-वोटर / दिल्ली DOB:</span><span class="font-black text-emerald-700">10 Credits (₹10)</span></div>
+                    <div class="flex justify-between font-bold text-slate-700"><span>• मूल निवास / जाति / ई-वोटर कार्ड:</span><span class="font-black text-emerald-700">10 Credits (₹10)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• पासपोर्ट सर्विस (Passport):</span><span class="font-black text-sky-700">30 Credits (₹30)</span></div>
-                    <div class="flex justify-between font-bold text-slate-700"><span>• जन्म प्रमाण पत्र (DOB Certificate):</span><span class="font-black text-amber-800">50 Credits (₹50)</span></div>
+                    <div class="flex justify-between font-bold text-slate-700"><span>• जन्म प्रमाण पत्र (DOB / दिल्ली DOB):</span><span class="font-black text-amber-800">50 Credits (₹50)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• डेट ऑफ बर्थ PDF ओरिजिनल (DOB Original PDF):</span><span class="font-black text-teal-800">140 Credits (₹140)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• गैजेट नोटिफिकेशन (Gazette Notification):</span><span class="font-black text-purple-800">100 Credits (₹100)</span></div>
                     <div class="flex justify-between font-bold text-slate-700"><span>• एनेक्सर जनरेट (Annexure Generate):</span><span class="font-black text-emerald-700">10 Credits (₹10)</span></div>
