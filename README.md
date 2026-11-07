@@ -19,9 +19,9 @@
    - `caste.html`, `domicile.html`, `evoter.html`, `dob-delhi.html`, `dob-print.html`, `gazette.html`, and all 9 `annexure-*.html` (`1`, `1a`, `3`, `3a`, `b`, `c`, `d`, `e`, `f`) files.
 
 ## Service Credit Rates (Anti-Tamper Server Enforced)
-- **Domicile / Caste / e-Voter ID / DOB Delhi**: ₹10 (10 Credits)
+- **Domicile / Caste / e-Voter ID**: ₹10 (10 Credits)
 - **Passport Services**: ₹30 (30 Credits)
-- **DOB (Minor Birth Certificate)**: ₹50 (50 Credits)
+- **DOB (Minor Birth Certificate) & DOB Delhi**: ₹50 (50 Credits)
 - **Gazette Notification**: ₹100 (100 Credits)
 - **DOB Original PDF (डेट ऑफ बर्थ PDF ओरिजिनल)**: **₹140 (140 Credits)** (Mandatory for all members except Admin)
 - **Annexures (1 to F)**:
