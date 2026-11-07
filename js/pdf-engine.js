@@ -172,6 +172,7 @@ window.processCasteOrDomicileData = function(rawFormObj, serviceType) {
 };
 
 // ================= MCD DOB DELHI (BIRTH.HTML) PROCESSOR & LIVE SYNC =================
+// ================= MCD DOB DELHI (BIRTH.HTML) PROCESSOR & LIVE SYNC =================
 window.generateMcdRegNo = function() {
     const rand7 = Math.floor(1000000 + Math.random() * 9000000);
     return `MCDOLIR-2219-00${rand7}`;
