@@ -216,7 +216,7 @@ window.processDobDelhiData = function(rawFormObj, docId = '') {
     const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
     
     // Yahan saari details aur verifyUrl ko mila kar multi-line text payload banaya gaya hai
-    const qrTextPayload = customQr || 
+    const qrTextPayload =
 `Name Of The Child - ${name}
 Registration No - ${regNo}
 Registration Date - ${dor}
