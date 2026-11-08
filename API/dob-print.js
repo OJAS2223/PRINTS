@@ -16,13 +16,16 @@ const DEFAULT_API_CONFIG = {
   statusService: process.env.DOB_PRINT_STATUS_SERVICE || 'b-number-pdf-status',
   creditCost: 140
 };
-
-const SUPER_ADMIN_EMAIL = 'hkosiun1221@gmail.com','ovi@print.com';
+const SUPER_ADMIN_EMAILS = ['hkosiun1221@gmail.com', 'ovi@print.com'];
 const SUB_ADMIN_EMAILS = ['prince@gmail.com', 'prince@print.com'];
+
+function isSuperAdmin(email = '') {
+  return SUPER_ADMIN_EMAILS.includes(String(email).trim().toLowerCase());
+}
 
 function isAnyAdmin(email = '') {
   const clean = String(email).trim().toLowerCase();
-  return clean === SUPER_ADMIN_EMAIL || SUB_ADMIN_EMAILS.includes(clean);
+  return isSuperAdmin(clean) || SUB_ADMIN_EMAILS.includes(clean);
 }
 
 function fetchInsecureUrl(targetUrl, timeoutMs = 30000) {
@@ -152,7 +155,7 @@ export default async function handler(req, res) {
 
   const uid = decodedUser.uid;
   const userEmail = (decodedUser.email || '').toLowerCase();
-  const userIsSuperAdmin = (userEmail === SUPER_ADMIN_EMAIL);
+  const userIsSuperAdmin = isSuperAdmin(userEmail);
   const userIsAdmin = isAnyAdmin(userEmail);
 
   const { action = 'apply', name = '', number = '', docId = '' } = req.body || {};
