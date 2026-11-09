@@ -244,23 +244,22 @@ window.handleSeparateAdminLogin = async function(event) {
     }
 };
 
+// === js/admin-logic.js के अंदर लाइन 124 से 180 तक का हिस्सा इससे बदलें ===
+
 onAuthStateChanged(auth, async (user) => {
-    const emailEl = document.getElementById('secAdminEmail');
-    const passEl = document.getElementById('secAdminPass');
-    if (emailEl) emailEl.value = '';
-    if (passEl) passEl.value = '';
-
-    const isSeparateVerified = sessionStorage.getItem('ojas_separate_admin_verified') === 'true';
+    const isPortalAdminVerified = sessionStorage.getItem('ojas_separate_admin_verified') === 'true';
     const emailLower = user?.email ? user.email.trim().toLowerCase() : '';
-    const isAllowedAdmin = window.isAnyAdminEmail ? window.isAnyAdminEmail(emailLower) : (emailLower === ADMIN_EMAIL.toLowerCase() || emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
+    const isAllowedAdmin = window.isAnyAdminEmail
+        ? window.isAnyAdminEmail(emailLower)
+        : (emailLower === ADMIN_EMAIL.toLowerCase() || emailLower === 'ovi@print.com' || emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
 
-    if (user && isAllowedAdmin && isSeparateVerified) {
+    // सिर्फ वही एडमिन खुलेगा जो मेन लॉगिन पेज (/portal) से लॉगिन होकर आया है
+    if (user && isAllowedAdmin && isPortalAdminVerified) {
         await window.unlockAdminWorkspace(user);
     } else {
-        document.getElementById('loadingScreen').classList.add('hidden');
-        document.getElementById('adminPanelContent').classList.add('hidden');
-        const loginSec = document.getElementById('adminLoginSection');
-        if (loginSec) loginSec.style.display = 'flex';
+        // अगर कोई सीधे /ovi खोले या सामान्य यूज़र हो, तो तुरंत मेन लॉगिन पेज (/portal) पर भेज दें
+        sessionStorage.removeItem('ojas_separate_admin_verified');
+        window.location.replace('/portal');
     }
 });
 
@@ -268,8 +267,9 @@ window.handleLogout = async function() {
     sessionStorage.removeItem("ojas_separate_admin_verified");
     sessionStorage.removeItem("ojas_portal_access");
     await signOut(auth);
-    window.location.replace("/ovi");
+    window.location.replace("/portal");
 };
+
 window.copyUtrText = function(utr, btnEl) { navigator.clipboard.writeText(utr); const orig = btnEl.innerHTML; btnEl.innerHTML = '<i class="fa-solid fa-check text-green-600"></i> Copied'; setTimeout(() => { btnEl.innerHTML = orig; }, 1500); };
 window.getPortalLoginUrl = function() { return window.location.origin + window.location.pathname.replace('admin.html', 'portal.html'); };
 window.formatCleanPhone = function(rawPhone = '') { let digits = String(rawPhone).replace(/\D/g, ''); if (digits.length === 10) digits = '91' + digits; return digits; };
