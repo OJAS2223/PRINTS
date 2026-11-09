@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <!-- Progressive Web App (PWA) Android Support -->
+    <!-- Instant Guard: Direct /ovi access without Portal Admin Login redirects immediately to Main Login (/portal) -->
+    <script>
+        if (sessionStorage.getItem('ojas_separate_admin_verified') !== 'true') {
+            window.location.replace('/portal');
+        } else if (window.history && window.history.replaceState) {
+            try { window.history.replaceState(null, document.title, '/ovi'); } catch(e){}
+        }
+    </script>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#060b19">
     <meta name="mobile-web-app-capable" content="yes">
@@ -17,15 +24,7 @@
         }
     </script>
     <link rel="icon" type="image/png" href="/images/logo.png">
-        <title>Super Admin - Ojas Portal</title>
-    <!-- Stealth Shield & URL Masking -->
-    <script>
-        if (window.location.pathname === '/admin' || window.location.pathname === '/admin.html') {
-            window.location.replace('/');
-        } else if (window.history && window.history.replaceState) {
-            try { window.history.replaceState(null, document.title, '/ovi'); } catch(e){}
-        }
-    </script>
+    <title>Super Admin - Ojas Portal</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -34,51 +33,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <script src="/js/theme.js?v=9.0"></script>
-
     <link rel="stylesheet" href="/css/theme.css?v=9.0">
 
-        
-
     <!-- Modular Admin Logic -->
-    <script type="module" src="/js/admin-logic.js?v=5.2"></script>
+    <script type="module" src="/js/admin-logic.js?v=6.0"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-royal-300 selection:text-dark-900">
     
-    <!-- Loading Screen -->
+    <!-- Loading Screen (No separate login form here; unauthorized users are sent to /portal) -->
     <div id="loadingScreen" class="fixed inset-0 bg-dark-950 z-[100] flex flex-col items-center justify-center">
         <img src="/images/logo.png" alt="Ojas Logo" class="w-16 h-16 md:w-20 md:h-20 mb-4 object-contain animate-pulse" onerror="this.style.display='none'">
-        <h2 class="text-base font-black text-white tracking-widest uppercase">Super Admin Panel</h2>
-        <p class="text-xs text-royal-300 font-bold mt-1 animate-pulse">Loading Workspace...</p>
+        <h2 class="text-base font-black text-white tracking-widest uppercase">Verifying Admin Session...</h2>
+        <p class="text-xs text-royal-300 font-bold mt-1 animate-pulse">Redirecting if unauthorized...</p>
     </div>
 
-        <!-- SEPARATE DEDICATED SUPER ADMIN LOGIN SCREEN (/ovi) -->
-    <div id="adminLoginSection" style="display: none;" class="fixed inset-0 bg-dark-950 z-[95] flex items-center justify-center p-4">
-        <div class="bg-white text-slate-800 p-6 md:p-8 rounded-3xl shadow-2xl border-t-4 border-royal-500 w-full max-w-sm space-y-5">
-            <div class="text-center">
-                <div class="w-16 h-16 bg-dark-950 text-royal-400 border border-royal-500/40 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-glow text-2xl">
-                    <i class="fa-solid fa-user-shield"></i>
-                </div>
-                <h1 class="text-xl font-black text-dark-900">Admin Control Gateway</h1>
-                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">Authorized Access Only</p>
-            </div>
-            <form id="separateAdminLoginForm" onsubmit="window.handleSeparateAdminLogin(event)" autocomplete="off" class="space-y-4">
-                <div>
-                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Admin ID</label>
-                    <input type="email" id="secAdminEmail" name="ovi_admin_uid_field" autocomplete="off" readonly onfocus="this.removeAttribute('readonly');" placeholder="Enter Admin ID" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-slate-50 text-xs font-bold focus:border-royal-500">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Password</label>
-                    <input type="password" id="secAdminPass" name="ovi_admin_pwd_field" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');" placeholder="••••••••" required class="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none bg-slate-50 text-xs font-bold focus:border-royal-500">
-                </div>
-                <button type="submit" id="btnSecAdminLogin" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-glow transition text-xs uppercase tracking-wider">
-                    <i class="fa-solid fa-unlock-keyhole mr-1"></i> Secure Login
-                </button>
-            </form>
-            <div id="secAdminLoginError" style="display: none;" class="text-center text-xs font-bold text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200"></div>
-        </div>
-    </div>
-
-    <!-- FULL SCREEN PDF & HTML VIEWER MODAL (WITH SHARE BUTTON) -->
+    <!-- FULL SCREEN PDF & HTML VIEWER MODAL -->
     <div id="pdfViewerModal" class="fixed inset-0 z-[100] hidden bg-dark-950/85 backdrop-blur-md flex items-center justify-center p-2 md:p-6">
         <div class="bg-white w-full max-w-7xl h-full flex flex-col rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="flex flex-wrap justify-between items-center p-3.5 md:p-4 border-b border-slate-200 bg-slate-50 gap-2">
@@ -136,7 +105,7 @@
                 <i class="fa-solid fa-moon text-xs md:text-sm"></i>
             </button>
             <a href="/portal" class="flex items-center gap-1.5 text-royal-300 hover:bg-royal-500 hover:text-dark-950 transition font-black text-[10px] md:text-xs bg-dark-900 border border-royal-500/30 px-2.5 py-1.5 md:px-3.5 md:py-2.5 rounded-lg md:rounded-xl shadow-sm">
-                <i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="hidden sm:inline">Open User Portal</span>
+                <i class="fa-solid fa-arrow-up-right-from-square"></i> <span class="hidden sm:inline">Back to User Portal</span>
             </a>
             <button onclick="window.handleLogout()" class="bg-red-500/15 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 px-2.5 py-1.5 md:px-3.5 md:py-2.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold transition flex items-center gap-1.5">
                 <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Logout</span>
@@ -233,7 +202,7 @@
                 </div>
             </div>
             
-                        <div id="adminPaymentsCardsContainer" class="overflow-x-auto bg-white rounded-2xl shadow-card border border-slate-200">
+            <div id="adminPaymentsCardsContainer" class="overflow-x-auto bg-white rounded-2xl shadow-card border border-slate-200">
                 <table class="w-full text-left border-collapse min-w-[780px]">
                     <thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider">
                         <tr>
@@ -251,9 +220,8 @@
             </div>
         </div>
 
-        <!-- ================= TAB 2: MANAGE USERS & ACCESS (WITH DELETE USER BUTTON) ================= -->
+        <!-- ================= TAB 2: MANAGE USERS & ACCESS ================= -->
         <div id="section-users" class="space-y-4 hidden">
-            <!-- Top User Selector Bar -->
             <div class="bg-white rounded-2xl p-4 md:p-5 shadow-card border border-slate-200 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <div class="w-11 h-11 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center text-lg border border-indigo-200 font-black shrink-0">
@@ -273,17 +241,13 @@
 
             <div id="adminMsg" class="hidden"></div>
 
-            <!-- 2-Column Control Grid for Selected User -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                <!-- LEFT COLUMN: Profile Status, Services Stealth Control, Share & DELETE USER -->
                 <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 flex flex-col justify-between">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                             <span class="text-xs font-black uppercase tracking-wider text-slate-400"><i class="fa-solid fa-id-badge text-royal-500 mr-1.5"></i>User Overview &amp; Service Access</span>
                         </div>
 
-                        <!-- Live Balance & VIP Badge Card -->
                         <div class="p-4 bg-gradient-to-r from-dark-950 via-dark-900 to-slate-900 text-white rounded-2xl flex justify-between items-center border border-royal-500/40 shadow-sm">
                             <div>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase block">Available Balance</span>
@@ -298,54 +262,44 @@
                             </div>
                         </div>
 
-                        <!-- PER-USER SERVICE STEALTH SWITCHES -->
                         <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
                             <div class="flex items-center gap-2 mb-1 border-b border-slate-200 pb-2">
                                 <i class="fa-solid fa-eye text-royal-500"></i>
                                 <div class="text-xs font-black text-dark-900">Service Visibility (Per User Stealth)</div>
                             </div>
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                                <!-- Domicile -->
                                 <label class="flex items-center justify-between cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
                                     <span class="text-[10px] font-bold text-slate-700">Domicile</span>
                                     <input type="checkbox" id="userDomicileToggle" onchange="window.toggleUserAccess('allowDomicile', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- Caste -->
                                 <label class="flex items-center justify-between cursor-pointer bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
                                     <span class="text-[10px] font-bold text-slate-700">Caste</span>
                                     <input type="checkbox" id="userCasteToggle" onchange="window.toggleUserAccess('allowCaste', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- e-Voter ID -->
                                 <label class="flex items-center justify-between cursor-pointer bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 shadow-sm">
                                     <span class="text-[10px] font-bold text-emerald-900">e-Voter ID</span>
                                     <input type="checkbox" id="userEvoterToggle" onchange="window.toggleUserAccess('allowEvoter', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- DOB Birth Certificate (50 Credits) -->
-                                <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-300 shadow-sm" title="DOB Birth Certificate (50 Credits)">
+                                <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-300 shadow-sm">
                                     <span class="text-[10px] font-black text-amber-900">DOB (₹50)</span>
                                     <input type="checkbox" id="userMinorToggle" onchange="window.toggleUserAccess('allowMinor', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- DOB Delhi -->
                                 <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-200 shadow-sm">
                                     <span class="text-[10px] font-black text-amber-900">DOB Delhi (₹50)</span>
                                     <input type="checkbox" id="userDobDelhiToggle" onchange="window.toggleUserAccess('allowDobDelhi', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- DOB Print (50 Credits) -->
-                                <label class="flex items-center justify-between cursor-pointer bg-teal-50 p-2.5 rounded-xl border border-teal-200 shadow-sm" title="DOB Print (50 Credits)">
+                                <label class="flex items-center justify-between cursor-pointer bg-teal-50 p-2.5 rounded-xl border border-teal-200 shadow-sm">
                                     <span class="text-[10px] font-black text-teal-900">DOB Original PDF (₹140)</span>
                                     <input type="checkbox" id="userDobPrintToggle" onchange="window.toggleUserAccess('allowDobPrint', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- Passport Services -->
                                 <label class="flex items-center justify-between cursor-pointer bg-sky-50 p-2.5 rounded-xl border border-sky-200 shadow-sm">
                                     <span class="text-[10px] font-bold text-sky-900">Passport (₹30)</span>
                                     <input type="checkbox" id="userPassportToggle" onchange="window.toggleUserAccess('allowPassport', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- Gazette Notification (100 Credits) -->
-                                <label class="flex items-center justify-between cursor-pointer bg-purple-50 p-2.5 rounded-xl border border-purple-200 shadow-sm" title="Gazette Notification (100 Credits)">
+                                <label class="flex items-center justify-between cursor-pointer bg-purple-50 p-2.5 rounded-xl border border-purple-200 shadow-sm">
                                     <span class="text-[10px] font-black text-purple-900">Gazette (₹100)</span>
                                     <input type="checkbox" id="userGazetteToggle" onchange="window.toggleUserAccess('allowGazette', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
-                                <!-- All Annexures -->
                                 <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-200 shadow-sm">
                                     <span class="text-[10px] font-bold text-amber-900">Annexures</span>
                                     <input type="checkbox" id="userAnnexuresToggle" onchange="window.toggleUserAccess('allowAnnexures', this.checked)" class="accent-green-600 w-4 h-4" checked>
@@ -353,7 +307,6 @@
                             </div>
                         </div>
 
-                        <!-- WhatsApp Phone & 1-Click Credentials Share -->
                         <div class="p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200 space-y-3">
                             <label class="block text-[10px] font-black text-emerald-900 uppercase tracking-wider">
                                 <i class="fa-brands fa-whatsapp text-emerald-600 mr-1"></i> User WhatsApp &amp; Instant Login Share
@@ -378,7 +331,6 @@
                         </div>
                     </div>
 
-                    <!-- DELETE USER ACCOUNT BUTTON -->
                     <div class="pt-2 border-t border-slate-100">
                         <button type="button" id="btnDeleteUserAccount" onclick="window.deleteSelectedUserAccount()" class="w-full bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border-2 border-red-200 hover:border-red-600 font-black py-3 px-4 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-solid fa-user-slash"></i> Delete Selected User Account Permanently
@@ -386,10 +338,7 @@
                     </div>
                 </div>
 
-                <!-- RIGHT COLUMN: Password Reset, VIP Validity Stacker & Credit Wallet Adjuster -->
                 <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 flex flex-col justify-between">
-                    
-                    <!-- 1. Password Reset Box -->
                     <div class="p-4 bg-indigo-50/60 rounded-2xl border border-indigo-200 space-y-2.5">
                         <div class="flex justify-between items-center">
                             <span class="text-[11px] font-black text-indigo-950 uppercase"><i class="fa-solid fa-key text-indigo-600 mr-1.5"></i>Password Control</span>
@@ -403,7 +352,6 @@
                         </div>
                     </div>
 
-                    <!-- 2. Portal Service Credit Rates Overview -->
                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                         <div class="flex justify-between items-center border-b border-slate-200 pb-1.5">
                             <label class="text-[11px] font-black text-slate-700 uppercase"><i class="fa-solid fa-tags text-royal-600 mr-1.5"></i>Standard Service Credit Rates</label>
@@ -423,7 +371,6 @@
                         </div>
                     </div>
 
-                    <!-- 3. Add / Subtract Credits & Gift Note (Super Admin Only) -->
                     <div id="manualCreditAdjustBox" class="p-4 bg-royal-50/50 rounded-2xl border border-royal-200 space-y-2.5">
                         <div class="flex justify-between items-center">
                             <label class="block text-[11px] font-black text-royal-900 uppercase"><i class="fa-solid fa-coins text-royal-500 mr-1.5"></i>Add or Deduct Credits</label>
@@ -441,7 +388,6 @@
                             <button id="btnSub" type="button" onclick="window.adjustCredits('sub')" class="bg-red-500 hover:bg-red-600 text-white font-black px-5 py-3 rounded-xl text-xs transition shadow-sm">- Sub</button>
                         </div>
                     </div>
-
                 </div>
             </div>
 
@@ -454,7 +400,7 @@
                         </div>
                         <div>
                             <h3 class="text-base font-black text-dark-900">Targeted User Banner (इस यूज़र के लिए पर्सनल बैनर)</h3>
-                            <p class="text-[11px] font-semibold text-slate-400">यह बैनर सिर्फ चुने गए यूज़र के डैशबोर्ड पर "डियर [User]" नाम के साथ दिखेगा (बाकी यूज़र्स को नहीं दिखेगा)</p>
+                            <p class="text-[11px] font-semibold text-slate-400">यह बैनर सिर्फ चुने गए यूज़र के डैशबोर्ड पर "डियर [User]" नाम के साथ दिखेगा</p>
                         </div>
                     </div>
                     <label class="inline-flex items-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-950 border border-amber-300 px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer select-none transition shadow-sm">
@@ -475,9 +421,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">
-                        Personal Message for User (यूज़र के लिए खास संदेश)
-                    </label>
+                    <label class="block text-[10px] font-black text-slate-500 uppercase mb-1">Personal Message for User (यूज़र के लिए खास संदेश)</label>
                     <textarea id="inpUserBannerMessage" rows="2" oninput="window.updateUserBannerPreview()" placeholder="यहाँ संदेश लिखें..." class="w-full p-3 border border-slate-200 rounded-xl text-xs font-semibold bg-slate-50 focus:bg-white outline-none resize-none"></textarea>
                 </div>
 
@@ -492,7 +436,6 @@
                     </div>
                 </div>
 
-                <!-- LIVE PREVIEW BOX -->
                 <div class="space-y-1.5 pt-1">
                     <label class="block text-[10px] font-black text-slate-400 uppercase tracking-wider">
                         <i class="fa-solid fa-desktop mr-1"></i> Live Preview (यूज़र के स्क्रीन पर ऐसा दिखेगा)
@@ -513,7 +456,7 @@
             </div>
         </div>
 
-        <!-- ================= TAB 3: CREATE NEW USER (DEDICATED SEPARATE TAB) ================= -->
+        <!-- ================= TAB 3: CREATE NEW USER ================= -->
         <div id="section-create_user" class="hidden">
             <div class="max-w-xl mx-auto bg-white rounded-3xl p-5 md:p-8 shadow-card border border-slate-200 space-y-5">
                 <div class="flex items-center gap-3.5 border-b border-slate-100 pb-4">
@@ -539,7 +482,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">User WhatsApp Number (Optional - तुरंत डिटेल भेजने के लिए)</label>
+                        <label class="block text-[11px] font-black text-slate-500 uppercase mb-1.5">User WhatsApp Number (Optional)</label>
                         <input type="tel" id="newAdminUserPhone" placeholder="10-Digit Mobile / WhatsApp Number" class="w-full p-3.5 border border-slate-300 rounded-xl text-sm bg-slate-50 font-bold outline-none focus:bg-white focus:border-royal-500">
                     </div>
 
@@ -559,7 +502,6 @@
 
         <!-- ================= TAB 4: LIVE 2-WAY SUPPORT CHAT ================= -->
         <div id="section-support" class="space-y-4 hidden">
-            <!-- Top Bar: Start Chat with Any User -->
             <div class="bg-white rounded-2xl p-4 shadow-card border border-slate-200 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-green-500/15 text-green-600 flex items-center justify-center border border-green-300 font-black text-lg">
@@ -580,9 +522,7 @@
                 </div>
             </div>
 
-            <!-- Messenger Split View -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-                <!-- Left Sidebar: Conversation List -->
                 <div class="lg:col-span-4 bg-white rounded-2xl p-3.5 shadow-card border border-slate-200 flex flex-col h-[580px]">
                     <div class="relative mb-3">
                         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
@@ -591,7 +531,6 @@
                     <div id="supportChatThreadsList" class="space-y-2 flex-1 overflow-y-auto pr-1"></div>
                 </div>
 
-                <!-- Right Main Chat Window -->
                 <div class="lg:col-span-8 bg-white rounded-2xl shadow-card border border-slate-200 overflow-hidden flex flex-col h-[580px]">
                     <div id="chatWindowEmptyState" class="flex-1 flex flex-col items-center justify-center p-10 text-center text-slate-400 bg-slate-50/50">
                         <div class="w-16 h-16 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-3xl mb-3 text-royal-500">
@@ -731,7 +670,6 @@
 
             <div id="adminHistoryListContainer" class="space-y-2.5"></div>
             
-            <!-- 20-Record Pagination & Infinite Scroll Sentinel -->
             <div id="adminHistoryPaginationBox" class="pt-2 pb-4 text-center">
                 <button type="button" id="btnLoadMoreHistory" onclick="window.loadNextAdminHistoryBatch()" class="bg-dark-900 hover:bg-black text-royal-300 font-black px-6 py-2.5 rounded-xl text-xs shadow-sm transition flex items-center gap-2 mx-auto">
                     <i class="fa-solid fa-angles-down"></i> <span>और 20 रिकॉर्ड्स लोड करें (Load More)</span>
@@ -742,7 +680,6 @@
 
         <!-- ================= TAB 6: PORTAL CONTROL ================= -->
         <div id="section-controls" class="grid grid-cols-1 md:grid-cols-2 gap-4 hidden">
-            <!-- Global Stealth Control Card -->
             <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 flex flex-col justify-between">
                 <div class="space-y-4">
                     <div class="flex justify-between items-start border-b border-slate-100 pb-3">
@@ -870,7 +807,6 @@
                 </div>
             </div>
 
-            <!-- Live Update Banner Card -->
             <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4">
                 <div class="flex items-center gap-2.5 border-b border-slate-100 pb-3">
                     <div class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center text-lg border border-indigo-200">
@@ -890,7 +826,6 @@
                         <input type="text" id="inpSupportWhatsapp" value="919306437623" placeholder="e.g. 919306437623" class="w-full p-2.5 border border-emerald-300 rounded-xl text-xs font-black bg-white outline-none">
                     </div>
 
-                    <!-- BANNER 1 (PRIMARY) -->
                     <div class="p-3 bg-amber-50/70 rounded-xl border border-amber-200 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-black text-amber-900"><i class="fa-solid fa-bullhorn text-amber-600 mr-1"></i> Banner 1 (Primary Update)</span>
@@ -925,7 +860,6 @@
                         </div>
                     </div>
 
-                    <!-- BANNER 2 (SECONDARY) -->
                     <div class="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-black text-emerald-900"><i class="fa-solid fa-bell text-emerald-600 mr-1"></i> Banner 2 (Secondary Notice)</span>
@@ -967,7 +901,7 @@
                     </button>
                 </form>
             </div>
-            <!-- Secret DOB Original PDF API Gateway Control Card (Strictly Server/Admin Only) -->
+
             <div class="bg-white rounded-2xl p-5 shadow-card border border-slate-200 space-y-4 md:col-span-2">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-2.5">
@@ -976,7 +910,7 @@
                         </div>
                         <div>
                             <h3 class="text-base font-black text-dark-900">DOB Original PDF Secret API Configuration (Server-Side Locked)</h3>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">यह सेटिंग केवल सर्वर और एडमिन को दिखती है • यूज़र या हैकर से 100% छुपी हुई है</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">यह सेटिंग केवल सर्वर और एडमिन को दिखती है • यूज़र से 100% छुपी हुई है</p>
                         </div>
                     </div>
                     <span class="bg-teal-100 text-teal-900 border border-teal-300 px-2.5 py-1 rounded-full text-[10px] font-black uppercase">₹140 (140 Credits) / PDF</span>
