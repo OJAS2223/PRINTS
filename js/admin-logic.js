@@ -1286,6 +1286,11 @@ window.renderAdminHistory = function() {
                 <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-end shrink-0 border-t xl:border-t-0 pt-2 xl:pt-0 border-slate-100">
                     ${certificateCheckboxHtml}
                     ${stampCheckboxHtml}
+                    ${data.fileId === 'SERVER_API_DOB_PRINT' && !data.formData?.REFUNDED ? `
+                        <button onclick="window.refundDobPrintOrderByAdmin('${data.id}')" class="inline-flex items-center gap-1 bg-teal-50 text-teal-900 border border-teal-300 hover:bg-teal-600 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="DOB Original PDF कैंसिल होने पर यूज़र को 140 Cr रिफंड करें">
+                            <i class="fa-solid fa-rotate-left"></i> Refund Cr
+                        </button>
+                    ` : (data.formData?.REFUNDED ? `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2.5 py-1.5 rounded-xl text-xs font-black"><i class="fa-solid fa-check-double mr-0.5"></i>Refunded</span>` : '')}
                     ${editAnnexureBtnHtml}
                     <button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 bg-royal-50 text-royal-700 px-3 py-2 rounded-xl text-xs font-black hover:bg-royal-500 hover:text-white transition border border-royal-200"><i class="fa-solid fa-eye"></i> Preview</button>
                     <button onclick="window.triggerDirectPrintByIndex(${data._origIndex}, this)" class="inline-flex items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 text-dark-950 px-3 py-2 rounded-xl text-xs font-black transition shadow-sm"><i class="fa-solid fa-print"></i> Print</button>
@@ -1704,24 +1709,23 @@ window.adjustCredits = async function(action) {
         await updateDoc(doc(db, "users", uid), { credits: newCredits });
         window.usersDataList[uid].credits = newCredits;
 
-        // If credits were added, record in payments collection as Gift / Bonus
-        if (action === 'add') {
-            await addDoc(collection(db, "payments"), {
-                userId: uid,
-                email: uData.email,
-                amountPaid: 0,
-                creditsRequested: amtVal,
-                wantsVip: false,
-                vipDaysRequested: 0,
-                vipPlanFee: 0,
-                utrNumber: "ADMIN_GIFT",
-                status: "Gift / Bonus",
-                note: giftNote,
-                timestamp: new Date()
-            });
-            if (document.getElementById('adminCreditGiftNote')) {
-                document.getElementById('adminCreditGiftNote').value = '';
-            }
+        // Record both Admin Gift (+Cr) and Admin Deduction (-Cr) in payments collection for full Passbook transparency
+        await addDoc(collection(db, "payments"), {
+            userId: uid,
+            email: uData.email,
+            amountPaid: 0,
+            creditsRequested: amtVal,
+            wantsVip: false,
+            vipDaysRequested: 0,
+            vipPlanFee: 0,
+            utrNumber: action === 'add' ? "ADMIN_GIFT" : "ADMIN_DEDUCT",
+            status: action === 'add' ? "Gift / Bonus" : "Admin Deducted",
+            type: action === 'add' ? "GIFT" : "ADMIN_DEDUCT",
+            note: action === 'add' ? giftNote : (document.getElementById('adminCreditGiftNote')?.value.trim() || 'Admin Manual Credit Deduction'),
+            timestamp: new Date()
+        });
+        if (document.getElementById('adminCreditGiftNote')) {
+            document.getElementById('adminCreditGiftNote').value = '';
         }
 
         window.handleUserSelection();
@@ -1782,5 +1786,65 @@ window.saveDobPrintSecretApiConfig = async function() {
         alert('✅ DOB Original PDF Secret API settings saved securely on the server!');
     } catch (err) {
         alert('Error saving secret API config: ' + err.message);
+    }
+};
+
+
+window.refundDobPrintOrderByAdmin = async function(docId) {
+    const record = window.adminAllHistoryData.find(d => d.id === docId);
+    if (!record) return alert('रिकॉर्ड नहीं मिला!');
+    if (record.formData?.REFUNDED) return alert('इस ऑर्डर का रिफंड पहले ही दिया जा चुका है!');
+    const refundCr = Number(record.formData?.CREDITS_DEDUCTED) || 140;
+    const brnNo = record.formData?.BRN_NO || 'N/A';
+    const appName = record.formData?.NAME || 'Applicant';
+    const userEmail = window.allUsersMap[record.userId] || 'User';
+
+    if (!confirm(`🔄 Confirm DOB Original PDF Refund:\n\n• User: ${userEmail}\n• Name: ${appName}\n• BRN: ${brnNo}\n• Refund Credits: +${refundCr} Cr\n\nक्या आप इस ऑर्डर को Cancelled मार्क करके यूज़र के वॉलेट में +${refundCr} Credits रिफंड करना चाहते हैं?`)) return;
+
+    try {
+        const userRef = doc(db, "users", record.userId);
+        const userSnap = await getDoc(userRef);
+        let newCredits = refundCr;
+        if (userSnap.exists()) {
+            const cur = Number(userSnap.data().credits) || 0;
+            newCredits = cur + refundCr;
+            await updateDoc(userRef, { credits: newCredits });
+        }
+
+        const updatedFormData = {
+            ...(record.formData || {}),
+            API_STATUS: 'failed',
+            REFUNDED: true,
+            REFUND_CREDITS: refundCr,
+            REFUNDED_AT: new Date().toISOString()
+        };
+
+        await updateDoc(doc(db, "history", docId), {
+            formData: updatedFormData,
+            updatedAt: new Date()
+        });
+
+        await setDoc(doc(db, "payments", `refund_${docId}`), {
+            userId: record.userId,
+            email: userEmail,
+            amountPaid: refundCr,
+            creditsRequested: refundCr,
+            wantsVip: false,
+            vipDaysRequested: 0,
+            vipPlanFee: 0,
+            utrNumber: brnNo,
+            status: "Refunded",
+            type: "REFUND",
+            serviceType: "DOB Original PDF",
+            relatedDocId: docId,
+            note: `Refund: DOB Original PDF Cancelled (${appName} - ${brnNo})`,
+            timestamp: new Date()
+        }, { merge: true });
+
+        record.formData = updatedFormData;
+        window.renderAdminHistory();
+        alert(`✅ सफलतापूर्वक +${refundCr} Credits यूज़र (${userEmail}) के वॉलेट में रिफंड कर दिए गए हैं और यूज़र की Payment History (Passbook) में दर्ज हो गया है!`);
+    } catch (err) {
+        alert('Refund error: ' + err.message);
     }
 };
