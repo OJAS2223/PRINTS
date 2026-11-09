@@ -149,37 +149,43 @@ function startUserProfileListener(uid) {
     }); 
 }
 
-function startPortalSettingsListener() { 
-    if (window.portalSettingsUnsubscribe) window.portalSettingsUnsubscribe(); 
-    window.portalSettingsUnsubscribe = onSnapshot(doc(db, "settings", "portalConfig"), (snap) => { 
-        if (snap.exists()) { 
-            const data = snap.data(); 
-            window.portalConfigState = { 
-                showDomicile: data.showDomicile !== false, 
-                showCaste: data.showCaste !== false, 
-                showEvoter: data.showEvoter !== false,
-                showMinor: data.showMinor !== false, 
-                showDobMinor: data.showDobMinor !== false, 
-                showDobDelhi: data.showDobDelhi !== false,
-                showPassport: data.showPassport !== false,
-            showGazette: data.showGazette !== false,
-            showDobPrint: data.showDobPrint !== false,
-                showAnnexures: data.showAnnexures !== false,
-                bannerEnabled: !!data.bannerEnabled, 
-                bannerBadge: data.bannerBadge || "UPDATE", 
-                bannerTitle: data.bannerTitle || "", 
-                bannerMessage: data.bannerMessage || "", 
-                bannerBtnText: data.bannerBtnText || "", 
-                bannerBtnLink: data.bannerBtnLink || "",
-                banner2Enabled: !!data.banner2Enabled, 
-                banner2Badge: data.banner2Badge || "NOTICE", 
-                banner2Title: data.banner2Title || "", 
-                banner2Message: data.banner2Message || "", 
-                banner2BtnText: data.banner2BtnText || "", 
-                banner2BtnLink: data.banner2BtnLink || ""
-            }; 
-        } 
-        window.applyLivePortalControls(); 
+// === js/portal-wallet-chat.js में startUserProfileListener फंक्शन (बिना किसी क्रैश के) ===
+function startUserProfileListener(uid) { 
+    if (window.userProfileUnsubscribe) window.userProfileUnsubscribe(); 
+    window.userProfileUnsubscribe = onSnapshot(doc(db, "users", uid), (snap) => { 
+        if (!snap.exists() || !window.currentUserData) return; 
+        const data = snap.data(); 
+        window.currentUserData.credits = data.credits || 0; 
+        
+        // Sync per-user service permissions cleanly
+        window.currentUserData.allowEvoter = data.allowEvoter !== false;
+        window.currentUserData.allowMinor = data.allowMinor !== false;
+        window.currentUserData.allowDomicile = data.allowDomicile !== false;
+        window.currentUserData.allowCaste = data.allowCaste !== false;
+        window.currentUserData.allowDobMinor = data.allowDobMinor !== false;
+        window.currentUserData.allowDobDelhi = data.allowDobDelhi !== false;
+        window.currentUserData.allowPassport = data.allowPassport !== false;
+        window.currentUserData.allowGazette = data.allowGazette !== false;
+        window.currentUserData.allowDobPrint = data.allowDobPrint !== false;
+        window.currentUserData.allowAnnexures = data.allowAnnexures !== false;
+
+        // Sync Targeted Personal Banner State
+        window.currentUserData.personalBannerEnabled = !!data.personalBannerEnabled;
+        window.currentUserData.personalBannerBadge = data.personalBannerBadge || "NOTICE";
+        window.currentUserData.personalBannerTitle = data.personalBannerTitle || "";
+        window.currentUserData.personalBannerMessage = data.personalBannerMessage || "";
+        window.currentUserData.personalBannerBtnText = data.personalBannerBtnText || "";
+        window.currentUserData.personalBannerBtnLink = data.personalBannerBtnLink || "";
+
+        const creditEl = document.getElementById('displayCredits');
+        if (creditEl) creditEl.innerText = window.currentUserData.credits; 
+        const now = Date.now();
+        const isNowVip = window.currentUserData.hasFreeAccess || (data.isVip && (!data.vipExpiry || data.vipExpiry > now)); 
+        const vipChanged = window.currentUserData.isVip !== isNowVip; 
+        window.currentUserData.isVip = isNowVip;
+        window.currentUserData.vipExpiry = window.currentUserData.hasFreeAccess ? 0 : (data.vipExpiry || 0); 
+        if (vipChanged) setupDashboard(window.currentUserData);
+        else window.applyLivePortalControls(); 
     }); 
 }
 
