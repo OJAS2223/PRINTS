@@ -6,6 +6,7 @@ import http from 'http';
 // FILE: api/dob-print.js
 // Server-Side Locked BRN Original PDF Gateway (₹140 / 140 Credits)
 // Works with OR without FIREBASE_SERVICE_ACCOUNT (Auto REST API Fallback)
+// Normalized Statuses: 'pending' (PENDING) -> 'successful' (SUCCESSFUL + PDF Download)
 // ============================================================================
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'upeprint';
@@ -22,7 +23,7 @@ const DEFAULT_API_CONFIG = {
 const SUPER_ADMIN_EMAILS = ['hkosiun1221@gmail.com', 'ovi@print.com'];
 const SUB_ADMIN_EMAILS = ['prince@gmail.com', 'prince@print.com'];
 
-// Server-only AES-256 key to keep external PDF URLs 100% hidden from client inspection
+// Server-only AES-256 key to keep external PDF URLs hidden from client inspection
 const SERVER_SECRET_SEED = process.env.DOB_PRINT_API_KEY || process.env.RAZORPAY_KEY_SECRET || 'ojas_dob_secret_2026_lock';
 const AES_KEY = crypto.createHash('sha256').update(SERVER_SECRET_SEED).digest();
 
@@ -63,7 +64,215 @@ function isAnyAdmin(email = '') {
   return isSuperAdmin(clean) || SUB_ADMIN_EMAILS.includes(clean);
 }
 
-// Lazy & Safe Firebase Admin Initialization (Never crashes if env or package is missing)
+// Strictly normalize status so boolean true / "true" NEVER appears as status:
+// - If PDF is ready -> 'successful'
+// - If still waiting -> 'pending'
+function normalizeOrderStatus(rawStatusVal, hasPdf = false) {
+  if (hasPdf) return 'successful';
+  if (rawStatusVal === null || rawStatusVal === undefined || typeof rawStatusVal === 'boolean') {
+    return 'pending';
+  }
+  const s = String(rawStatusVal).trim().toLowerCase();
+  if (
+    !s ||
+    s === 'true' ||
+    s === '1' ||
+    s === 'ok' ||
+    s === 'pending' ||
+    s === 'processing' ||
+    s === 'submitted' ||
+    s === 'in_progress' ||
+    s === 'queued' ||
+    s === 'waiting'
+  ) {
+    return 'pending';
+  }
+  if (
+    s === 'approved' ||
+    s === 'completed' ||
+    s === 'complete' ||
+    s === 'success' ||
+    s === 'successful' ||
+    s === 'generated' ||
+    s === 'done' ||
+    s === 'ready'
+  ) {
+    return 'successful';
+  }
+  if (s === 'rejected' || s === 'failed' || s === 'error' || s === 'cancelled' || s === 'canceled') {
+    return 'failed';
+  }
+  return 'pending';
+}
+
+function resolvePdfUrlOrData(rawCandidate = '', baseUrl = DEFAULT_API_CONFIG.baseUrl) {
+  const val = String(rawCandidate || '').trim();
+  if (!val || val === 'null' || val === 'undefined' || val === 'false' || val === 'true') return '';
+  if (val.startsWith('data:application/pdf')) return val;
+  if (val.startsWith('JVBERi0')) return `data:application/pdf;base64,${val}`;
+  if (val.startsWith('http://') || val.startsWith('https://')) return val;
+  try {
+    return new URL(val, baseUrl).toString();
+  } catch (e) {
+    return val;
+  }
+}
+
+// Deep extractor that finds app_id, application_ref, status, and PDF URL from any API structure
+function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targetAppId = '', baseUrl = DEFAULT_API_CONFIG.baseUrl) {
+  if (!parsed || typeof parsed !== 'object') {
+    return { appId: '', appRef: '', status: 'pending', pdfUrl: '', hasPdf: false };
+  }
+
+  const cleanTargetBrn = String(targetBrn || '').trim().toUpperCase();
+  const cleanTargetRef = String(targetRef || '').trim().toUpperCase();
+  const cleanTargetAppId = String(targetAppId || '').trim();
+
+  // Collect candidate record objects from parsed, parsed.data, parsed.records, parsed.orders, etc.
+  const candidates = [];
+  const pushCandidate = (item) => {
+    if (!item || typeof item !== 'object') return;
+    if (Array.isArray(item)) {
+      item.forEach(pushCandidate);
+    } else {
+      candidates.push(item);
+      if (item.data && typeof item.data === 'object') pushCandidate(item.data);
+      if (item.application && typeof item.application === 'object') pushCandidate(item.application);
+      if (item.order && typeof item.order === 'object') pushCandidate(item.order);
+      if (item.result && typeof item.result === 'object') pushCandidate(item.result);
+      if (item.records && typeof item.records === 'object') pushCandidate(item.records);
+      if (item.orders && typeof item.orders === 'object') pushCandidate(item.orders);
+    }
+  };
+  pushCandidate(parsed);
+
+  // Pick the best matching record if multiple records exist (e.g. array from status API)
+  let primaryRec = candidates.find((c) => {
+    if (c === parsed && candidates.length > 1) return false;
+    const cBrn = String(c.number || c.b_number || c.brn || c.brn_no || '').trim().toUpperCase();
+    const cRef = String(c.application_ref || c.app_ref || c.ref_id || c.reference || c.order_ref || '').trim().toUpperCase();
+    const cId = String(c.app_id ?? c.id ?? c.order_id ?? c.application_id ?? '').trim();
+    if (cleanTargetBrn && cBrn && cBrn === cleanTargetBrn) return true;
+    if (cleanTargetRef && !cleanTargetRef.startsWith('LOCAL_') && cRef && cRef === cleanTargetRef) return true;
+    if (cleanTargetAppId && cId && cId === cleanTargetAppId) return true;
+    return false;
+  });
+
+  if (!primaryRec) {
+    primaryRec = candidates.find((c) => c !== parsed) || parsed;
+  }
+
+  const searchObjs = [primaryRec, parsed];
+
+  // 1. Extract App ID
+  let appId = '';
+  for (const obj of searchObjs) {
+    if (!obj || typeof obj !== 'object') continue;
+    const idVal = obj.app_id ?? obj.application_id ?? obj.id ?? obj.order_id ?? obj.request_id;
+    if (idVal !== undefined && idVal !== null && String(idVal).trim() !== '') {
+      appId = String(idVal).trim();
+      break;
+    }
+  }
+
+  // 2. Extract Application Reference
+  let appRef = '';
+  for (const obj of searchObjs) {
+    if (!obj || typeof obj !== 'object') continue;
+    const refVal =
+      obj.application_ref ||
+      obj.app_ref ||
+      obj.ref_id ||
+      obj.reference_id ||
+      obj.reference ||
+      obj.ref_no ||
+      obj.order_ref ||
+      obj.txn_id ||
+      obj.token;
+    if (refVal && String(refVal).trim() !== '') {
+      appRef = String(refVal).trim();
+      break;
+    }
+  }
+
+  // 3. Extract PDF URL or Base64 PDF across all known PDF keys
+  const pdfKeys = [
+    'pdf_url', 'pdfUrl', 'pdf_link', 'pdfLink', 'pdf_file', 'pdfFile', 'pdf_path', 'pdfPath',
+    'pdf', 'file_url', 'fileUrl', 'file_link', 'file_path', 'file', 'download_url', 'downloadUrl',
+    'download_link', 'downloadLink', 'download_pdf', 'download', 'certificate_url', 'certificateUrl',
+    'certificate_pdf', 'cert_url', 'document_url', 'doc_url', 'url', 'link', 'output_pdf',
+    'result_pdf', 'pdf_base64', 'base64_pdf', 'base64', 'pdf_data'
+  ];
+
+  let rawPdfCandidate = '';
+  for (const obj of searchObjs) {
+    if (!obj || typeof obj !== 'object') continue;
+    for (const k of pdfKeys) {
+      const v = obj[k];
+      if (typeof v === 'string' && v.trim().length > 4 && v.trim() !== 'null' && v.trim() !== 'false') {
+        rawPdfCandidate = v.trim();
+        break;
+      }
+    }
+    if (rawPdfCandidate) break;
+  }
+
+  // Fallback scan: check any string property that looks like a PDF URL or .pdf file path
+  if (!rawPdfCandidate) {
+    for (const obj of searchObjs) {
+      if (!obj || typeof obj !== 'object') continue;
+      for (const [k, v] of Object.entries(obj)) {
+        if (typeof v !== 'string') continue;
+        const s = v.trim();
+        if (
+          s.startsWith('data:application/pdf') ||
+          s.startsWith('JVBERi0') ||
+          /\.pdf(\?.*)?$/i.test(s) ||
+          ((s.startsWith('http://') || s.startsWith('https://')) &&
+            (s.toLowerCase().includes('pdf') || s.toLowerCase().includes('download') || s.toLowerCase().includes('cert') || s.toLowerCase().includes('file')))
+        ) {
+          rawPdfCandidate = s;
+          break;
+        }
+      }
+      if (rawPdfCandidate) break;
+    }
+  }
+
+  const pdfUrl = resolvePdfUrlOrData(rawPdfCandidate, baseUrl);
+  const hasPdf = Boolean(pdfUrl);
+
+  // 4. Extract Status (ignoring boolean true on top-level/wrapper status)
+  let rawStatusVal = undefined;
+  for (const obj of searchObjs) {
+    if (!obj || typeof obj !== 'object') continue;
+    const candidateStat =
+      obj.application_status ??
+      obj.order_status ??
+      obj.pdf_status ??
+      obj.app_status ??
+      obj.current_status ??
+      obj.state ??
+      (typeof obj.status === 'string' && obj.status.trim().toLowerCase() !== 'true' ? obj.status : undefined);
+    if (candidateStat !== undefined && candidateStat !== null && String(candidateStat).trim() !== '') {
+      rawStatusVal = candidateStat;
+      break;
+    }
+  }
+
+  const status = normalizeOrderStatus(rawStatusVal, hasPdf);
+  return {
+    appId,
+    appRef,
+    status,
+    pdfUrl,
+    hasPdf,
+    name: String(primaryRec?.name || primaryRec?.applicant_name || primaryRec?.full_name || '').trim().toUpperCase(),
+    number: String(primaryRec?.number || primaryRec?.b_number || primaryRec?.brn || '').trim().toUpperCase()
+  };
+}
+
+// Lazy & Safe Firebase Admin Initialization
 let cachedAdminApp = null;
 async function getFirebaseAdminDb() {
   if (cachedAdminApp) return cachedAdminApp.firestore();
@@ -89,11 +298,9 @@ async function getFirebaseAdminDb() {
   }
 }
 
-// Verify Firebase ID Token (Works via Admin SDK OR Identity Toolkit REST API)
 async function verifyFirebaseUserToken(idToken) {
   if (!idToken) throw new Error('Authentication token missing');
 
-  // 1. Try Firebase Admin SDK first if available
   if (cachedAdminApp) {
     try {
       const decoded = await cachedAdminApp.auth().verifyIdToken(idToken);
@@ -101,7 +308,6 @@ async function verifyFirebaseUserToken(idToken) {
     } catch (e) {}
   }
 
-  // 2. Fallback to Google Identity Toolkit REST verification
   const verifyUrl = `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_WEB_API_KEY}`;
   const resp = await fetch(verifyUrl, {
     method: 'POST',
@@ -120,7 +326,7 @@ async function verifyFirebaseUserToken(idToken) {
 }
 
 // ============================================================================
-// FIRESTORE REST API HELPERS (Used automatically when FIREBASE_SERVICE_ACCOUNT is not set)
+// FIRESTORE REST API HELPERS
 // ============================================================================
 function toFirestoreValue(val) {
   if (val === null || val === undefined) return { nullValue: null };
@@ -210,7 +416,7 @@ async function restPatchDoc(collectionName, docId, dataObj, idToken = '') {
 }
 
 // ============================================================================
-// EXTERNAL API HTTP CLIENT (Handles HTTPS/HTTP, Redirects & Self-Signed Certs)
+// EXTERNAL API HTTP CLIENT
 // ============================================================================
 function fetchExternalUrl(targetUrl, timeoutMs = 30000) {
   return new Promise((resolve, reject) => {
@@ -268,7 +474,6 @@ function parseExternalApiJson(rawText = '', statusCode = 200) {
   try {
     return JSON.parse(trimmed);
   } catch (e) {
-    // Extract JSON if PHP warning/notice text precedes or follows the JSON payload
     const firstBrace = trimmed.indexOf('{');
     const lastBrace = trimmed.lastIndexOf('}');
     if (firstBrace !== -1 && lastBrace > firstBrace) {
@@ -314,6 +519,88 @@ async function getServerApiConfig(adminDb, idToken = '') {
   return DEFAULT_API_CONFIG;
 }
 
+// Multi-attempt status query to rtyu.run.place so even orders with missing app_id or local ref are found by BRN number
+async function queryUpstreamStatusAndPdf(apiCfg, appId = '', appRef = '', brnNumber = '', applicantName = '') {
+  const attempts = [];
+
+  // Attempt 1: Full parameters (without sending &status=true which breaks upstream filtering)
+  const url1 = new URL(apiCfg.baseUrl);
+  url1.searchParams.set('api_key', apiCfg.apiKey);
+  url1.searchParams.set('service', apiCfg.statusService);
+  if (appId) url1.searchParams.set('app_id', String(appId));
+  if (appRef && !String(appRef).startsWith('LOCAL_')) url1.searchParams.set('application_ref', String(appRef));
+  if (brnNumber) url1.searchParams.set('number', String(brnNumber));
+  if (applicantName) url1.searchParams.set('name', String(applicantName));
+  attempts.push(url1.toString());
+
+  // Attempt 2: Lookup by BRN number only
+  if (brnNumber) {
+    const url2 = new URL(apiCfg.baseUrl);
+    url2.searchParams.set('api_key', apiCfg.apiKey);
+    url2.searchParams.set('service', apiCfg.statusService);
+    url2.searchParams.set('number', String(brnNumber));
+    if (url2.toString() !== url1.toString()) attempts.push(url2.toString());
+  }
+
+  // Attempt 3: Lookup by application_ref only (if present)
+  if (appRef) {
+    const url3 = new URL(apiCfg.baseUrl);
+    url3.searchParams.set('api_key', apiCfg.apiKey);
+    url3.searchParams.set('service', apiCfg.statusService);
+    url3.searchParams.set('application_ref', String(appRef));
+    if (!attempts.includes(url3.toString())) attempts.push(url3.toString());
+  }
+
+  // Attempt 4: Service list lookup (matches by BRN number in returned array)
+  const url4 = new URL(apiCfg.baseUrl);
+  url4.searchParams.set('api_key', apiCfg.apiKey);
+  url4.searchParams.set('service', apiCfg.statusService);
+  if (!attempts.includes(url4.toString())) attempts.push(url4.toString());
+
+  let lastParsed = null;
+  let lastExtracted = { appId, appRef, status: 'pending', pdfUrl: '', hasPdf: false };
+  let lastHttpCode = 200;
+
+  for (const targetUrl of attempts) {
+    try {
+      const apiRes = await fetchExternalUrl(targetUrl, 25000);
+      lastHttpCode = apiRes.statusCode;
+
+      // Check if upstream directly returned a raw PDF binary stream (%PDF-)
+      if (
+        apiRes.buffer &&
+        apiRes.buffer.length > 100 &&
+        apiRes.buffer.slice(0, 5).toString('ascii') === '%PDF-'
+      ) {
+        return {
+          parsed: { status: true, message: 'Direct PDF stream received' },
+          extracted: {
+            appId,
+            appRef,
+            status: 'successful',
+            pdfUrl: targetUrl,
+            hasPdf: true
+          },
+          httpCode: lastHttpCode
+        };
+      }
+
+      const parsed = parseExternalApiJson(apiRes.text, apiRes.statusCode);
+      lastParsed = parsed;
+      const extracted = extractOrderDetailsFromApi(parsed, brnNumber, appRef, appId, apiCfg.baseUrl);
+      lastExtracted = extracted;
+
+      if (extracted.hasPdf || extracted.status === 'successful') {
+        return { parsed, extracted, httpCode: lastHttpCode };
+      }
+    } catch (e) {
+      // Continue to next fallback attempt
+    }
+  }
+
+  return { parsed: lastParsed, extracted: lastExtracted, httpCode: lastHttpCode };
+}
+
 // ============================================================================
 // MAIN SERVERLESS HANDLER
 // ============================================================================
@@ -342,6 +629,7 @@ export default async function handler(req, res) {
       const decoded = await verifyFirebaseUserToken(idToken);
 
       let histData = null;
+      let secretData = {};
       let pdfUrl = '';
 
       if (adminDb) {
@@ -350,8 +638,9 @@ export default async function handler(req, res) {
         histData = histSnap.data();
 
         const secretSnap = await adminDb.collection('adminSecrets').doc(`pdf_${docId}`).get();
-        if (secretSnap.exists && secretSnap.data().pdfUrl) {
-          pdfUrl = String(secretSnap.data().pdfUrl).trim();
+        if (secretSnap.exists) {
+          secretData = secretSnap.data();
+          if (secretData.pdfUrl) pdfUrl = String(secretData.pdfUrl).trim();
         }
       } else {
         const histSnap = await restGetDoc('history', docId, idToken);
@@ -367,12 +656,76 @@ export default async function handler(req, res) {
         pdfUrl = decryptSecretText(histData.formData.ENCRYPTED_PDF_TOKEN);
       }
 
+      // Live on-demand fetch if pdfUrl was not yet saved in Firestore!
       if (!pdfUrl) {
-        return res.status(404).send('PDF is still pending approval. Please click Check Status first.');
+        const apiCfg = await getServerApiConfig(adminDb, idToken);
+        const appId = secretData.appId !== undefined ? secretData.appId : (histData.formData?.APP_ID || '');
+        const appRef = secretData.applicationRef || histData.formData?.APPLICATION_REF || '';
+        const brnNumber = secretData.brnNumber || histData.formData?.BRN_NO || '';
+        const applicantName = secretData.applicantName || histData.formData?.NAME || '';
+
+        const liveCheck = await queryUpstreamStatusAndPdf(apiCfg, appId, appRef, brnNumber, applicantName);
+        if (liveCheck.extracted.hasPdf && liveCheck.extracted.pdfUrl) {
+          pdfUrl = liveCheck.extracted.pdfUrl;
+          const encryptedToken = encryptSecretText(pdfUrl);
+          const updatedFormData = {
+            ...(histData.formData || {}),
+            API_STATUS: 'successful',
+            HAS_PDF: true,
+            ENCRYPTED_PDF_TOKEN: encryptedToken
+          };
+          try {
+            if (adminDb) {
+              await adminDb.collection('adminSecrets').doc(`pdf_${docId}`).set({
+                pdfUrl,
+                status: 'successful',
+                updatedAt: new Date()
+              }, { merge: true });
+              await adminDb.collection('history').doc(docId).update({
+                formData: updatedFormData,
+                updatedAt: new Date()
+              });
+            } else {
+              await restPatchDoc('history', docId, {
+                formData: updatedFormData,
+                updatedAt: new Date()
+              }, idToken);
+            }
+          } catch (e) {}
+        }
       }
 
-      const pdfRes = await fetchExternalUrl(pdfUrl, 30000);
+      if (!pdfUrl) {
+        return res.status(404).send('PDF is still PENDING on the print server. Please try again in a few moments.');
+      }
+
       const cleanFileName = String(histData.fileName || 'DOB_Original_Certificate.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
+
+      // Handle base64 data URI PDFs
+      if (pdfUrl.startsWith('data:application/pdf;base64,')) {
+        const b64Data = pdfUrl.split(',')[1] || '';
+        const pdfBuffer = Buffer.from(b64Data, 'base64');
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `${isDownload ? 'attachment' : 'inline'}; filename="${cleanFileName}"`);
+        return res.status(200).send(pdfBuffer);
+      }
+
+      let pdfRes = await fetchExternalUrl(pdfUrl, 30000);
+      // If upstream requires api_key appended to download URL
+      if (
+        pdfRes.buffer.length < 200 ||
+        (pdfRes.buffer.slice(0, 5).toString('ascii') !== '%PDF-' && !pdfUrl.includes('api_key='))
+      ) {
+        try {
+          const apiCfg = await getServerApiConfig(adminDb, idToken);
+          const retryUrl = new URL(pdfUrl, apiCfg.baseUrl);
+          retryUrl.searchParams.set('api_key', apiCfg.apiKey);
+          const retryRes = await fetchExternalUrl(retryUrl.toString(), 30000);
+          if (retryRes.buffer.slice(0, 5).toString('ascii') === '%PDF-' || retryRes.buffer.length > pdfRes.buffer.length) {
+            pdfRes = retryRes;
+          }
+        } catch (e) {}
+      }
 
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
@@ -442,7 +795,7 @@ export default async function handler(req, res) {
         if (secretSnap.exists) secretData = secretSnap.data();
       } else {
         const histSnap = await restGetDoc('history', docId, idToken);
-        if (!histSnap.exists) return res.status(404).json({ status: false, message: 'Record not found' });
+        if (!histSnap.exists) return res.status(404).send({ status: false, message: 'Record not found' });
         histData = histSnap.data;
       }
 
@@ -451,49 +804,52 @@ export default async function handler(req, res) {
       }
 
       const existingPdfUrl = secretData.pdfUrl || decryptSecretText(histData.formData?.ENCRYPTED_PDF_TOKEN || '');
-      if (existingPdfUrl && histData.formData?.API_STATUS === 'approved') {
+      const existingStatusNorm = normalizeOrderStatus(histData.formData?.API_STATUS, Boolean(existingPdfUrl));
+
+      if (existingPdfUrl && existingStatusNorm === 'successful') {
         return res.status(200).json({
           status: true,
-          apiStatus: 'approved',
+          apiStatus: 'successful',
           hasPdf: true,
-          message: 'Certificate Approved! PDF is ready for download.'
+          message: '✅ SUCCESSFUL! आपकी ओरिजिनल जन्म प्रमाण-पत्र PDF डाउनलोड के लिए तैयार है।'
         });
       }
 
       const appId = secretData.appId !== undefined ? secretData.appId : (histData.formData?.APP_ID || '');
       const appRef = secretData.applicationRef || histData.formData?.APPLICATION_REF || '';
       const brnNumber = secretData.brnNumber || histData.formData?.BRN_NO || '';
-      const curStatus = histData.formData?.API_STATUS || 'pending';
+      const applicantName = secretData.applicantName || histData.formData?.NAME || '';
 
-      const statusUrl = new URL(apiCfg.baseUrl);
-      statusUrl.searchParams.set('api_key', apiCfg.apiKey);
-      statusUrl.searchParams.set('service', apiCfg.statusService);
-      statusUrl.searchParams.set('app_id', String(appId));
-      statusUrl.searchParams.set('application_ref', String(appRef));
-      statusUrl.searchParams.set('number', String(brnNumber));
-      statusUrl.searchParams.set('status', String(curStatus));
+      const { parsed, extracted, httpCode } = await queryUpstreamStatusAndPdf(
+        apiCfg,
+        appId,
+        appRef,
+        brnNumber,
+        applicantName
+      );
 
-      const apiRes = await fetchExternalUrl(statusUrl.toString(), 30000);
-      const parsed = parseExternalApiJson(apiRes.text, apiRes.statusCode);
+      const remotePdfUrl = extracted.pdfUrl || existingPdfUrl || '';
+      const hasPdf = Boolean(remotePdfUrl);
+      const finalStatus = normalizeOrderStatus(extracted.status, hasPdf);
+      const encryptedToken = remotePdfUrl ? encryptSecretText(remotePdfUrl) : (histData.formData?.ENCRYPTED_PDF_TOKEN || '');
 
-      if (parsed && parsed.status && parsed.data) {
-        const remoteStatus = String(parsed.data.status || curStatus).toLowerCase();
-        const remotePdfUrl = String(parsed.data.pdf_url || '').trim();
-        const isApproved = (remoteStatus === 'approved' || remoteStatus === 'completed') && Boolean(remotePdfUrl);
-        const encryptedToken = remotePdfUrl ? encryptSecretText(remotePdfUrl) : (histData.formData?.ENCRYPTED_PDF_TOKEN || '');
+      const updatedFormData = {
+        ...(histData.formData || {}),
+        APP_ID: extracted.appId || appId,
+        APPLICATION_REF: extracted.appRef || appRef,
+        API_STATUS: finalStatus,
+        HAS_PDF: hasPdf,
+        ENCRYPTED_PDF_TOKEN: encryptedToken
+      };
 
-        const updatedFormData = {
-          ...(histData.formData || {}),
-          API_STATUS: remoteStatus,
-          HAS_PDF: Boolean(remotePdfUrl),
-          ENCRYPTED_PDF_TOKEN: encryptedToken
-        };
-
+      try {
         if (adminDb) {
-          if (remotePdfUrl) {
+          if (remotePdfUrl || extracted.appId || extracted.appRef) {
             await adminDb.collection('adminSecrets').doc(`pdf_${docId}`).set({
               pdfUrl: remotePdfUrl,
-              status: remoteStatus,
+              status: finalStatus,
+              appId: extracted.appId || appId,
+              applicationRef: extracted.appRef || appRef,
               updatedAt: new Date()
             }, { merge: true });
           }
@@ -507,23 +863,18 @@ export default async function handler(req, res) {
             updatedAt: new Date()
           }, idToken);
         }
-
-        return res.status(200).json({
-          status: true,
-          response_code: parsed.response_code || apiRes.statusCode,
-          apiStatus: remoteStatus,
-          hasPdf: Boolean(remotePdfUrl),
-          message: isApproved
-            ? '✅ Approved! Your DOB Original PDF is now ready to view & download.'
-            : `Status: ${remoteStatus.toUpperCase()} (${parsed.message || 'OK'})`
-        });
+      } catch (saveUpdateErr) {
+        console.warn('History update warning:', saveUpdateErr.message);
       }
 
       return res.status(200).json({
         status: true,
-        apiStatus: curStatus,
-        hasPdf: false,
-        message: parsed?.message || `Current Status: ${curStatus.toUpperCase()}`
+        response_code: parsed?.response_code || httpCode,
+        apiStatus: finalStatus,
+        hasPdf: hasPdf,
+        message: hasPdf || finalStatus === 'successful'
+          ? '✅ SUCCESSFUL! आपकी ओरिजिनल जन्म प्रमाण-पत्र PDF तैयार हो गई है। अब आप Preview या Download PDF पर क्लिक कर सकते हैं।'
+          : `⏳ वर्तमान स्टेटस: PENDING (प्रिंट सर्वर पर प्रक्रिया में है, कृपया थोड़ी देर बाद दोबारा चेक करें)`
       });
     } catch (err) {
       return res.status(500).json({ status: false, message: 'Status check error: ' + err.message });
@@ -580,7 +931,6 @@ export default async function handler(req, res) {
         }
       });
     } else {
-      // REST API Fallback (Works without FIREBASE_SERVICE_ACCOUNT)
       const [portalSnap, userSnap] = await Promise.all([
         restGetDoc('settings', 'portalConfig', idToken),
         restGetDoc('users', uid, idToken)
@@ -612,6 +962,7 @@ export default async function handler(req, res) {
   // Step 4B: Call External BRN Apply API
   let apiResult = null;
   let httpCode = 500;
+  let directApplyPdfUrl = '';
 
   try {
     const targetUrl = new URL(apiCfg.baseUrl);
@@ -622,13 +973,22 @@ export default async function handler(req, res) {
 
     const response = await fetchExternalUrl(targetUrl.toString(), 30000);
     httpCode = response.statusCode;
-    apiResult = parseExternalApiJson(response.text, httpCode);
+
+    if (
+      response.buffer &&
+      response.buffer.length > 100 &&
+      response.buffer.slice(0, 5).toString('ascii') === '%PDF-'
+    ) {
+      directApplyPdfUrl = targetUrl.toString();
+      apiResult = { status: true, message: 'PDF generated successfully' };
+    } else {
+      apiResult = parseExternalApiJson(response.text, httpCode);
+    }
 
     if (!apiResult || apiResult.status === false) {
       throw new Error(apiResult?.message || 'BRN आवेदन सबमिट नहीं हो सका।');
     }
   } catch (apiError) {
-    // Refund credits if external API fails (only possible when Admin SDK is active, as Firestore rules disallow client credit increase)
     if (creditCost > 0 && adminDb) {
       try {
         const userRef = adminDb.collection('users').doc(uid);
@@ -651,24 +1011,50 @@ export default async function handler(req, res) {
     });
   }
 
-  // Step 4C: Save History & Encrypted PDF Secret
+  // Step 4C: Extract Details, Perform Immediate Quick Status Check if PDF not in Apply Response, and Save
   try {
-    const resData = apiResult.data || {};
-    const appId = resData.app_id !== undefined ? resData.app_id : '';
-    const appRef = resData.application_ref || `BNP_${Date.now()}`;
-    const apiStatus = String(resData.status || 'pending').toLowerCase();
-    const rawPdfUrl = String(resData.pdf_url || '').trim();
+    let extracted = extractOrderDetailsFromApi(apiResult, cleanNumber, '', '', apiCfg.baseUrl);
+    if (directApplyPdfUrl) {
+      extracted.pdfUrl = directApplyPdfUrl;
+      extracted.hasPdf = true;
+      extracted.status = 'successful';
+    }
+
+    // If apply didn't include the PDF URL directly, do a fast status check right away in case the server generated it immediately!
+    if (!extracted.hasPdf) {
+      try {
+        const immediateCheck = await queryUpstreamStatusAndPdf(
+          apiCfg,
+          extracted.appId,
+          extracted.appRef,
+          cleanNumber,
+          cleanName
+        );
+        if (immediateCheck.extracted.hasPdf) {
+          extracted.pdfUrl = immediateCheck.extracted.pdfUrl;
+          extracted.hasPdf = true;
+          extracted.status = 'successful';
+        }
+        if (!extracted.appId && immediateCheck.extracted.appId) extracted.appId = immediateCheck.extracted.appId;
+        if (!extracted.appRef && immediateCheck.extracted.appRef) extracted.appRef = immediateCheck.extracted.appRef;
+      } catch (e) {}
+    }
+
+    const appId = extracted.appId || '';
+    const appRef = extracted.appRef || `LOCAL_${Date.now()}`;
+    const rawPdfUrl = extracted.pdfUrl || '';
     const hasPdf = Boolean(rawPdfUrl);
+    const normalizedStatus = normalizeOrderStatus(extracted.status, hasPdf);
     const newDocId = `dob_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
     const sanitizedFormData = {
       SERVICE_TYPE: 'DOB Original PDF',
       DOC_ID: newDocId,
       APP_ID: appId,
-      NAME: resData.name || cleanName,
-      BRN_NO: resData.number || cleanNumber,
+      NAME: extracted.name || cleanName,
+      BRN_NO: extracted.number || cleanNumber,
       APPLICATION_REF: appRef,
-      API_STATUS: hasPdf ? 'approved' : apiStatus,
+      API_STATUS: normalizedStatus,
       HAS_PDF: hasPdf,
       CREDITS_DEDUCTED: creditCost,
       ENCRYPTED_PDF_TOKEN: rawPdfUrl ? encryptSecretText(rawPdfUrl) : ''
@@ -684,7 +1070,7 @@ export default async function handler(req, res) {
         applicationRef: appRef,
         brnNumber: sanitizedFormData.BRN_NO,
         applicantName: sanitizedFormData.NAME,
-        status: apiStatus,
+        status: normalizedStatus,
         pdfUrl: rawPdfUrl,
         createdAt: new Date()
       });
@@ -711,7 +1097,9 @@ export default async function handler(req, res) {
     return res.status(200).json({
       status: true,
       response_code: apiResult.response_code || httpCode,
-      message: apiResult.message || 'Application submitted successfully. Status: pending',
+      message: hasPdf
+        ? '✅ SUCCESSFUL! आपकी ओरिजिनल PDF तुरंत जनरेट हो गई है। आप Document History से इसे अभी डाउनलोड कर सकते हैं।'
+        : '✅ आवेदन सफलतापूर्वक सबमिट हो गया है! वर्तमान स्टेटस: PENDING',
       docId: newDocId,
       remainingCredits: remainingCredits,
       data: {
@@ -720,7 +1108,7 @@ export default async function handler(req, res) {
         name: sanitizedFormData.NAME,
         number: sanitizedFormData.BRN_NO,
         credit_cost: creditCost,
-        status: sanitizedFormData.API_STATUS,
+        status: normalizedStatus,
         has_pdf: hasPdf
       }
     });
