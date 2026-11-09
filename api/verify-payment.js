@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import admin from 'firebase-admin';
-
+ 
 if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
   try {
     const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
