@@ -1433,7 +1433,7 @@ window.openRazorpayModalNow = function() {
     }
 
     const options = {
-        key: orderData.key_id || 'rzp_test_TwxsYylNMNurst',
+        key: orderData.key_id || 'rzp_test_Ty1GJPYLAfH9Zl',
         amount: orderData.amount,
         currency: orderData.currency || 'INR',
         name: 'Ojas Print Service (ojasprints.in)',
@@ -1488,9 +1488,16 @@ window.openRazorpayModalNow = function() {
         }
     };
 
+    // Handle modal dismiss (user closed window)
+    options.modal = {
+        ondismiss: function() {
+            console.log('Razorpay payment modal closed by user');
+        }
+    };
+
     const rzp = new window.Razorpay(options);
     rzp.on('payment.failed', function (response) {
-        const errDesc = response?.error?.description || 'Payment failed.';
+        const errDesc = response?.error?.description || response?.error?.reason || 'Payment failed.';
         alert(`❌ पेमेंट पूरा नहीं हो सका: ${errDesc}\n\nयदि आपके अकाउंट से पैसे कट गए हैं, तो नीचे दिए गए बॉक्स में UTR / Transaction ID डालकर Ticket जनरेट करें (24 से 48 घंटे में समाधान)।`);
         const tBox = document.getElementById('paymentIssueTicketBox');
         if (tBox) tBox.style.display = 'block';
