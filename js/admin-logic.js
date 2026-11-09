@@ -1,4 +1,4 @@
-// === THEME MANAGER (DARK / LIGHT MODE) ===  
+// === THEME MANAGER (DARK / LIGHT MODE) ===
 window.initTheme = function() {
     const saved = localStorage.getItem('ojas_theme');
     const isDark = saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -29,8 +29,7 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================================
-// FILE 4: js/admin-logic.js (UPDATED & COMPLETE)
-// (Complete Admin Logic: Auth, Users, Support Chat, Settings, Cert Caching & Per-User Stealth)
+// FILE: js/admin-logic.js (COMPLETE & UNIFIED PORTAL LOGIN GUARD)
 // ============================================================================
 
 import "./config-templates.js?v=5.1";
@@ -46,7 +45,6 @@ const FREE_VIP_EMAILS = window.FREE_VIP_EMAILS;
 const MS_PER_DAY = window.MS_PER_DAY;
 
 // ================= STAMP FILES AUTO-DETECT & RANDOM CONFIG =================
-// 8 City Stamp Definitions (Baraut, Baghpat, Kairana, Shamli, Ghaziabad, Muzaffarnagar, Saharanpur, Meerut)
 const CITY_STAMP_CONFIG = [
     { id: 'baraut', name: 'Baraut (बड़ौत)', files: ['baraut.png', 'stamp_baraut.png', 'stamp1.png', 'stamp.png'] },
     { id: 'baghpat', name: 'Baghpat (बागपत)', files: ['baghpat.png', 'stamp_baghpat.png', 'stamp2.png'] },
@@ -150,7 +148,7 @@ window.getStampDataUrlByName = function(fileName) {
 
 window.unlockAdminWorkspace = async function(user) {
     const emailLower = user.email.trim().toLowerCase();
-    const isSuper = window.isSuperAdminEmail ? window.isSuperAdminEmail(emailLower) : (emailLower === ADMIN_EMAIL.toLowerCase());
+    const isSuper = window.isSuperAdminEmail ? window.isSuperAdminEmail(emailLower) : (emailLower === ADMIN_EMAIL.toLowerCase() || emailLower === 'ovi@print.com');
     const isSub = window.isSubAdminEmail ? window.isSubAdminEmail(emailLower) : (emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
 
     window.currentUserData = {
@@ -162,7 +160,6 @@ window.unlockAdminWorkspace = async function(user) {
     };
     sessionStorage.setItem('ojas_separate_admin_verified', 'true');
 
-    // Update Header Title & Apply Sub-Admin Restrictions for prince@gmail.com
     const headerTitleEl = document.getElementById('adminHeaderRoleTitle');
     const tabCreateUser = document.getElementById('tab-create_user');
     const secCreateUser = document.getElementById('section-create_user');
@@ -184,14 +181,11 @@ window.unlockAdminWorkspace = async function(user) {
         if (boxManualCredit) boxManualCredit.style.display = 'block';
     }
 
-    const emailEl = document.getElementById('secAdminEmail');
-    const passEl = document.getElementById('secAdminPass');
-    if (emailEl) emailEl.value = '';
-    if (passEl) passEl.value = '';
-    const loginSec = document.getElementById('adminLoginSection');
-    if (loginSec) loginSec.style.display = 'none';
-    document.getElementById('loadingScreen').classList.add('hidden');
-    document.getElementById('adminPanelContent').classList.remove('hidden');
+    const loadingEl = document.getElementById('loadingScreen');
+    if (loadingEl) loadingEl.classList.add('hidden');
+    const panelEl = document.getElementById('adminPanelContent');
+    if (panelEl) panelEl.classList.remove('hidden');
+
     if (window.history && window.history.replaceState) {
         try { window.history.replaceState(null, document.title, '/ovi'); } catch(e){}
     }
@@ -206,46 +200,7 @@ window.unlockAdminWorkspace = async function(user) {
     window.switchAdminMainTab(savedTab);
 };
 
-window.handleSeparateAdminLogin = async function(event) {
-    event.preventDefault();
-    const emailEl = document.getElementById('secAdminEmail');
-    const passEl = document.getElementById('secAdminPass');
-    const rawInp = (emailEl?.value || '').trim().toLowerCase();
-    const emailInp = rawInp.includes('@') ? rawInp : `${rawInp}@print.com`;
-    const passInp = (passEl?.value || '').trim();
-    const errBox = document.getElementById('secAdminLoginError');
-    const btn = document.getElementById('btnSecAdminLogin');
-    errBox.style.display = 'none';
-
-    const isAllowedAdmin = window.isAnyAdminEmail ? window.isAnyAdminEmail(emailInp) : (emailInp === ADMIN_EMAIL.toLowerCase() || emailInp === 'prince@gmail.com' || emailInp === 'prince@print.com');
-    if (!isAllowedAdmin) {
-        errBox.innerText = 'Access Denied: Unauthorized Admin ID!';
-        errBox.style.display = 'block';
-        if (passEl) passEl.value = '';
-        return;
-    }
-
-    const origHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying...';
-    try {
-        const cred = await window.fb.signInWithEmailAndPassword(auth, emailInp, passInp);
-        if (emailEl) emailEl.value = '';
-        if (passEl) passEl.value = '';
-        sessionStorage.setItem('ojas_separate_admin_verified', 'true');
-        await window.unlockAdminWorkspace(cred.user);
-    } catch (e) {
-        errBox.innerText = 'Invalid Admin ID or Password!';
-        errBox.style.display = 'block';
-        if (passEl) passEl.value = '';
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = origHtml;
-    }
-};
-
-// === js/admin-logic.js के अंदर लाइन 124 से 180 तक का हिस्सा इससे बदलें ===
-
+// STRICT SINGLE-LOGIN GUARD: No separate login on /ovi. Redirects unauthorized users to /portal.
 onAuthStateChanged(auth, async (user) => {
     const isPortalAdminVerified = sessionStorage.getItem('ojas_separate_admin_verified') === 'true';
     const emailLower = user?.email ? user.email.trim().toLowerCase() : '';
@@ -253,11 +208,9 @@ onAuthStateChanged(auth, async (user) => {
         ? window.isAnyAdminEmail(emailLower)
         : (emailLower === ADMIN_EMAIL.toLowerCase() || emailLower === 'ovi@print.com' || emailLower === 'prince@gmail.com' || emailLower === 'prince@print.com');
 
-    // सिर्फ वही एडमिन खुलेगा जो मेन लॉगिन पेज (/portal) से लॉगिन होकर आया है
     if (user && isAllowedAdmin && isPortalAdminVerified) {
         await window.unlockAdminWorkspace(user);
     } else {
-        // अगर कोई सीधे /ovi खोले या सामान्य यूज़र हो, तो तुरंत मेन लॉगिन पेज (/portal) पर भेज दें
         sessionStorage.removeItem('ojas_separate_admin_verified');
         window.location.replace('/portal');
     }
@@ -271,7 +224,7 @@ window.handleLogout = async function() {
 };
 
 window.copyUtrText = function(utr, btnEl) { navigator.clipboard.writeText(utr); const orig = btnEl.innerHTML; btnEl.innerHTML = '<i class="fa-solid fa-check text-green-600"></i> Copied'; setTimeout(() => { btnEl.innerHTML = orig; }, 1500); };
-window.getPortalLoginUrl = function() { return window.location.origin + window.location.pathname.replace('admin.html', 'portal.html'); };
+window.getPortalLoginUrl = function() { return window.location.origin + '/portal'; };
 window.formatCleanPhone = function(rawPhone = '') { let digits = String(rawPhone).replace(/\D/g, ''); if (digits.length === 10) digits = '91' + digits; return digits; };
 
 window.buildUserCredentialsText = function(email, pass, credits) {
@@ -309,7 +262,6 @@ window.saveSelectedUserPhone = async function() {
     try { await updateDoc(doc(db, "users", uid), { userPhone: phoneVal }); window.usersDataList[uid].userPhone = phoneVal; alert('यूज़र का WhatsApp नंबर सेव हो गया!'); } catch (err) { alert('Error: ' + err.message); }
 };
 
-// === TOGGLE FOR PER-USER STEALTH CONTROL ===
 window.toggleUserAccess = async function(field, allowed) {
     const uid = document.getElementById('userSelectDropdown').value;
     if (!uid || !window.usersDataList[uid]) return alert('कृपया पहले ड्रॉपडाउन से यूज़र सेलेक्ट करें!');
@@ -532,7 +484,6 @@ window.loadPortalSettingsForAdmin = async function() {
         const gazEl = document.getElementById('chkShowGazette'); if(gazEl) gazEl.checked = cfg.showGazette !== false;
         const annexEl = document.getElementById('chkShowAnnexures'); if(annexEl) annexEl.checked = cfg.showAnnexures !== false;
         
-        // Banner 1
         document.getElementById('chkBannerEnabled').checked = !!cfg.bannerEnabled; 
         document.getElementById('inpBannerBadge').value = cfg.bannerBadge || 'UPDATE'; 
         document.getElementById('inpBannerTitle').value = cfg.bannerTitle || ''; 
@@ -540,7 +491,6 @@ window.loadPortalSettingsForAdmin = async function() {
         document.getElementById('inpBannerBtnText').value = cfg.bannerBtnText || ''; 
         document.getElementById('inpBannerBtnLink').value = cfg.bannerBtnLink || ''; 
         
-        // Banner 2
         const b2Chk = document.getElementById('chkBanner2Enabled'); if(b2Chk) b2Chk.checked = !!cfg.banner2Enabled;
         const b2Bdg = document.getElementById('inpBanner2Badge'); if(b2Bdg) b2Bdg.value = cfg.banner2Badge || 'NOTICE';
         const b2Ttl = document.getElementById('inpBanner2Title'); if(b2Ttl) b2Ttl.value = cfg.banner2Title || '';
@@ -587,7 +537,6 @@ window.savePortalSettings = async function(event) {
         showGazette: document.getElementById('chkShowGazette') ? document.getElementById('chkShowGazette').checked : true,
         showAnnexures: document.getElementById('chkShowAnnexures') ? document.getElementById('chkShowAnnexures').checked : true,
         
-        // Banner 1
         bannerEnabled: document.getElementById('chkBannerEnabled').checked, 
         bannerBadge: document.getElementById('inpBannerBadge').value.trim() || 'UPDATE', 
         bannerTitle: document.getElementById('inpBannerTitle').value.trim(), 
@@ -595,7 +544,6 @@ window.savePortalSettings = async function(event) {
         bannerBtnText: document.getElementById('inpBannerBtnText').value.trim(), 
         bannerBtnLink: document.getElementById('inpBannerBtnLink').value.trim(),
         
-        // Banner 2
         banner2Enabled: document.getElementById('chkBanner2Enabled') ? document.getElementById('chkBanner2Enabled').checked : false,
         banner2Badge: document.getElementById('inpBanner2Badge') ? document.getElementById('inpBanner2Badge').value.trim() || 'NOTICE' : 'NOTICE',
         banner2Title: document.getElementById('inpBanner2Title') ? document.getElementById('inpBanner2Title').value.trim() : '',
@@ -636,7 +584,6 @@ window.loadAllPayments = async function() {
         
         querySnapshot.forEach((docSnap) => { 
             const item = { id: docSnap.id, ...docSnap.data() };
-            // Auto-cancel pending payments older than 72 hours
             const sec = item.timestamp?.seconds || (item.timestamp ? Math.floor(new Date(item.timestamp).getTime() / 1000) : 0);
             const itemTime = sec * 1000;
             if (item.status === 'Pending' && itemTime > 0 && (now - itemTime > MS_72_HOURS)) {
@@ -647,7 +594,7 @@ window.loadAllPayments = async function() {
             }
             window.allPaymentsData.push(item); 
         }); 
-        window.allPaymentsData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)); window.updatePaymentStatsAndBadges(); window.renderPaymentsByFilter(); } catch (err) { container.innerHTML = `<div class="col-span-1 md:col-span-2 p-6 text-center text-red-500 font-bold bg-white rounded-2xl">Error: ${err.message}</div>`; }
+        window.allPaymentsData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)); window.updatePaymentStatsAndBadges(); window.renderPaymentsByFilter(); } catch (err) { if (tableBody) tableBody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-red-500 font-bold">Error: ${err.message}</td></tr>`; }
 };
 
 window.updatePaymentStatsAndBadges = function() {
@@ -665,7 +612,6 @@ window.setPaymentFilter = function(filterStatus) {
 
 window.renderPaymentsByFilter = function() {
     const tableBody = document.getElementById('adminPaymentsTableBody');
-    const container = document.getElementById('adminPaymentsCardsContainer');
     const searchQuery = (document.getElementById('paymentSearchInput')?.value || '').trim().toLowerCase();
     const activeFilter = window.currentPaymentFilter;
 
@@ -798,7 +744,7 @@ window.approvePayment = async function(paymentDocId, userId, creditsToAdd, vipDa
 window.rejectPayment = async function(paymentDocId) { if (!confirm(`क्या आप इस पेमेंट को REJECT करना चाहते हैं?\n(यह आपकी Rejected History में सेव रहेगा)`)) return; try { await updateDoc(doc(db, "payments", paymentDocId), { status: "Rejected" }); window.loadAllPayments(); } catch (err) {} };
 window.deletePaymentRecord = async function(paymentDocId) { if (!confirm(`क्या आप इस पेमेंट हिस्ट्री रिकॉर्ड को हमेशा के लिए डिलीट करना चाहते हैं?`)) return; try { await deleteDoc(doc(db, "payments", paymentDocId)); window.loadAllPayments(); } catch (err) {} };
 
-// ================= HISTORY, STAMP & NEW CERTIFICATE CHECKBOX LOGIC =================
+// ================= HISTORY, STAMP & CERTIFICATE CHECKBOX LOGIC =================
 window.adminHistoryLastVisibleDoc = null;
 window.adminHistoryHasMore = true;
 window.adminHistoryIsLoading = false;
@@ -863,7 +809,6 @@ window.loadAdminHistory = async function(isReset = true) {
         try {
             snap = await getDocs(historyQuery);
         } catch (queryErr) {
-            console.warn('Index fallback on query:', queryErr);
             historyQuery = query(historyCol, limit(window.adminHistoryBatchSize));
             snap = await getDocs(historyQuery);
         }
@@ -900,7 +845,6 @@ window.loadAdminHistory = async function(isReset = true) {
         window.setupAdminHistoryInfiniteScroll();
 
     } catch (err) {
-        console.error('History load error:', err);
         if (container && isReset) {
             container.innerHTML = `<div class="p-6 text-center text-red-500 font-bold bg-white rounded-2xl">एरर: ${err.message}</div>`;
         }
@@ -940,10 +884,6 @@ window.setupAdminHistoryInfiniteScroll = function() {
     window.adminHistoryObserver.observe(sentinel);
 };
 
-// ================= SEPARATE ₹20 STAMP & ₹20 CERTIFICATE DEDUCTION ENGINE =================
-// • Annexure Generate = ₹10 (already paid on generation)
-// • Stamp Attach = +₹20 (20 Credits) -> Total ₹30
-// • Certificate Attach = +₹20 (20 Credits) -> Total ₹50 (Annexure 10 + Stamp 20 + Cert 20)
 window.deductAnnexureAddonFee = async function(record, addonType) {
     if (!record || !String(record.fileId || '').startsWith('LOCAL_HTML_ANNEXURE_')) {
         return { ok: true, chargedNow: false };
@@ -999,7 +939,6 @@ window.deductAnnexureAddonFee = async function(record, addonType) {
         }
         return { ok: true, chargedNow: true, fee: fee, newCredits: newCredits, userEmail: uData.email || 'User' };
     } catch (err) {
-        console.error('Error deducting addon fee:', err);
         return { ok: true, chargedNow: false };
     }
 };
@@ -1271,6 +1210,12 @@ window.renderAdminHistory = function() {
             <a href="/portal?editAnnexure=${data.id}" target="_blank" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="डॉक्यूमेंट एडिट करें (केवल एडमिन)"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
         ` : '';
 
+        const isDobPrint = (data.fileId === 'SERVER_API_DOB_PRINT' || data.serviceType === 'DOB Print');
+        const isAlreadyRefunded = Boolean(data.isRefunded || data.formData?.REFUNDED);
+        const refundBtnHtml = (isDobPrint && !isAlreadyRefunded) ? `
+            <button onclick="window.refundDobOrderByAdmin('${data.id}', '${data.userId}', ${Number(data.formData?.CREDITS_DEDUCTED || 140)})" class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-600 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="यूज़र के क्रेडिट्स रिफंड करें"><i class="fa-solid fa-rotate-left"></i> Refund Cr</button>
+        ` : (isAlreadyRefunded ? `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-[10px] font-black"><i class="fa-solid fa-check-circle mr-0.5"></i>Refunded</span>` : '');
+
         container.innerHTML += `
             <div class="bg-white p-3.5 md:p-4 rounded-2xl border ${isStampChecked || isCertChecked ? 'border-royal-300 bg-slate-50/50' : 'border-slate-200'} shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 hover:border-royal-400 transition">
                 <div class="space-y-1 overflow-hidden w-full">
@@ -1286,11 +1231,7 @@ window.renderAdminHistory = function() {
                 <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-end shrink-0 border-t xl:border-t-0 pt-2 xl:pt-0 border-slate-100">
                     ${certificateCheckboxHtml}
                     ${stampCheckboxHtml}
-                    ${data.fileId === 'SERVER_API_DOB_PRINT' && !data.formData?.REFUNDED ? `
-                        <button onclick="window.refundDobPrintOrderByAdmin('${data.id}')" class="inline-flex items-center gap-1 bg-teal-50 text-teal-900 border border-teal-300 hover:bg-teal-600 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="DOB Original PDF कैंसिल होने पर यूज़र को 140 Cr रिफंड करें">
-                            <i class="fa-solid fa-rotate-left"></i> Refund Cr
-                        </button>
-                    ` : (data.formData?.REFUNDED ? `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2.5 py-1.5 rounded-xl text-xs font-black"><i class="fa-solid fa-check-double mr-0.5"></i>Refunded</span>` : '')}
+                    ${refundBtnHtml}
                     ${editAnnexureBtnHtml}
                     <button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="flex-1 sm:flex-initial justify-center inline-flex items-center gap-1.5 bg-royal-50 text-royal-700 px-3 py-2 rounded-xl text-xs font-black hover:bg-royal-500 hover:text-white transition border border-royal-200"><i class="fa-solid fa-eye"></i> Preview</button>
                     <button onclick="window.triggerDirectPrintByIndex(${data._origIndex}, this)" class="inline-flex items-center justify-center gap-1 bg-amber-500 hover:bg-amber-600 text-dark-950 px-3 py-2 rounded-xl text-xs font-black transition shadow-sm"><i class="fa-solid fa-print"></i> Print</button>
@@ -1299,6 +1240,48 @@ window.renderAdminHistory = function() {
             </div>
         `;
     });
+};
+
+window.refundDobOrderByAdmin = async function(docId, targetUid, refundAmt = 140) {
+    if (!docId || !targetUid) return;
+    if (!confirm(`क्या आप इस DOB Original PDF ऑर्डर को कैंसिल करके यूज़र को +${refundAmt} Credits (₹${refundAmt}) रिफंड करना चाहते हैं?`)) return;
+    try {
+        const userRef = doc(db, "users", targetUid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) return alert('यूज़र नहीं मिला!');
+        const uData = userSnap.data();
+        const curCredits = Number(uData.credits) || 0;
+        const newCredits = curCredits + refundAmt;
+
+        await updateDoc(userRef, { credits: newCredits });
+        await updateDoc(doc(db, "history", docId), {
+            isRefunded: true,
+            refundAmount: refundAmt,
+            refundReason: `Admin Refunded (+${refundAmt} Cr)`,
+            refundedAt: new Date(),
+            'formData.API_STATUS': 'cancelled',
+            'formData.REFUNDED': true
+        });
+        await addDoc(collection(db, "payments"), {
+            userId: targetUid,
+            email: uData.email || '',
+            amountPaid: 0,
+            creditsRequested: refundAmt,
+            wantsVip: false,
+            vipDaysRequested: 0,
+            vipPlanFee: 0,
+            utrNumber: 'DOB_REFUND',
+            status: 'Refunded',
+            note: `DOB Original PDF Cancelled - Refund (+${refundAmt} Cr)`,
+            timestamp: new Date()
+        });
+
+        if (window.usersDataList[targetUid]) window.usersDataList[targetUid].credits = newCredits;
+        alert(`✅ +${refundAmt} Credits सफलतापूर्वक यूज़र (${uData.email}) को रिफंड कर दिए गए हैं और उसकी पासबुक में एंट्री जोड़ दी गई है!`);
+        window.loadAdminHistory();
+    } catch (err) {
+        alert('Error refunding credits: ' + err.message);
+    }
 };
 
 window.deleteHistoryRecord = async function(docId) { if (!confirm('क्या आप इस फाइल को हमेशा के लिए डिलीट करना चाहते हैं?')) return; try { await deleteDoc(doc(db, "history", docId)); window.loadAdminHistory(); } catch (err) {} };
@@ -1432,7 +1415,6 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
 
 window.closePdfViewer = function() { const modal = document.getElementById('pdfViewerModal'); if (modal) { modal.style.display = 'none'; modal.classList.add('hidden'); } const iframe = document.getElementById('pdfIframe'); if (iframe) iframe.src = ''; const htmlContainer = document.getElementById('htmlDocPreviewContainer'); if (htmlContainer) htmlContainer.innerHTML = ''; document.body.style.overflow = 'auto'; };
 
-// === ADMIN TAB SWITCH & USERS / SETTINGS DATA ===
 window.switchAdminMainTab = function(tabName) {
     if (tabName === 'create_user' && window.currentUserData?.isSubAdmin) { alert('नया यूज़र बनाने का अधिकार केवल Super Admin के पास है!'); return; } 
     if (!tabName) tabName = "payments";
@@ -1475,12 +1457,6 @@ window.handleUserSelection = function() {
     } 
     const uData = window.usersDataList[uid]; 
     document.getElementById('currentUserCreditsDisplay').innerText = uData.credits || 0; 
-    const now = Date.now(); let vipStatus = "Normal User"; 
-    if (uData.isVip) { 
-        if (uData.vipExpiry && uData.vipExpiry > now) { const days = Math.ceil((uData.vipExpiry - now) / MS_PER_DAY); vipStatus = `👑 VIP (${days} Days)`; } 
-        else if (!uData.vipExpiry) { vipStatus = "👑 VIP (Lifetime)"; } 
-        else { vipStatus = "Expired VIP"; } 
-    } 
     document.getElementById('selectedUserVipBadge').innerText = 'Active Normal User'; 
     if(document.getElementById('selectedUserPhoneInput')) document.getElementById('selectedUserPhoneInput').value = uData.userPhone || ''; 
     if(document.getElementById('selectedUserSavedPass')) document.getElementById('selectedUserSavedPass').innerText = uData.userPass || 'Not Set'; 
@@ -1496,7 +1472,6 @@ window.handleUserSelection = function() {
     if(document.getElementById('userGazetteToggle')) document.getElementById('userGazetteToggle').checked = uData.allowGazette !== false;
     if(document.getElementById('userAnnexuresToggle')) document.getElementById('userAnnexuresToggle').checked = uData.allowAnnexures !== false;
 
-    // Load Personal Banner Config for Selected User
     const bannerChk = document.getElementById('chkUserBannerEnabled');
     if (bannerChk) bannerChk.checked = !!uData.personalBannerEnabled;
     if (document.getElementById('inpUserBannerBadge')) document.getElementById('inpUserBannerBadge').value = uData.personalBannerBadge || 'NOTICE';
@@ -1646,52 +1621,7 @@ window.clearSelectedUserBanner = async function() {
 };
 
 window.adminSetNewUserPassword = async function() { const uid = document.getElementById('userSelectDropdown').value; if (!uid || !window.usersDataList[uid]) return alert('कृपया पहले यूज़र चुनें!'); const newPass = document.getElementById('adminNewResetPass').value.trim(); if (newPass.length < 6) return alert('पासवर्ड कम से कम 6 अक्षरों का होना चाहिए!'); const btn = document.getElementById('btnAdminSetPass'); const orig = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; btn.disabled = true; try { const uData = window.usersDataList[uid]; if (uData.userPass) { try { const signInRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: uData.email, password: uData.userPass, returnSecureToken: true }) }); const signInData = await signInRes.json(); if (signInData.idToken) { await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${firebaseConfig.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken: signInData.idToken, password: newPass, returnSecureToken: true }) }); } } catch (e) { } } await updateDoc(doc(db, "users", uid), { userPass: newPass, adminResetPass: newPass, passUpdatedAt: new Date() }); window.usersDataList[uid].userPass = newPass; document.getElementById('selectedUserSavedPass').innerText = newPass; document.getElementById('adminNewResetPass').value = ''; alert('पासवर्ड सफलतापूर्वक बदल दिया गया है!'); } catch (err) { alert('Error: ' + err.message); } finally { btn.innerHTML = orig; btn.disabled = false; } };
-window.adminUpdateVipDays = async function(daysToAdd) {
-    const uid = document.getElementById('userSelectDropdown').value;
-    if (!uid || !window.usersDataList[uid]) return alert('कृपया पहले यूज़र चुनें!');
-    const uData = window.usersDataList[uid];
-    let newIsVip = false;
-    let newExpiry = 0;
-    const now = Date.now();
-    if (daysToAdd > 0) {
-        newIsVip = true;
-        const baseTime = (uData.vipExpiry && uData.vipExpiry > now) ? uData.vipExpiry : now;
-        newExpiry = baseTime + (daysToAdd * MS_PER_DAY);
-    }
 
-    const giftNote = document.getElementById('adminCreditGiftNote')?.value.trim() || `Admin VIP Gift (+${daysToAdd} Days)`;
-
-    try {
-        await updateDoc(doc(db, "users", uid), { isVip: newIsVip, vipExpiry: newExpiry });
-        window.usersDataList[uid].isVip = newIsVip;
-        window.usersDataList[uid].vipExpiry = newExpiry;
-
-        // If VIP validity was added, record in payments collection as Gift / Bonus
-        if (daysToAdd > 0) {
-            await addDoc(collection(db, "payments"), {
-                userId: uid,
-                email: uData.email,
-                amountPaid: 0,
-                creditsRequested: 0,
-                wantsVip: true,
-                vipDaysRequested: daysToAdd,
-                vipPlanFee: 0,
-                utrNumber: "ADMIN_GIFT",
-                status: "Gift / Bonus",
-                note: giftNote,
-                timestamp: new Date()
-            });
-            if (document.getElementById('adminCreditGiftNote')) {
-                document.getElementById('adminCreditGiftNote').value = '';
-            }
-        }
-
-        window.handleUserSelection();
-        alert(daysToAdd > 0 
-            ? `VIP ${daysToAdd} दिन के लिए बढ़ा/गिफ्ट कर दिया गया है और हिस्ट्री में रिकॉर्ड हो गया है!` 
-            : `VIP हटा दिया गया है।`);
-    } catch (err) { alert('Error: ' + err.message); }
-};
 window.adjustCredits = async function(action) {
     if (window.currentUserData?.isSubAdmin) return alert('एक्स्ट्रा क्रेडिट्स मैन्युअली बढ़ाने या घटाने का अधिकार केवल Super Admin के पास है! आप केवल Payments टैब से पेमेंट रिक्वेस्ट Approve कर सकते हैं।');
     const uid = document.getElementById('userSelectDropdown').value;
@@ -1703,13 +1633,12 @@ window.adjustCredits = async function(action) {
     let newCredits = action === 'add' ? currentCredits + amtVal : currentCredits - amtVal;
     if (newCredits < 0) newCredits = 0;
 
-    const giftNote = document.getElementById('adminCreditGiftNote')?.value.trim() || 'Admin Credit Gift / Bonus';
+    const giftNote = document.getElementById('adminCreditGiftNote')?.value.trim() || (action === 'add' ? 'Admin Credit Gift / Bonus' : 'Admin Credit Deduction');
 
     try {
         await updateDoc(doc(db, "users", uid), { credits: newCredits });
         window.usersDataList[uid].credits = newCredits;
 
-        // Record both Admin Gift (+Cr) and Admin Deduction (-Cr) in payments collection for full Passbook transparency
         await addDoc(collection(db, "payments"), {
             userId: uid,
             email: uData.email,
@@ -1720,8 +1649,7 @@ window.adjustCredits = async function(action) {
             vipPlanFee: 0,
             utrNumber: action === 'add' ? "ADMIN_GIFT" : "ADMIN_DEDUCT",
             status: action === 'add' ? "Gift / Bonus" : "Admin Deducted",
-            type: action === 'add' ? "GIFT" : "ADMIN_DEDUCT",
-            note: action === 'add' ? giftNote : (document.getElementById('adminCreditGiftNote')?.value.trim() || 'Admin Manual Credit Deduction'),
+            note: giftNote,
             timestamp: new Date()
         });
         if (document.getElementById('adminCreditGiftNote')) {
@@ -1735,6 +1663,7 @@ window.adjustCredits = async function(action) {
             : `क्रेडिट्स सफलतापूर्वक घटा दिए गए हैं!`);
     } catch (err) { alert('Error: ' + err.message); }
 };
+
 window.createNewUserByAdmin = async function(e) { e.preventDefault(); const emailInp = document.getElementById('newAdminUserEmail').value.trim().toLowerCase(); const pass = document.getElementById('newAdminUserPass').value.trim(); const phone = document.getElementById('newAdminUserPhone').value.trim(); const credits = parseInt(document.getElementById('newAdminUserCredits').value) || 0; const vipDays = 0; const msg = document.getElementById('adminCreateMsg'); const email = emailInp.includes('@') ? emailInp : `${emailInp}@print.com`; if (pass.length < 6) return alert('पासवर्ड 6 अक्षरों का होना चाहिए!'); msg.className = "p-3 bg-blue-50 text-blue-800 rounded-xl text-xs font-bold text-center"; msg.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating user account...'; msg.classList.remove('hidden'); try { const signUpRes = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email, password: pass, returnSecureToken: true }) }); const signUpData = await signUpRes.json(); if (signUpData.error) throw new Error(signUpData.error.message); const uid = signUpData.localId; const now = Date.now(); const isVip = vipDays > 0; const vipExpiry = isVip ? now + (vipDays * MS_PER_DAY) : 0; await setDoc(doc(db, "users", uid), { 
     email: email, 
     username: email.split('@')[0], 
@@ -1756,7 +1685,6 @@ window.createNewUserByAdmin = async function(e) { e.preventDefault(); const emai
     userPhone: phone, 
     createdAt: new Date() 
 }); await window.loadAllUsersForDropdown(); msg.className = "p-3.5 bg-green-50 text-green-900 border border-green-300 rounded-xl text-xs font-black text-center"; msg.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> यूज़र <strong>${email}</strong> सफलतापूर्वक बन गया है!`; e.target.reset(); setTimeout(() => msg.classList.add('hidden'), 5000); } catch (err) { msg.className = "p-3 bg-red-50 text-red-800 border border-red-300 rounded-xl text-xs font-bold text-center"; msg.innerText = "Error: " + err.message; } };
-
 
 window.loadDobPrintSecretApiConfig = async function() {
     try {
@@ -1786,65 +1714,5 @@ window.saveDobPrintSecretApiConfig = async function() {
         alert('✅ DOB Original PDF Secret API settings saved securely on the server!');
     } catch (err) {
         alert('Error saving secret API config: ' + err.message);
-    }
-};
-
-
-window.refundDobPrintOrderByAdmin = async function(docId) {
-    const record = window.adminAllHistoryData.find(d => d.id === docId);
-    if (!record) return alert('रिकॉर्ड नहीं मिला!');
-    if (record.formData?.REFUNDED) return alert('इस ऑर्डर का रिफंड पहले ही दिया जा चुका है!');
-    const refundCr = Number(record.formData?.CREDITS_DEDUCTED) || 140;
-    const brnNo = record.formData?.BRN_NO || 'N/A';
-    const appName = record.formData?.NAME || 'Applicant';
-    const userEmail = window.allUsersMap[record.userId] || 'User';
-
-    if (!confirm(`🔄 Confirm DOB Original PDF Refund:\n\n• User: ${userEmail}\n• Name: ${appName}\n• BRN: ${brnNo}\n• Refund Credits: +${refundCr} Cr\n\nक्या आप इस ऑर्डर को Cancelled मार्क करके यूज़र के वॉलेट में +${refundCr} Credits रिफंड करना चाहते हैं?`)) return;
-
-    try {
-        const userRef = doc(db, "users", record.userId);
-        const userSnap = await getDoc(userRef);
-        let newCredits = refundCr;
-        if (userSnap.exists()) {
-            const cur = Number(userSnap.data().credits) || 0;
-            newCredits = cur + refundCr;
-            await updateDoc(userRef, { credits: newCredits });
-        }
-
-        const updatedFormData = {
-            ...(record.formData || {}),
-            API_STATUS: 'failed',
-            REFUNDED: true,
-            REFUND_CREDITS: refundCr,
-            REFUNDED_AT: new Date().toISOString()
-        };
-
-        await updateDoc(doc(db, "history", docId), {
-            formData: updatedFormData,
-            updatedAt: new Date()
-        });
-
-        await setDoc(doc(db, "payments", `refund_${docId}`), {
-            userId: record.userId,
-            email: userEmail,
-            amountPaid: refundCr,
-            creditsRequested: refundCr,
-            wantsVip: false,
-            vipDaysRequested: 0,
-            vipPlanFee: 0,
-            utrNumber: brnNo,
-            status: "Refunded",
-            type: "REFUND",
-            serviceType: "DOB Original PDF",
-            relatedDocId: docId,
-            note: `Refund: DOB Original PDF Cancelled (${appName} - ${brnNo})`,
-            timestamp: new Date()
-        }, { merge: true });
-
-        record.formData = updatedFormData;
-        window.renderAdminHistory();
-        alert(`✅ सफलतापूर्वक +${refundCr} Credits यूज़र (${userEmail}) के वॉलेट में रिफंड कर दिए गए हैं और यूज़र की Payment History (Passbook) में दर्ज हो गया है!`);
-    } catch (err) {
-        alert('Refund error: ' + err.message);
     }
 };
