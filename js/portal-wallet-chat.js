@@ -691,77 +691,87 @@ window.calculateCredits = function() {
 };
 
 window.generateQR = async function() {
-    if (window.currentUserData?.hasFreeAccess) return; window.calculateCredits();
+    if (window.currentUserData?.hasFreeAccess) return;
+    window.calculateCredits();
     if (!window.currentWantsVip && window.currentRechargeCredits < 100) return alert('पोर्टल पर कम से कम ₹100 के क्रेडिट रिचार्ज करना अनिवार्य है!');
     if (window.currentWantsVip && window.currentRechargeCredits > 0 && window.currentRechargeCredits < 100) return alert('क्रेडिट रिचार्ज की न्यूनतम वैल्यू ₹100 है!');
     if (window.currentTotalPayable < 100) return alert('न्यूनतम पेमेंट राशि ₹100 होनी चाहिए!');
 
-    const btn = document.getElementById('btnGenerateQR'); const origBtnHtml = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> पेमेंट लिंक बन रहा है...'; }
+    const btn = document.getElementById('btnGenerateQR');
+    const origBtnHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Razorpay Order बन रहा है...';
+    }
 
-    const queryParams = `pa=8279650137@amazonpay&pn=Ojas%20Print%20Service&am=${window.currentTotalPayable}&cu=INR&tn=${encodeURIComponent(window.currentWantsVip ? `Ojas VIP ${window.currentVipDays}d` : `Ojas Credits`)}`;
-    let universalUpiUrl = `upi://pay?${queryParams}`; let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(universalUpiUrl)}`; window.currentActiveOrderId = null;
+    window.currentActiveOrderId = null;
+    window.currentRzpOrderData = null;
 
     try {
-        const res = await fetch('/api/create-order', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: window.currentUserData.uid, email: window.currentUserData.email, username: window.currentUserData.username, totalPayable: window.currentTotalPayable, creditsRequested: window.currentRechargeCredits, wantsVip: window.currentWantsVip, vipDaysRequested: window.currentVipDays, vipPlanFee: window.currentVipPlanFee }) });
+        const res = await fetch('/api/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                amount: Math.round(window.currentTotalPayable * 100),
+                currency: 'INR',
+                receipt: `OJAS_${Date.now()}`,
+                userId: window.currentUserData.uid,
+                email: window.currentUserData.email,
+                username: window.currentUserData.username,
+                totalPayable: window.currentTotalPayable,
+                creditsRequested: window.currentRechargeCredits,
+                wantsVip: window.currentWantsVip,
+                vipDaysRequested: window.currentVipDays,
+                vipPlanFee: window.currentVipPlanFee
+            })
+        });
         const orderData = await res.json();
-        if (orderData.status && (orderData.orderId || orderData.order_id)) {
-            window.currentRzpOrderData = orderData;
-            window.currentActiveOrderId = orderData.orderId;
-            if (orderData.upi_string) { universalUpiUrl = orderData.upi_string; qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(universalUpiUrl)}`; }
-            if (orderData.qr_code && orderData.qr_code.startsWith('http')) qrUrl = orderData.qr_code;
+        if (!res.ok || !orderData.status || !(orderData.order_id || orderData.orderId)) {
+            throw new Error(orderData.message || 'Razorpay ऑर्डर बनाने में समस्या आई।');
+        }
 
-            if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe();
-            window.activePaymentUnsubscribe = onSnapshot(doc(db, "payments", orderData.orderId), async (snap) => {
-                if (snap.exists() && (snap.data().status === 'Auto-Approved' || snap.data().status === 'Approved')) {
-                    if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe(); window.currentActiveOrderId = null;
-                    const uSnap = await getDoc(doc(db, "users", window.currentUserData.uid));
-                    if (uSnap.exists()) { const updatedUser = uSnap.data(); window.currentUserData.credits = updatedUser.credits || 0; window.currentUserData.isVip = updatedUser.isVip || window.currentUserData.hasFreeAccess; window.currentUserData.vipExpiry = updatedUser.vipExpiry || 0; const crEl = document.getElementById('displayCredits'); if (crEl) crEl.innerText = window.currentUserData.credits; }
-                    document.getElementById('walletMainUI').innerHTML = `<div class="p-6 bg-green-50 rounded-2xl border-2 border-green-400 text-center space-y-2"><i class="fa-solid fa-circle-check text-5xl text-green-600 mb-2 animate-bounce"></i><h2 class="text-xl font-black text-green-900">पेमेंट सफल! (Auto-Verified)</h2><p class="text-xs font-bold text-green-700">आपका ₹${window.currentTotalPayable} का पेमेंट वेरीफाई हो गया है और आपके अकाउंट में तुरंत क्रेडिट्स/VIP जोड़ दिए गए हैं!</p><div class="pt-3"><button onclick="window.location.reload()" class="bg-green-600 hover:bg-green-700 text-white font-black py-2.5 px-6 rounded-xl text-xs shadow">डैशबोर्ड पर जाएँ</button></div></div>`;
+        const rzpOrderId = orderData.order_id || orderData.orderId;
+        orderData.order_id = rzpOrderId;
+        orderData.orderId = rzpOrderId;
+        window.currentRzpOrderData = orderData;
+        window.currentActiveOrderId = rzpOrderId;
+
+        if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe();
+        window.activePaymentUnsubscribe = onSnapshot(doc(db, "payments", rzpOrderId), async (snap) => {
+            if (snap.exists() && (snap.data().status === 'Auto-Approved' || snap.data().status === 'Approved')) {
+                if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe();
+                window.currentActiveOrderId = null;
+                const uSnap = await getDoc(doc(db, "users", window.currentUserData.uid));
+                if (uSnap.exists()) {
+                    const updatedUser = uSnap.data();
+                    window.currentUserData.credits = updatedUser.credits || 0;
+                    window.currentUserData.isVip = updatedUser.isVip || window.currentUserData.hasFreeAccess;
+                    window.currentUserData.vipExpiry = updatedUser.vipExpiry || 0;
+                    const crEl = document.getElementById('displayCredits');
+                    if (crEl) crEl.innerText = window.currentUserData.credits;
                 }
-            });
-        }
-    } catch (err) { try { const fallbackDoc = await addDoc(collection(db, "payments"), { userId: window.currentUserData.uid, email: window.currentUserData.email, amountPaid: window.currentTotalPayable, creditsRequested: window.currentRechargeCredits, wantsVip: window.currentWantsVip, vipDaysRequested: window.currentVipDays, vipPlanFee: window.currentVipPlanFee, utrNumber: "ONLINE_UPI", timestamp: new Date(), status: "Pending" }); window.currentActiveOrderId = fallbackDoc.id; } catch (e) {} } finally { if (btn) { btn.disabled = false; btn.innerHTML = origBtnHtml; } }
+                const walletUI = document.getElementById('walletMainUI');
+                if (walletUI) {
+                    walletUI.innerHTML = `<div class="p-6 bg-green-50 rounded-2xl border-2 border-green-400 text-center space-y-2"><i class="fa-solid fa-circle-check text-5xl text-green-600 mb-2 animate-bounce"></i><h2 class="text-xl font-black text-green-900">पेमेंट सफल! (Auto-Verified by Razorpay)</h2><p class="text-xs font-bold text-green-700">आपका ₹${window.currentTotalPayable} का Razorpay पेमेंट तुरंत वेरीफाई हो गया है और आपके अकाउंट में +${window.currentRechargeCredits} Credits जोड़ दिए गए हैं!</p><div class="pt-3"><button onclick="window.switchService('payments_history')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2.5 px-6 rounded-xl text-xs shadow">पेमेंट हिस्ट्री देखें</button></div></div>`;
+                }
+            }
+        });
 
-    window.currentUniversalUpiUrl = universalUpiUrl;
-    document.getElementById('upiQRCode').src = qrUrl; 
-    document.getElementById('qrPayableAmountText').innerText = `कुल पेमेंट: ₹${window.currentTotalPayable}`;
-    const mainUpiBtn = document.getElementById('btnDirectUpiPay'); 
-    if (mainUpiBtn) { 
-        mainUpiBtn.href = universalUpiUrl; 
-        mainUpiBtn.innerHTML = `<i class="fa-solid fa-bolt mr-1"></i> Any Other UPI App`; 
-    }
-    document.getElementById('paymentStep1').style.display = 'none'; 
-    document.getElementById('qrSection').style.display = 'flex';
-};
+        const payableEl = document.getElementById('qrPayableAmountText');
+        if (payableEl) payableEl.innerText = `कुल पेमेंट: ₹${window.currentTotalPayable} (Order: ${rzpOrderId})`;
+        document.getElementById('paymentStep1').style.display = 'none';
+        document.getElementById('qrSection').style.display = 'flex';
 
-window.openUpiApp = function(app) {
-    let upiUrl = window.currentUniversalUpiUrl || `upi://pay?pa=8279650137@amazonpay&pn=Ojas%20Print%20Service&am=${window.currentTotalPayable}&cu=INR&tn=${encodeURIComponent(window.currentWantsVip ? `Ojas VIP ${window.currentVipDays}d` : `Ojas Credits`)}`;
-    const params = upiUrl.includes('?') ? upiUrl.substring(upiUrl.indexOf('?') + 1) : '';
-    const isAndroid = /android/i.test(navigator.userAgent);
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-
-    let target = upiUrl;
-    if (app === 'gpay') {
-        if (isAndroid) {
-            target = `intent://upi/pay?${params}#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`;
-        } else if (isIOS) {
-            target = `gpay://upi/pay?${params}`;
-        }
-    } else if (app === 'phonepe') {
-        if (isAndroid) {
-            target = `intent://upi/pay?${params}#Intent;scheme=upi;package=com.phonepe.app;end`;
-        } else if (isIOS) {
-            target = `phonepe://pay?${params}`;
-        }
-    } else if (app === 'paytm') {
-        if (isAndroid) {
-            target = `intent://upi/pay?${params}#Intent;scheme=upi;package=net.one97.paytm;end`;
-        } else if (isIOS) {
-            target = `paytmmp://pay?${params}`;
+        // Directly open Razorpay Standard Checkout (Includes Razorpay Official QR Code + UPI + Cards)
+        window.openRazorpayModalNow();
+    } catch (err) {
+        alert('Razorpay पेमेंट शुरू करने में समस्या आई: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = origBtnHtml;
         }
     }
-    window.location.href = target;
 };
 
 window.cancelAndBackToPaymentStep1 = async function() {
@@ -1185,60 +1195,37 @@ window.switchService = async function(serviceName) {
                 <div class="bg-dark-950 p-4 rounded-2xl text-white">
                     <div class="flex justify-between items-center mb-3 pb-3 border-b border-slate-800"><span class="text-xs font-bold text-slate-400">Credits You Get:</span><span id="calculatedCredits" class="text-lg font-black text-emerald-400">100 Cr</span></div>
                     <div class="flex justify-between items-center mb-4"><span class="text-sm font-black uppercase text-royal-300">Total Payable:</span><span id="totalPayableDisplay" class="text-2xl font-black text-white">₹100</span></div>
-                    <button id="btnGenerateQR" onclick="window.generateQR()" class="w-full bg-royal-500 hover:bg-royal-400 text-white font-black py-3.5 rounded-xl shadow-glow transition">Proceed to Pay</button>
+                    <button id="btnGenerateQR" onclick="window.generateQR()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-black py-3.5 rounded-xl shadow-glow transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> Pay Now via Razorpay (QR / UPI / Card • Auto-Verify)
+                    </button>
                 </div>
             </div>
             <div id="qrSection" style="display:none;" class="flex-col items-center justify-center space-y-4">
-                <div class="w-full max-w-sm mx-auto bg-amber-500/15 border-2 border-amber-500 rounded-2xl p-4 text-center shadow-lg animate-pulse">
-                    <div class="flex items-center justify-center gap-1.5 text-amber-600 dark:text-amber-400 font-black text-xs md:text-sm uppercase tracking-wide">
-                        <i class="fa-solid fa-triangle-exclamation text-base text-amber-500"></i>
-                        <span>कृपया पेज को बैक या रिफ्रेश न करें</span>
+                <div class="w-full max-w-sm mx-auto bg-indigo-500/15 border-2 border-indigo-500 rounded-2xl p-4 text-center shadow-lg">
+                    <div class="flex items-center justify-center gap-1.5 text-indigo-700 dark:text-indigo-300 font-black text-xs md:text-sm uppercase tracking-wide">
+                        <i class="fa-solid fa-shield-halved text-base text-indigo-600"></i>
+                        <span>Razorpay Auto-Verify Checkout Active</span>
                     </div>
-                    <p class="text-[11px] font-bold text-amber-950 dark:text-amber-200 mt-1.5 leading-relaxed">
-                        ⚠️ <strong>Please DO NOT Refresh or Go Back!</strong><br>
-                        QR कोड स्कैन करके पेमेंट करें। पेमेंट सफल होते ही यह स्क्रीन ऑटोमैटिक अपडेट होकर कन्फर्मेशन दिखा देगी।
+                    <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 mt-1.5 leading-relaxed">
+                        पेमेंट केवल <strong>Razorpay Popup (Razorpay QR Code, Google Pay, PhonePe, Paytm, Card)</strong> के माध्यम से ही करें। पेमेंट पूरा होते ही आपके वॉलेट में क्रेडिट्स <strong>तुरंत ऑटोमैटिक</strong> जुड़ जाएंगे।
                     </p>
                 </div>
 
-                <div class="bg-white dark:bg-dark-900 p-6 rounded-3xl shadow-xl border-2 border-slate-200 dark:border-slate-700 text-center w-full max-w-sm mx-auto">
-                    <div class="flex items-center justify-center gap-2 mb-1">
+                <div class="bg-white dark:bg-dark-900 p-6 rounded-3xl shadow-xl border-2 border-slate-200 dark:border-slate-700 text-center w-full max-w-sm mx-auto space-y-4">
+                    <div class="flex items-center justify-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-ping"></span>
-                        <h4 class="text-sm font-black text-dark-900 dark:text-white uppercase tracking-wider">Scan &amp; Pay (Auto-Verify)</h4>
+                        <h4 class="text-sm font-black text-dark-900 dark:text-white uppercase tracking-wider">Razorpay Official Gateway</h4>
                     </div>
-                    <p id="qrPayableAmountText" class="text-sm font-black text-royal-600 dark:text-royal-400 mb-4">कुल पेमेंट: ₹0</p>
-                    
-                    <div class="bg-white p-3 rounded-2xl inline-block border-2 border-slate-300 dark:border-slate-600 shadow-inner mb-4">
-                        <img id="upiQRCode" src="" alt="Payment QR Code" class="w-52 h-52 object-contain mx-auto">
+                    <p id="qrPayableAmountText" class="text-sm font-black text-royal-600 dark:text-royal-400">कुल पेमेंट: ₹0</p>
+
+                    <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs font-bold text-indigo-950 space-y-2">
+                        <i class="fa-solid fa-qrcode text-4xl text-indigo-600"></i>
+                        <p>Razorpay विंडो में दिख रहे <strong>Razorpay QR Code</strong> को स्कैन करें या <strong>UPI / Card</strong> चुनें।</p>
                     </div>
 
-                    <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold mb-3">
-                        QR कोड स्कैन करें या मोबाइल पर नीचे दिए गए ऐप बटन पर 1-Click टैप करके सीधा पेमेंट करें:
-                    </p>
-
-                    <!-- 1-CLICK MOBILE UPI APP BUTTONS (Google Pay, PhonePe, Paytm) -->
-                    <div class="space-y-2 mb-4 text-left">
-                        <span class="block text-[10px] font-black text-slate-400 uppercase text-center tracking-wider">📱 1-Click Mobile UPI Instant Pay</span>
-                        <div class="grid grid-cols-3 gap-2">
-                            <button type="button" onclick="window.openUpiApp('gpay')" class="upi-app-btn bg-white hover:bg-blue-50 text-slate-800 border-2 border-blue-500/40 rounded-xl py-2.5 px-2 text-xs font-black flex flex-col items-center justify-center gap-1 shadow-sm">
-                                <i class="fa-brands fa-google-pay text-2xl text-blue-600"></i>
-                                <span class="text-[10px]">Google Pay</span>
-                            </button>
-                            <button type="button" onclick="window.openUpiApp('phonepe')" class="upi-app-btn bg-white hover:bg-purple-50 text-slate-800 border-2 border-purple-500/40 rounded-xl py-2.5 px-2 text-xs font-black flex flex-col items-center justify-center gap-1 shadow-sm">
-                                <i class="fa-solid fa-mobile-screen-button text-xl text-purple-600"></i>
-                                <span class="text-[10px]">PhonePe</span>
-                            </button>
-                            <button type="button" onclick="window.openUpiApp('paytm')" class="upi-app-btn bg-white hover:bg-sky-50 text-slate-800 border-2 border-sky-500/40 rounded-xl py-2.5 px-2 text-xs font-black flex flex-col items-center justify-center gap-1 shadow-sm">
-                                <i class="fa-solid fa-wallet text-xl text-sky-600"></i>
-                                <span class="text-[10px]">Paytm</span>
-                            </button>
-                        </div>
-                        <a id="btnDirectUpiPay" href="javascript:void(0);" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-sm">
-                            <i class="fa-solid fa-bolt"></i> Open Any UPI App (1-Click)
-                        </a>
-                        <button type="button" onclick="window.openRazorpayModalNow()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-glow">
-                            <i class="fa-solid fa-shield-halved"></i> Pay via Razorpay (UPI / Card / NetBanking)
-                        </button>
-                    </div>
+                    <button type="button" onclick="window.openRazorpayModalNow()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3.5 px-4 rounded-xl text-xs md:text-sm transition flex items-center justify-center gap-2 shadow-glow">
+                        <i class="fa-solid fa-shield-halved"></i> Open Razorpay Checkout (QR / UPI / Card)
+                    </button>
 
                     <button type="button" onclick="window.cancelAndBackToPaymentStep1()" class="w-full bg-slate-100 hover:bg-red-50 text-slate-700 hover:text-red-600 border border-slate-200 hover:border-red-200 font-black py-3 rounded-xl transition text-xs flex items-center justify-center gap-1.5 shadow-sm">
                         <i class="fa-solid fa-ban"></i> Cancel Payment &amp; Go Back
@@ -1426,10 +1413,10 @@ window.currentRzpOrderData = null;
 window.openRazorpayModalNow = function() {
     const orderData = window.currentRzpOrderData;
     if (!orderData || !orderData.order_id) {
-        return alert('कृपया पहले Proceed to Pay पर क्लिक करें।');
+        return alert('कृपया पहले Pay Now via Razorpay पर क्लिक करें।');
     }
     if (typeof window.Razorpay === 'undefined') {
-        return alert('Razorpay SDK लोड नहीं हो सका। कृपया नीचे दिए गए Google Pay / PhonePe बटन या QR कोड से पेमेंट करें।');
+        return alert('Razorpay Checkout SDK लोड नहीं हो सका। कृपया पेज को रिफ्रेश करके दोबारा प्रयास करें।');
     }
 
     const options = {
@@ -1444,8 +1431,37 @@ window.openRazorpayModalNow = function() {
             name: window.currentUserData?.username || '',
             email: window.currentUserData?.email || ''
         },
+        config: {
+            display: {
+                blocks: {
+                    upi_qr: {
+                        name: 'Pay via Razorpay QR / UPI',
+                        instruments: [
+                            { method: 'upi', flows: ['qr', 'intent', 'collect'] }
+                        ]
+                    },
+                    other_methods: {
+                        name: 'Cards, NetBanking & Wallets',
+                        instruments: [
+                            { method: 'card' },
+                            { method: 'netbanking' },
+                            { method: 'wallet' }
+                        ]
+                    }
+                },
+                sequence: ['block.upi_qr', 'block.other_methods'],
+                preferences: {
+                    show_default_blocks: true
+                }
+            }
+        },
         theme: {
             color: '#4f46e5'
+        },
+        modal: {
+            ondismiss: function () {
+                console.log('Razorpay checkout modal closed by user');
+            }
         },
         handler: async function (response) {
             try {
@@ -1488,16 +1504,9 @@ window.openRazorpayModalNow = function() {
         }
     };
 
-    // Handle modal dismiss (user closed window)
-    options.modal = {
-        ondismiss: function() {
-            console.log('Razorpay payment modal closed by user');
-        }
-    };
-
     const rzp = new window.Razorpay(options);
     rzp.on('payment.failed', function (response) {
-        const errDesc = response?.error?.description || response?.error?.reason || 'Payment failed.';
+        const errDesc = response?.error?.description || 'Payment failed.';
         alert(`❌ पेमेंट पूरा नहीं हो सका: ${errDesc}\n\nयदि आपके अकाउंट से पैसे कट गए हैं, तो नीचे दिए गए बॉक्स में UTR / Transaction ID डालकर Ticket जनरेट करें (24 से 48 घंटे में समाधान)।`);
         const tBox = document.getElementById('paymentIssueTicketBox');
         if (tBox) tBox.style.display = 'block';
