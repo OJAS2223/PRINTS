@@ -3,7 +3,7 @@
 // (Forms, submitForm fix, FORM DRAFT PERSISTENCE & MINOR SERVICE FORM)
 // ============================================================================
 
-import "./config-templates.js";
+import "./config-templates.js"; 
 
 async function compressImage(file) {
     return new Promise((resolve) => {
