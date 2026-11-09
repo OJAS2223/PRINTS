@@ -1306,7 +1306,81 @@ window.switchService = async function(serviceName) {
     }
 
     if (serviceName === 'payments_history') { 
-        container.innerHTML = `<div class="space-y-4"><div id="userValidityInfoBox"></div><div class="grid grid-cols-3 gap-2 md:gap-4"><div class="p-3 rounded-xl bg-slate-50 border border-slate-200"><p class="text-[10px] font-bold text-slate-400 uppercase">कुल ट्रांजैक्शन</p><p id="sumTotalTxns" class="text-lg md:text-2xl font-black text-dark-900">0</p></div><div class="p-3 rounded-xl bg-green-50 border border-green-200"><p class="text-[10px] font-bold text-green-700 uppercase">सफल (Approved)</p><p id="sumApprovedAmt" class="text-lg md:text-2xl font-black text-green-700">₹0</p></div><div class="p-3 rounded-xl bg-amber-50 border border-amber-200"><p class="text-[10px] font-bold text-amber-800 uppercase">पेंडिंग (Pending)</p><p id="sumPendingAmt" class="text-lg md:text-2xl font-black text-amber-700">₹0 (0)</p></div></div><div><div class="flex justify-between items-center mb-2"><h4 class="text-sm md:text-base font-black text-dark-900"><i class="fa-solid fa-receipt text-royal-500 mr-1.5"></i> पेमेंट और VIP हिस्ट्री</h4><button onclick="window.loadUserPayments()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-rotate-right mr-1"></i> Refresh</button></div><div class="overflow-x-auto border border-slate-200 rounded-xl"><table class="w-full text-left border-collapse bg-white min-w-[520px]"><thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase"><tr><th class="p-3">तारीख (Date)</th><th class="p-3">राशि</th><th class="p-3">क्रेडिट्स / VIP</th><th class="p-3">UTR / Mode</th><th class="p-3 text-right">स्टेटस</th></tr></thead><tbody id="userPaymentsTableBody" class="text-xs text-slate-700"></tbody></table></div></div></div>`; 
+        container.innerHTML = `
+        <div class="space-y-4">
+            <div id="userValidityInfoBox"></div>
+
+            <!-- 5 Passbook Summary Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                <div class="p-3 rounded-2xl bg-dark-950 text-white border border-royal-500/40 shadow-sm">
+                    <p class="text-[10px] font-bold text-royal-300 uppercase">वर्तमान बैलेंस (Wallet)</p>
+                    <p id="sumCurrentWalletCr" class="text-lg md:text-xl font-black text-white mt-0.5">${window.currentUserData?.credits || 0} Cr</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-green-50 border border-green-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-green-700 uppercase">कुल रिचार्ज (Recharged)</p>
+                    <p id="sumApprovedAmt" class="text-lg md:text-xl font-black text-green-700 mt-0.5">₹0</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-red-50 border border-red-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-red-700 uppercase">कार्ड खर्च (Card Deduct)</p>
+                    <p id="sumSpentOnCards" class="text-lg md:text-xl font-black text-red-600 mt-0.5">-0 Cr</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-teal-50 border border-teal-200 shadow-sm">
+                    <p class="text-[10px] font-bold text-teal-800 uppercase">रिफंड + गिफ्ट (Refund/Gift)</p>
+                    <p id="sumRefundAndGift" class="text-lg md:text-xl font-black text-teal-700 mt-0.5">+0 Cr</p>
+                </div>
+                <div class="p-3 rounded-2xl bg-amber-50 border border-amber-200 shadow-sm col-span-2 sm:col-span-1">
+                    <p class="text-[10px] font-bold text-amber-800 uppercase">पेंडिंग रिचार्ज (Pending)</p>
+                    <p id="sumPendingAmt" class="text-lg md:text-xl font-black text-amber-700 mt-0.5">₹0 (0)</p>
+                </div>
+            </div>
+
+            <!-- Filter Tabs & Search Bar -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2.5 bg-slate-50 p-3 rounded-2xl border border-slate-200">
+                <div class="flex flex-wrap items-center gap-1.5" id="passbookFilterBtns">
+                    <button type="button" onclick="window.setPassbookFilter('ALL')" data-filter="ALL" class="passbook-tab bg-dark-900 text-royal-300 font-black px-3 py-1.5 rounded-xl text-[11px] transition shadow-sm">
+                        <i class="fa-solid fa-book-open mr-1"></i> All (<span id="cntPassAll">0</span>)
+                    </button>
+                    <button type="button" onclick="window.setPassbookFilter('RECHARGE')" data-filter="RECHARGE" class="passbook-tab bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 font-bold px-3 py-1.5 rounded-xl text-[11px] transition">
+                        <i class="fa-solid fa-credit-card text-green-600 mr-1"></i> Recharges (<span id="cntPassRecharge">0</span>)
+                    </button>
+                    <button type="button" onclick="window.setPassbookFilter('DEDUCTION')" data-filter="DEDUCTION" class="passbook-tab bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 font-bold px-3 py-1.5 rounded-xl text-[11px] transition">
+                        <i class="fa-solid fa-file-invoice text-red-500 mr-1"></i> Card Deductions (<span id="cntPassDeduct">0</span>)
+                    </button>
+                    <button type="button" onclick="window.setPassbookFilter('REFUND')" data-filter="REFUND" class="passbook-tab bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 font-bold px-3 py-1.5 rounded-xl text-[11px] transition">
+                        <i class="fa-solid fa-rotate-left text-teal-600 mr-1"></i> Refunds (<span id="cntPassRefund">0</span>)
+                    </button>
+                    <button type="button" onclick="window.setPassbookFilter('GIFT')" data-filter="GIFT" class="passbook-tab bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 font-bold px-3 py-1.5 rounded-xl text-[11px] transition">
+                        <i class="fa-solid fa-gift text-purple-600 mr-1"></i> Admin Gifts (<span id="cntPassGift">0</span>)
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1 md:w-52">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="passbookSearchInput" oninput="window.renderUserPassbook()" placeholder="नाम, कार्ड, BRN या UTR खोजें..." class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-xl text-xs font-bold bg-white outline-none focus:border-royal-500">
+                    </div>
+                    <button onclick="window.loadUserPayments()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-xl text-xs font-black transition shadow-sm shrink-0">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+
+            <!-- Passbook Table -->
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
+                <table class="w-full text-left border-collapse bg-white min-w-[640px]">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase">
+                        <tr>
+                            <th class="p-3">तारीख व समय (Date)</th>
+                            <th class="p-3">विवरण / किस कार्ड या पेमेंट का है (Particulars)</th>
+                            <th class="p-3">क्रेडिट्स (+Add / -Deduct)</th>
+                            <th class="p-3">राशि / रेफरेंस (Ref / UTR)</th>
+                            <th class="p-3 text-right">स्टेटस (Status)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userPaymentsTableBody" class="text-xs text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>`; 
         window.loadUserPayments(); 
         return; 
     }
@@ -1343,93 +1417,352 @@ window.switchService = async function(serviceName) {
     }
 };
 
+window.currentPassbookFilter = 'ALL';
+window.userPassbookEntries = [];
+
+window.getHistoricalCardCost = function(histItem) {
+    if (!histItem) return 10;
+    const fd = histItem.formData || {};
+    if (fd.CREDITS_DEDUCTED !== undefined && fd.CREDITS_DEDUCTED !== null) {
+        return Number(fd.CREDITS_DEDUCTED) || 0;
+    }
+    if (histItem.creditsDeducted !== undefined && histItem.creditsDeducted !== null) {
+        return Number(histItem.creditsDeducted) || 0;
+    }
+    const sType = String(histItem.serviceType || fd.SERVICE_TYPE || '').toLowerCase();
+    if (histItem.fileId === 'SERVER_API_DOB_PRINT' || sType.includes('dob print') || sType.includes('original pdf')) return 140;
+    if (sType.includes('gazette')) return 100;
+    if (sType.includes('dob') || sType.includes('minor')) return 50;
+    if (sType.includes('passport')) return 30;
+    return 10;
+};
+
+window.parseFirestoreTimestampSec = function(ts) {
+    if (!ts) return 0;
+    if (typeof ts.seconds === 'number') return ts.seconds;
+    const d = new Date(ts);
+    return isNaN(d.getTime()) ? 0 : Math.floor(d.getTime() / 1000);
+};
+
+window.setPassbookFilter = function(filterKey) {
+    window.currentPassbookFilter = filterKey || 'ALL';
+    document.querySelectorAll('#passbookFilterBtns .passbook-tab').forEach(btn => {
+        const isAct = btn.getAttribute('data-filter') === window.currentPassbookFilter;
+        btn.className = isAct
+            ? 'passbook-tab bg-dark-900 text-royal-300 font-black px-3 py-1.5 rounded-xl text-[11px] transition shadow-sm'
+            : 'passbook-tab bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 font-bold px-3 py-1.5 rounded-xl text-[11px] transition';
+    });
+    window.renderUserPassbook();
+};
+
 window.loadUserPayments = async function() {
-    const tableBody = document.getElementById('userPaymentsTableBody'); if (!tableBody) return; tableBody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading payment history...</td></tr>`;
-    try { 
-        const querySnapshot = await getDocs(query(collection(db, "payments"), where("userId", "==", window.currentUserData.uid))); 
-        window.userPaymentsData = []; 
+    const tableBody = document.getElementById('userPaymentsTableBody');
+    if (!tableBody) return;
+    tableBody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>आपकी वॉलेट पासबुक और कार्ड हिस्ट्री लोड हो रही है...</td></tr>`;
+
+    try {
+        const uid = window.currentUserData.uid;
+        const [paySnap, histSnap] = await Promise.all([
+            getDocs(query(collection(db, "payments"), where("userId", "==", uid))),
+            getDocs(query(collection(db, "history"), where("userId", "==", uid)))
+        ]);
+
         const now = Date.now();
         const MS_72_HOURS = 72 * 60 * 60 * 1000;
-        
-        querySnapshot.forEach((docSnap) => { 
+        const entries = [];
+        const recordedRefundDocIds = new Set();
+
+        let sumApprovedRs = 0;
+        let sumRechargedCr = 0;
+        let sumPendingRs = 0;
+        let pendingCount = 0;
+        let sumSpentCr = 0;
+        let sumRefundAndGiftCr = 0;
+
+        // 1. Process Payments Collection (Recharges, Gifts, Refunds, Admin Deductions)
+        paySnap.forEach((docSnap) => {
             const item = { id: docSnap.id, ...docSnap.data() };
-            const sec = item.timestamp?.seconds || (item.timestamp ? Math.floor(new Date(item.timestamp).getTime() / 1000) : 0);
+            const sec = window.parseFirestoreTimestampSec(item.timestamp);
             const itemTime = sec * 1000;
+
             if (item.status === 'Pending' && itemTime > 0 && (now - itemTime > MS_72_HOURS)) {
                 item.status = 'Cancelled (Expired 72h)';
                 try {
                     updateDoc(doc(db, "payments", item.id), { status: 'Cancelled (Expired 72h)', expiredAt: new Date() });
-                } catch(e) {}
+                } catch (e) {}
             }
-            window.userPaymentsData.push(item); 
-        }); 
-        window.userPaymentsData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)); 
-        let sumApproved = 0, sumPending = 0, pendingCount = 0; 
-        window.userPaymentsData.forEach(item => { 
-            const amt = parseFloat(item.amountPaid) || 0; 
-            if (item.status === 'Approved' || item.status === 'Auto-Approved') { 
-                sumApproved += amt; 
-            } else if (item.status === 'Pending' || (item.status || '').includes('Ticket')) { 
-                sumPending += amt; 
-                pendingCount++; 
-            } 
-        }); 
-        document.getElementById('sumTotalTxns').innerText = window.userPaymentsData.length; 
-        document.getElementById('sumApprovedAmt').innerText = `₹${sumApproved}`; 
-        document.getElementById('sumPendingAmt').innerText = `₹${sumPending} (${pendingCount})`; 
-        tableBody.innerHTML = ''; 
-        if (window.userPaymentsData.length === 0) { 
-            tableBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300"></i><br>आपने अभी तक कोई पेमेंट नहीं किया है।</td></tr>`; 
-            return; 
-        } 
-        window.userPaymentsData.forEach(data => { 
-            const sec = data.timestamp?.seconds || Math.floor(Date.now() / 1000); 
-            const dateObj = new Date(sec * 1000); 
-            const dateStr = dateObj.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'}); 
-            const timeStr = dateObj.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}); 
-            const isGift = (data.status === 'Gift / Bonus');
-            let statusBadge = ''; 
+
+            const statusStr = String(item.status || 'Pending');
+            const isGift = statusStr === 'Gift / Bonus' || item.type === 'GIFT' || item.utrNumber === 'ADMIN_GIFT';
+            const isRefund = statusStr === 'Refunded' || item.type === 'REFUND' || String(item.id).startsWith('refund_');
+            const isAdminDeduct = statusStr === 'Admin Deducted' || item.type === 'ADMIN_DEDUCT' || item.utrNumber === 'ADMIN_DEDUCT';
+            const creds = Number(item.creditsRequested !== undefined ? item.creditsRequested : (item.creditsAdded || 0)) || 0;
+            const amtRs = parseFloat(item.amountPaid) || 0;
+
+            if (isRefund && item.relatedDocId) {
+                recordedRefundDocIds.add(String(item.relatedDocId));
+            }
+
+            let category = 'RECHARGE';
             if (isGift) {
-                statusBadge = `<span class="bg-purple-100 text-purple-800 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-black"><i class="fa-solid fa-gift mr-1"></i>Gift / Bonus</span>`;
-            } else if ((data.status || '').includes('Ticket')) { 
-                statusBadge = `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-black"><i class="fa-solid fa-ticket mr-1"></i>Ticket Raised</span>`; 
-            } else if (data.status === 'Pending') { 
-                statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-black"><i class="fa-solid fa-clock mr-1"></i>Pending</span>`; 
-            } else if (data.status === 'Approved' || data.status === 'Auto-Approved') { 
-                statusBadge = `<span class="bg-green-100 text-green-800 border border-green-200 px-2 py-0.5 rounded text-[10px] font-black"><i class="fa-solid fa-check-circle mr-1"></i>Approved</span>`; 
-            } else { 
-                statusBadge = `<span class="bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[10px] font-black"><i class="fa-solid fa-circle-xmark mr-1"></i>${data.status}</span>`; 
-            } 
-            const vipDays = data.vipDaysRequested || (data.wantsVip ? 30 : 0); 
-            const creds = data.creditsRequested !== undefined ? data.creditsRequested : (data.creditsAdded || 0); 
+                category = 'GIFT';
+                sumRefundAndGiftCr += creds;
+            } else if (isRefund) {
+                category = 'REFUND';
+                sumRefundAndGiftCr += creds;
+            } else if (isAdminDeduct) {
+                category = 'DEDUCTION';
+                sumSpentCr += creds;
+            } else {
+                category = 'RECHARGE';
+                if (statusStr === 'Approved' || statusStr === 'Auto-Approved') {
+                    sumApprovedRs += amtRs;
+                    sumRechargedCr += creds;
+                } else if (statusStr === 'Pending' || statusStr.includes('Ticket')) {
+                    sumPendingRs += amtRs;
+                    pendingCount++;
+                }
+            }
 
-            const amountText = isGift 
-                ? `<span class="text-purple-700 font-black text-xs bg-purple-50 px-2 py-0.5 rounded border border-purple-200">🎁 FREE</span>` 
-                : `₹${data.amountPaid || 0}`;
+            entries.push({
+                id: item.id,
+                sec: sec || Math.floor(now / 1000),
+                category,
+                isGift,
+                isRefund,
+                isAdminDeduct,
+                title: isGift
+                    ? '🎁 Admin Gift / Bonus Credits'
+                    : (isRefund
+                        ? `🔄 Credit Refund (${item.serviceType || 'DOB Original PDF'})`
+                        : (isAdminDeduct ? '⚠️ Admin Credit Deduction' : '💳 Wallet Credit Recharge (Razorpay)')),
+                subtitle: item.note || (item.wantsVip ? `Includes +${item.vipDaysRequested || 30} Days VIP` : 'Online Wallet Top-Up'),
+                credits: creds,
+                direction: isAdminDeduct ? 'DEBIT' : 'CREDIT',
+                amountRs: amtRs,
+                refText: item.utrNumber || item.razorpayPaymentId || item.orderId || 'RAZORPAY',
+                status: statusStr,
+                vipDays: item.vipDaysRequested || (item.wantsVip ? 30 : 0)
+            });
+        });
 
-            const utrText = isGift 
-                ? `<span class="text-purple-700 font-bold"><i class="fa-solid fa-gift text-purple-500 mr-1"></i>Admin Gift</span>` 
-                : (data.utrNumber || 'ONLINE_UPI');
+        // 2. Process History Collection (Every Card / Certificate Deduction + Stamp/Cert Add-ons + Unlogged Auto-Refunds)
+        histSnap.forEach((docSnap) => {
+            const h = { id: docSnap.id, ...docSnap.data() };
+            const sec = window.parseFirestoreTimestampSec(h.timestamp);
+            const fd = h.formData || {};
+            const cardCost = window.getHistoricalCardCost(h);
+            const personName = fd.NAME || fd.NEW_NAME || fd.applicantName || fd.childName || fd.parentName || h.fileName || 'Applicant';
+            const sLabel = h.serviceType === 'DOB Print' ? 'DOB Original PDF (BRN)' : (h.serviceType || 'Portal Card');
+            const brnOrRef = fd.BRN_NO || fd.GAZETTE_NO || fd.REG_NO || fd.EPIC_NO || fd.RN || fd.APPLICATION_REF || 'CARD_GEN';
 
-            const noteLine = data.note ? `<span class="text-[10px] text-purple-700 font-black flex items-center gap-1"><i class="fa-solid fa-gift text-purple-500"></i> ${data.note}</span>` : '';
+            // Main Card Generation Deduction Row
+            if (cardCost > 0) {
+                sumSpentCr += cardCost;
+            }
+            entries.push({
+                id: `card_${h.id}`,
+                sec: sec || Math.floor(now / 1000),
+                category: 'DEDUCTION',
+                serviceBadge: sLabel,
+                title: `📄 ${sLabel} — ${personName}`,
+                subtitle: h.fileName || `${personName} (${sLabel})`,
+                credits: cardCost,
+                direction: 'DEBIT',
+                amountRs: cardCost,
+                refText: brnOrRef,
+                status: h.fileId === 'SERVER_API_DOB_PRINT'
+                    ? ((fd.HAS_PDF || ['successful', 'approved', 'completed'].includes(String(fd.API_STATUS || '').toLowerCase()))
+                        ? 'SUCCESSFUL'
+                        : (fd.REFUNDED || String(fd.API_STATUS || '').toLowerCase() === 'failed' ? 'CANCELLED (REFUNDED)' : 'PENDING'))
+                    : 'Card Generated'
+            });
 
-            tableBody.innerHTML += `<tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
-                <td class="p-3 text-slate-500 font-medium whitespace-nowrap">${dateStr} <br> <span class="text-[10px] text-slate-400">${timeStr}</span></td>
-                <td class="p-3 font-black text-slate-800 text-sm whitespace-nowrap">${amountText}</td>
-                <td class="p-3">
-                    <div class="flex flex-col gap-0.5">
-                        ${creds > 0 ? `<span class="font-bold text-royal-600">+${creds} Cr</span>` : ''}
-                        ${vipDays > 0 ? `<span class="bg-amber-400 text-dark-950 px-1.5 py-0.5 rounded text-[9px] font-black inline-block w-max">👑 +${vipDays}d VIP</span>` : ''}
-                        ${noteLine}
-                    </div>
-                </td>
-                <td class="p-3 font-mono font-bold text-slate-600 text-[11px] whitespace-nowrap">${utrText}</td>
-                <td class="p-3 text-right whitespace-nowrap">${statusBadge}</td>
-            </tr>`; 
-        }); 
-    } catch (err) { 
-        tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 text-xs">Failed to load payment history.</td></tr>`; 
+            // Separate Passbook Entry if +20 Cr Stamp was charged on Annexure
+            if (h.adminStampCharged) {
+                const stampFee = Number(h.adminStampFee) || 20;
+                const stampSec = window.parseFirestoreTimestampSec(h.adminStampChargedAt) || (sec + 5);
+                sumSpentCr += stampFee;
+                entries.push({
+                    id: `stamp_${h.id}`,
+                    sec: stampSec,
+                    category: 'DEDUCTION',
+                    serviceBadge: 'Stamp Add-on',
+                    title: `🔏 Stamp Attached on ${sLabel} — ${personName}`,
+                    subtitle: `Official Stamp (${h.stampCity || 'Baraut'}) on ${h.fileName || sLabel}`,
+                    credits: stampFee,
+                    direction: 'DEBIT',
+                    amountRs: stampFee,
+                    refText: 'STAMP_ADDON',
+                    status: 'Stamp Attached'
+                });
+            }
+
+            // Separate Passbook Entry if +20 Cr Certificate was charged on Annexure
+            if (h.adminCertCharged) {
+                const certFee = Number(h.adminCertFee) || 20;
+                const certSec = window.parseFirestoreTimestampSec(h.adminCertChargedAt) || (sec + 10);
+                sumSpentCr += certFee;
+                entries.push({
+                    id: `cert_${h.id}`,
+                    sec: certSec,
+                    category: 'DEDUCTION',
+                    serviceBadge: 'Cert Add-on',
+                    title: `📜 Certificate Attached on ${sLabel} — ${personName}`,
+                    subtitle: `Supporting Certificate attached to ${h.fileName || sLabel}`,
+                    credits: certFee,
+                    direction: 'DEBIT',
+                    amountRs: certFee,
+                    refText: 'CERT_ADDON',
+                    status: 'Cert Attached'
+                });
+            }
+
+            // Synthesize Refund row if a DOB Original PDF was marked REFUNDED but had no separate doc in payments
+            if (fd.REFUNDED && !recordedRefundDocIds.has(String(h.id))) {
+                const refCr = Number(fd.REFUND_CREDITS || fd.CREDITS_DEDUCTED) || 140;
+                const refSec = window.parseFirestoreTimestampSec(fd.REFUNDED_AT) || (sec + 60);
+                sumRefundAndGiftCr += refCr;
+                entries.push({
+                    id: `autoref_${h.id}`,
+                    sec: refSec,
+                    category: 'REFUND',
+                    isRefund: true,
+                    title: `🔄 Credit Refund (DOB Original PDF Cancelled)`,
+                    subtitle: `Auto-Refund for ${personName} (BRN: ${fd.BRN_NO || 'N/A'})`,
+                    credits: refCr,
+                    direction: 'CREDIT',
+                    amountRs: refCr,
+                    refText: fd.BRN_NO || 'AUTO_REFUND',
+                    status: 'Refunded'
+                });
+            }
+        });
+
+        // Sort newest first
+        entries.sort((a, b) => b.sec - a.sec);
+        window.userPassbookEntries = entries;
+
+        // Update Top Summary Cards & Filter Counts
+        const elWalletCr = document.getElementById('sumCurrentWalletCr');
+        if (elWalletCr) elWalletCr.innerText = `${window.currentUserData?.credits || 0} Cr`;
+        const elApproved = document.getElementById('sumApprovedAmt');
+        if (elApproved) elApproved.innerText = `₹${sumApprovedRs} (+${sumRechargedCr} Cr)`;
+        const elSpent = document.getElementById('sumSpentOnCards');
+        if (elSpent) elSpent.innerText = `-${sumSpentCr} Cr`;
+        const elRefGift = document.getElementById('sumRefundAndGift');
+        if (elRefGift) elRefGift.innerText = `+${sumRefundAndGiftCr} Cr`;
+        const elPending = document.getElementById('sumPendingAmt');
+        if (elPending) elPending.innerText = `₹${sumPendingRs} (${pendingCount})`;
+
+        const setCnt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+        setCnt('cntPassAll', entries.length);
+        setCnt('cntPassRecharge', entries.filter(e => e.category === 'RECHARGE').length);
+        setCnt('cntPassDeduct', entries.filter(e => e.category === 'DEDUCTION').length);
+        setCnt('cntPassRefund', entries.filter(e => e.category === 'REFUND').length);
+        setCnt('cntPassGift', entries.filter(e => e.category === 'GIFT').length);
+
+        window.renderUserPassbook();
+    } catch (err) {
+        console.error('Passbook load error:', err);
+        tableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 text-xs">Failed to load passbook history: ${err.message}</td></tr>`;
     }
+};
+
+window.renderUserPassbook = function() {
+    const tableBody = document.getElementById('userPaymentsTableBody');
+    if (!tableBody) return;
+
+    const filter = window.currentPassbookFilter || 'ALL';
+    const search = (document.getElementById('passbookSearchInput')?.value || '').trim().toLowerCase();
+
+    let list = window.userPassbookEntries || [];
+    if (filter !== 'ALL') {
+        list = list.filter(item => item.category === filter);
+    }
+    if (search) {
+        list = list.filter(item =>
+            (item.title || '').toLowerCase().includes(search) ||
+            (item.subtitle || '').toLowerCase().includes(search) ||
+            (item.refText || '').toLowerCase().includes(search) ||
+            (item.status || '').toLowerCase().includes(search)
+        );
+    }
+
+    tableBody.innerHTML = '';
+    if (list.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300"></i><br>इस सेक्शन में कोई ट्रांजैक्शन रिकॉर्ड नहीं मिला।</td></tr>`;
+        return;
+    }
+
+    list.forEach(item => {
+        const dateObj = new Date(item.sec * 1000);
+        const dateStr = dateObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        const timeStr = dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+
+        // Credit Change Column (+Cr in Green, -Cr in Red)
+        let creditHtml = '';
+        if (item.direction === 'DEBIT') {
+            creditHtml = item.credits > 0
+                ? `<span class="inline-flex items-center gap-1 font-black text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-lg text-xs">-${item.credits} Cr</span>`
+                : `<span class="inline-flex items-center gap-1 font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg text-[11px]">FREE (0 Cr)</span>`;
+        } else {
+            const isPendingOrCancelled = item.category === 'RECHARGE' && item.status !== 'Approved' && item.status !== 'Auto-Approved';
+            creditHtml = isPendingOrCancelled
+                ? `<span class="inline-flex items-center gap-1 font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg text-xs">+${item.credits} Cr</span>`
+                : `<span class="inline-flex items-center gap-1 font-black text-emerald-700 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg text-xs">+${item.credits} Cr</span>`;
+        }
+
+        // Category & Status Badges
+        let statusBadge = '';
+        if (item.category === 'GIFT') {
+            statusBadge = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-gift mr-1"></i>Admin Gift</span>`;
+        } else if (item.category === 'REFUND') {
+            statusBadge = `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-rotate-left mr-1"></i>Refunded (+Cr)</span>`;
+        } else if (item.category === 'DEDUCTION') {
+            if (item.status === 'PENDING') {
+                statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-clock mr-1"></i>PENDING</span>`;
+            } else if (item.status === 'CANCELLED (REFUNDED)') {
+                statusBadge = `<span class="bg-red-100 text-red-800 border border-red-300 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-ban mr-1"></i>Cancelled &amp; Refunded</span>`;
+            } else {
+                statusBadge = `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-check-circle mr-1"></i>${item.status}</span>`;
+            }
+        } else {
+            // RECHARGE
+            if ((item.status || '').includes('Ticket')) {
+                statusBadge = `<span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-ticket mr-1"></i>Ticket Raised</span>`;
+            } else if (item.status === 'Pending') {
+                statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-clock mr-1"></i>Pending</span>`;
+            } else if (item.status === 'Approved' || item.status === 'Auto-Approved') {
+                statusBadge = `<span class="bg-green-100 text-green-800 border border-green-300 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-check-circle mr-1"></i>Approved</span>`;
+            } else {
+                statusBadge = `<span class="bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-[10px] font-black"><i class="fa-solid fa-circle-xmark mr-1"></i>${item.status}</span>`;
+            }
+        }
+
+        const refLine = item.category === 'RECHARGE'
+            ? `<div class="font-black text-slate-800">₹${item.amountRs}</div><div class="font-mono text-[10px] text-slate-500">${item.refText}</div>`
+            : `<div class="font-mono text-[11px] font-bold text-slate-700">${item.refText}</div>`;
+
+        tableBody.innerHTML += `
+            <tr class="border-b border-slate-100 text-xs hover:bg-slate-50/90 transition">
+                <td class="p-3 text-slate-500 font-medium whitespace-nowrap">
+                    <span class="font-bold text-slate-700">${dateStr}</span><br>
+                    <span class="text-[10px] text-slate-400">${timeStr}</span>
+                </td>
+                <td class="p-3">
+                    <div class="font-black text-slate-800 text-xs md:text-sm">${item.title}</div>
+                    <div class="text-[11px] text-slate-500 font-semibold mt-0.5">${item.subtitle || ''}</div>
+                </td>
+                <td class="p-3 whitespace-nowrap">
+                    ${creditHtml}
+                    ${item.vipDays > 0 ? `<div class="mt-1"><span class="bg-amber-400 text-dark-950 px-1.5 py-0.5 rounded text-[9px] font-black">👑 +${item.vipDays}d VIP</span></div>` : ''}
+                </td>
+                <td class="p-3 whitespace-nowrap">${refLine}</td>
+                <td class="p-3 text-right whitespace-nowrap">${statusBadge}</td>
+            </tr>
+        `;
+    });
 };
 
 
