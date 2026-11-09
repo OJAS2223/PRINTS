@@ -149,7 +149,9 @@ window.submitForm = async function(event, serviceType) {
             }
 
             sessionStorage.removeItem('ojas_draft_dob_print');
-            alert(`✅ ${resJson.message}\n\n• Application Ref: ${resJson.data?.application_ref || 'N/A'}\n• Name: ${resJson.data?.name}\n• BRN No: ${resJson.data?.number}\n• Status: ${(resJson.data?.status || 'pending').toUpperCase()}\n\nआप Document History में जाकर स्टेटस चेक और ओरिजिनल PDF डाउनलोड कर सकते हैं।`);
+            const rawSt = String(resJson.data?.status || 'pending').toLowerCase();
+            const normSt = (resJson.data?.has_pdf || rawSt === 'successful' || rawSt === 'approved' || rawSt === 'completed') ? 'SUCCESSFUL' : 'PENDING';
+            alert(`✅ ${resJson.message}\n\n• Application Ref: ${resJson.data?.application_ref || 'N/A'}\n• Name: ${resJson.data?.name}\n• BRN No: ${resJson.data?.number}\n• Status: ${normSt}\n\nआप Document History में जाकर स्टेटस चेक और ओरिजिनल PDF डाउनलोड कर सकते हैं।`);
             formElement.reset();
             window.switchService('history');
             return;
@@ -1174,11 +1176,26 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
     // GAZETTE NOTIFICATION (गैजेट नोटिफिकेशन • ₹100 / 100 Credits)
     else if (serviceName === 'gazette') {
         if (!window.currentUserData || !window.canCurrentUserSeeService('gazette')) { window.switchService(window.getFirstAllowedTab()); return true; }
+        window.toggleGazetteMinorFields = function(val) {
+            const minorSec = document.getElementById('gazetteMinorFields');
+            const gInp = document.getElementById('inpGazetteGuardian');
+            const aInp = document.getElementById('inpGazetteChildAge');
+            if (!minorSec) return;
+            if (val === 'MINOR') {
+                minorSec.style.display = 'grid';
+                if (gInp) gInp.required = true;
+                if (aInp) aInp.required = true;
+            } else {
+                minorSec.style.display = 'none';
+                if (gInp) gInp.required = false;
+                if (aInp) aInp.required = false;
+            }
+        };
         container.innerHTML = `
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
                 <div>
-                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-newspaper text-purple-600 mr-1.5"></i> Gazette Notification (गैजेट नोटिफिकेशन • भारत का राजपत्र)</h3>
-                    <p class="text-[11px] font-bold text-slate-500">नाम या विवरण परिवर्तन हेतु ऑफिशियल गैजेट नोटिफिकेशन जनरेट करें • शुल्क: 100 Credits (₹100)</p>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-newspaper text-purple-600 mr-1.5"></i> Gazette Notification (गैजेट नोटिफिकेशन • भारत का राजपत्र भाग IV)</h3>
+                    <p class="text-[11px] font-bold text-slate-500">ऑफिशियल द गजट ऑफ इंडिया (Part-IV) नाम परिवर्तन अधिसूचना जनरेट करें • शुल्क: 100 Credits (₹100)</p>
                 </div>
                 <span class="bg-purple-100 text-purple-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-purple-300 uppercase">100 Credits (₹100)</span>
             </div>
@@ -1188,56 +1205,70 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                         <div>
                             <div class="flex justify-between items-center mb-1">
-                                <label class="text-[11px] font-bold text-royal-700 uppercase">Gazette Notification No <span class="text-red-500">*</span></label>
-                                <button type="button" onclick="document.getElementById('inpGazetteNo').value = window.generateGazetteNo();" class="text-[10px] bg-royal-100 hover:bg-royal-200 text-royal-900 font-black px-2 py-0.5 rounded border border-royal-300 transition"><i class="fa-solid fa-shuffle mr-1"></i>Auto Generate</button>
+                                <label class="text-[11px] font-bold text-royal-700 uppercase">Gazette Serial No (CG-DL-W-...) <span class="text-red-500">*</span></label>
+                                <button type="button" onclick="const dtEl=document.getElementById('inpGazetteIssueDate'); document.getElementById('inpGazetteNo').value = window.generateGazetteNo(dtEl ? dtEl.value : '');" class="text-[10px] bg-royal-100 hover:bg-royal-200 text-royal-900 font-black px-2 py-0.5 rounded border border-royal-300 transition"><i class="fa-solid fa-shuffle mr-1"></i>Auto Generate</button>
                             </div>
-                            <input type="text" id="inpGazetteNo" name="GAZETTE_NO" placeholder="e.g. CG-DL-W-2026-48291" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-black tracking-wider bg-royal-50/40 focus:bg-white outline-none uppercase relative z-10">
+                            <input type="text" id="inpGazetteNo" name="GAZETTE_NO" placeholder="e.g. CG-DL-W-10012022-232514" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-black tracking-wider bg-royal-50/40 focus:bg-white outline-none uppercase relative z-10">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Change Type (परिवर्तन का प्रकार) <span class="text-red-500">*</span></label>
-                            <select name="CHANGE_TYPE" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
-                                <option value="NAME CHANGE / CORRECTION">NAME CHANGE / CORRECTION (नाम परिवर्तन)</option>
-                                <option value="SURNAME ADDITION / CHANGE">SURNAME ADDITION / CHANGE (उपनाम परिवर्तन)</option>
-                                <option value="DATE OF BIRTH / PARTICULARS CORRECTION">DOB / PARTICULARS CORRECTION (विवरण संशोधन)</option>
+                            <label class="block text-[11px] font-bold text-purple-800 uppercase mb-1">Applicant Category (आवेदक का प्रकार) <span class="text-red-500">*</span></label>
+                            <select name="APPLICANT_TYPE" onchange="window.toggleGazetteMinorFields(this.value)" class="w-full p-3 border border-purple-300 rounded-xl text-sm font-black bg-purple-50/50 focus:bg-white outline-none uppercase relative z-10">
+                                <option value="ADULT">ADULT / SELF (वयस्क — स्वयं का नाम परिवर्तन)</option>
+                                <option value="MINOR">MINOR CHILD (नाबालिग बच्चे का नाम परिवर्तन — माता/पिता द्वारा)</option>
                             </select>
                         </div>
+
+                        <!-- Minor Extra Fields (Hidden for Adult) -->
+                        <div id="gazetteMinorFields" style="display: none;" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3.5 p-3.5 bg-amber-50/80 border border-amber-300 rounded-2xl">
+                            <div>
+                                <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Guardian / Parent Name (अभिभावक का नाम) <span class="text-red-500">*</span></label>
+                                <input type="text" id="inpGazetteGuardian" name="GUARDIAN_NAME" placeholder="e.g. MOHAMMAD HASNAIN" class="w-full p-2.5 border border-amber-300 rounded-xl text-sm font-bold bg-white outline-none uppercase">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Minor Child Relation (पुत्र / पुत्री)</label>
+                                <select name="CHILD_REL" class="w-full p-2.5 border border-amber-300 rounded-xl text-sm font-bold bg-white outline-none">
+                                    <option value="daughter">minor daughter (नाबालिग पुत्री)</option>
+                                    <option value="son">minor son (नाबालिग पुत्र)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Child Age in Years (बच्चे की उम्र) <span class="text-red-500">*</span></label>
+                                <input type="number" id="inpGazetteChildAge" name="CHILD_AGE" placeholder="e.g. 15" min="1" max="17" class="w-full p-2.5 border border-amber-300 rounded-xl text-sm font-bold bg-white outline-none">
+                            </div>
+                        </div>
+
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Old Name (पुराना नाम / गलत नाम) <span class="text-red-500">*</span></label>
-                            <input type="text" name="OLD_NAME" placeholder="Enter Old Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                            <input type="text" name="OLD_NAME" placeholder="e.g. AMBER FIRDAUS / VED PRAKASH BALMIKI" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-emerald-700 uppercase mb-1">New Name (नया सही नाम) <span class="text-red-500">*</span></label>
-                            <input type="text" name="NEW_NAME" placeholder="Enter New Correct Name" required class="w-full p-3 border border-emerald-300 rounded-xl text-sm font-black bg-emerald-50/40 focus:bg-white outline-none uppercase relative z-10">
+                            <input type="text" name="NEW_NAME" placeholder="e.g. AMBER HASNAIN / VED PRAKASH" required class="w-full p-3 border border-emerald-300 rounded-xl text-sm font-black bg-emerald-50/40 focus:bg-white outline-none uppercase relative z-10">
                         </div>
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Relation</label>
-                                <select name="REL_TYPE" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
-                                    <option value="S/O">S/O</option>
-                                    <option value="D/O">D/O</option>
-                                    <option value="W/O">W/O</option>
+                                <select name="REL_TYPE" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
+                                    <option value="S/o">S/o</option>
+                                    <option value="D/o">D/o</option>
+                                    <option value="W/o">W/o</option>
+                                    <option value="son of">son of</option>
+                                    <option value="daughter of">daughter of</option>
+                                    <option value="wife of">wife of</option>
                                 </select>
                             </div>
                             <div class="col-span-2">
                                 <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father / Husband Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="FNAME" placeholder="Enter Father/Husband Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                                <input type="text" name="FNAME" placeholder="e.g. ABDUL HAMID / Shri KANCHHI LAL" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (जन्मतिथि) <span class="text-red-500">*</span></label>
-                            <input type="date" name="DOB" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
-                        </div>
-                        <div>
                             <label class="block text-[11px] font-bold text-royal-700 uppercase mb-1">Gazette Issue Date (प्रकाशन दिनांक) <span class="text-red-500">*</span></label>
-                            <input type="date" name="ISSUE_DATE" value="${todayISO}" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-bold bg-royal-50/40 focus:bg-white outline-none relative z-10">
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Supporting Document / Reason</label>
-                            <input type="text" name="REASON" value="AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                            <input type="date" id="inpGazetteIssueDate" name="ISSUE_DATE" value="${todayISO}" onchange="const gEl=document.getElementById('inpGazetteNo'); if(gEl && typeof window.generateGazetteNo==='function') gEl.value = window.generateGazetteNo(this.value);" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-bold bg-royal-50/40 focus:bg-white outline-none relative z-10">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Complete Address (पूरा स्थायी पता) <span class="text-red-500">*</span></label>
-                            <input type="text" name="ADDRESS" placeholder="HOUSE NO, VILLAGE/COLONY, TEHSIL, DISTRICT, STATE, PIN CODE" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Complete Address (पूरा पता — जैसा गजट में छपेगा) <span class="text-red-500">*</span></label>
+                            <input type="text" name="ADDRESS" placeholder="e.g. B-43, Third Floor, Khirki Extn, New Delhi-110017" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
                         </div>
                     </div>
                     <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base relative z-10">
@@ -1248,7 +1279,10 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
         `;
         if (!window.currentEditingAnnexure) {
             const gInp = document.getElementById('inpGazetteNo');
-            if (gInp && !gInp.value && typeof window.generateGazetteNo === 'function') gInp.value = window.generateGazetteNo();
+            const dtInp = document.getElementById('inpGazetteIssueDate');
+            if (gInp && !gInp.value && typeof window.generateGazetteNo === 'function') {
+                gInp.value = window.generateGazetteNo(dtInp ? dtInp.value : '');
+            }
         }
         isFormRendered = true;
     }
