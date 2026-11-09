@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import https from 'https';
 import http from 'http';
- 
+
 // ============================================================================
 // FILE: api/dob-print.js
 // Server-Side Locked BRN Original PDF Gateway (₹140 / 140 Credits)
@@ -372,6 +372,55 @@ function fromFirestoreFields(fields = {}) {
     result[k] = fromFirestoreValue(v);
   }
   return result;
+}
+
+async function recordRefundAndCreditUser(adminDb, idToken, uid, userEmail, refundCredits, brnNumber, applicantName, docId, reasonText) {
+  if (!refundCredits || refundCredits <= 0) return 0;
+  let updatedCredits = 0;
+  const refundDocId = `refund_${docId || Date.now()}`;
+  const refundPaymentData = {
+    userId: uid,
+    email: userEmail || '',
+    amountPaid: refundCredits,
+    creditsRequested: refundCredits,
+    wantsVip: false,
+    vipDaysRequested: 0,
+    vipPlanFee: 0,
+    utrNumber: brnNumber || 'AUTO_REFUND',
+    status: 'Refunded',
+    type: 'REFUND',
+    serviceType: 'DOB Original PDF',
+    relatedDocId: docId || '',
+    note: reasonText || `Auto-Refund: DOB Original PDF Cancelled (${applicantName} - ${brnNumber})`,
+    timestamp: new Date()
+  };
+
+  if (adminDb) {
+    const userRef = adminDb.collection('users').doc(uid);
+    await adminDb.runTransaction(async (t) => {
+      const uSnap = await t.get(userRef);
+      if (uSnap.exists) {
+        const cur = Number(uSnap.data().credits) || 0;
+        updatedCredits = cur + refundCredits;
+        t.update(userRef, { credits: updatedCredits });
+      }
+      const payRef = adminDb.collection('payments').doc(refundDocId);
+      t.set(payRef, refundPaymentData, { merge: true });
+    });
+  } else {
+    try {
+      const uSnap = await restGetDoc('users', uid, idToken);
+      if (uSnap.exists && uSnap.data) {
+        const cur = Number(uSnap.data.credits) || 0;
+        updatedCredits = cur + refundCredits;
+        await restPatchDoc('users', uid, { credits: updatedCredits }, idToken);
+      }
+    } catch (e) {}
+    try {
+      await restPatchDoc('payments', refundDocId, refundPaymentData, idToken);
+    } catch (e) {}
+  }
+  return updatedCredits;
 }
 
 const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
@@ -833,12 +882,35 @@ export default async function handler(req, res) {
       const finalStatus = normalizeOrderStatus(extracted.status, hasPdf);
       const encryptedToken = remotePdfUrl ? encryptSecretText(remotePdfUrl) : (histData.formData?.ENCRYPTED_PDF_TOKEN || '');
 
+      let isRefundedNow = Boolean(histData.formData?.REFUNDED);
+      const deductedCr = Number(histData.formData?.CREDITS_DEDUCTED) || 140;
+      if (finalStatus === 'failed' && !isRefundedNow && deductedCr > 0) {
+        try {
+          await recordRefundAndCreditUser(
+            adminDb,
+            idToken,
+            histData.userId || uid,
+            userEmail,
+            deductedCr,
+            brnNumber,
+            applicantName,
+            docId,
+            `Auto-Refund: DOB Original PDF Cancelled/Rejected (${applicantName} - ${brnNumber})`
+          );
+          isRefundedNow = true;
+        } catch (refErr) {
+          console.warn('Auto-refund on failed status warning:', refErr.message);
+        }
+      }
+
       const updatedFormData = {
         ...(histData.formData || {}),
         APP_ID: extracted.appId || appId,
         APPLICATION_REF: extracted.appRef || appRef,
         API_STATUS: finalStatus,
         HAS_PDF: hasPdf,
+        REFUNDED: isRefundedNow,
+        REFUND_CREDITS: isRefundedNow ? deductedCr : 0,
         ENCRYPTED_PDF_TOKEN: encryptedToken
       };
 
@@ -872,9 +944,12 @@ export default async function handler(req, res) {
         response_code: parsed?.response_code || httpCode,
         apiStatus: finalStatus,
         hasPdf: hasPdf,
+        refunded: isRefundedNow,
         message: hasPdf || finalStatus === 'successful'
           ? '✅ SUCCESSFUL! आपकी ओरिजिनल जन्म प्रमाण-पत्र PDF तैयार हो गई है। अब आप Preview या Download PDF पर क्लिक कर सकते हैं।'
-          : `⏳ वर्तमान स्टेटस: PENDING (प्रिंट सर्वर पर प्रक्रिया में है, कृपया थोड़ी देर बाद दोबारा चेक करें)`
+          : (finalStatus === 'failed'
+              ? `❌ यह आवेदन कैंसिल/रिजेक्ट हो गया है। आपके +${deductedCr} Credits वॉलेट में वापस रिफंड कर दिए गए हैं!`
+              : `⏳ वर्तमान स्टेटस: PENDING (प्रिंट सर्वर पर प्रक्रिया में है, कृपया थोड़ी देर बाद दोबारा चेक करें)`)
       });
     } catch (err) {
       return res.status(500).json({ status: false, message: 'Status check error: ' + err.message });
