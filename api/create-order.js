@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import Razorpay from 'razorpay'; 
+import Razorpay from 'razorpay';
 
 if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
   try {
@@ -23,12 +23,12 @@ export default async function handler(req, res) {
   if (!keyId || !keySecret) {
     return res.status(500).json({
       status: false,
-      message: 'Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are not configured'
+      message: 'Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are not configured on server'
     });
   }
 
   try {
-    // Optional session verification if Authorization Bearer token is provided
+    // Optional Firebase Auth Bearer token verification
     const authHeader = req.headers.authorization || '';
     if (authHeader.startsWith('Bearer ') && admin.apps.length) {
       const idToken = authHeader.slice(7).trim();
@@ -52,9 +52,7 @@ export default async function handler(req, res) {
       totalPayable
     } = req.body || {};
 
-    // Determine amount in paise:
-    // If 'amount' is provided directly in paise (e.g. 10000 = ₹100), validate and use it.
-    // If 'totalPayable' or 'creditsRequested' in Rupees is provided, convert to paise.
+    // Calculate amount in paise (1 INR = 100 paise)
     let amountInPaise = 0;
     if (amount !== undefined && amount !== null) {
       amountInPaise = Math.round(Number(amount));
@@ -64,7 +62,7 @@ export default async function handler(req, res) {
       amountInPaise = Math.round(Number(creditsRequested) * 100);
     }
 
-    // Razorpay standard requirement: Minimum amount is 100 paise (₹1)
+    // Minimum amount validation (>= 100 paise)
     if (isNaN(amountInPaise) || amountInPaise < 100) {
       return res.status(400).json({
         status: false,
@@ -80,8 +78,9 @@ export default async function handler(req, res) {
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanUsername = String(username || 'Ojas User').trim();
     const creditsNum = Math.floor(amountInPaise / 100);
+    const rupeeValue = Math.round(amountInPaise / 100);
 
-    // Call Razorpay API to create standard order
+    // Initialize Razorpay SDK (100% Razorpay Checkout - No Static/External UPI)
     const razorpay = new Razorpay({
       key_id: keyId,
       key_secret: keySecret
@@ -119,14 +118,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Build UPI intent string & QR code for fallback mobile UPI apps
-    const productInfo = wantsVip ? `Ojas VIP + Credits` : `Ojas ${creditsNum} Credits`;
-    const rupeeValue = (amountInPaise / 100).toFixed(2);
-    const upiQuery = `pa=8279650137@amazonpay&pn=${encodeURIComponent('Ojas Print Service')}&am=${rupeeValue}&cu=INR&tn=${encodeURIComponent(productInfo)}&tr=${encodeURIComponent(rzpOrder.id)}`;
-    const upiString = `upi://pay?${upiQuery}`;
-    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(upiString)}`;
-
-    // Save pending payment record in Firestore if configured
+    // Save Pending Razorpay Order in Firestore
     if (admin.apps.length && cleanUserId) {
       try {
         const db = admin.firestore();
@@ -135,13 +127,14 @@ export default async function handler(req, res) {
           receiptId: receiptId,
           userId: cleanUserId,
           email: cleanEmail,
-          amountPaid: Number(rupeeValue),
+          amountPaid: rupeeValue,
           amountPaise: rzpOrder.amount,
           currency: rzpOrder.currency,
           creditsRequested: Number(creditsRequested || creditsNum),
           wantsVip: Boolean(wantsVip),
           vipDaysRequested: Number(vipDaysRequested || 0),
-          utrNumber: 'AUTO_WAITING',
+          utrNumber: 'RAZORPAY_PENDING',
+          paymentGateway: 'Razorpay',
           status: 'Pending',
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
@@ -150,7 +143,6 @@ export default async function handler(req, res) {
       }
     }
 
-    // Return format satisfying Razorpay Standard Checkout spec + frontend compatibility
     return res.status(200).json({
       status: true,
       order_id: rzpOrder.id,
@@ -158,9 +150,7 @@ export default async function handler(req, res) {
       amount: rzpOrder.amount,
       currency: rzpOrder.currency,
       receipt: receiptId,
-      key_id: keyId,
-      upi_string: upiString,
-      qr_code: qrCodeUrl
+      key_id: keyId
     });
 
   } catch (error) {
