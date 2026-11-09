@@ -942,14 +942,32 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
 
 window.closePdfViewer = function() { const modal = document.getElementById('pdfViewerModal'); if (modal) { modal.style.display = 'none'; modal.classList.add('hidden'); } const iframe = document.getElementById('pdfIframe'); if (iframe) iframe.src = ''; const htmlContainer = document.getElementById('htmlDocPreviewContainer'); if (htmlContainer) htmlContainer.innerHTML = ''; document.body.style.overflow = 'auto'; };
 
-window.loadUserHistory = async function() {
+window.loadUserHistory = async function(skipAutoSync = false) {
     const historyContainer = document.getElementById('historyTableBody'); if (!historyContainer) return;
     historyContainer.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading records...</td></tr>`;
     try {
         const q = query(collection(db, "history"), where("userId", "==", window.currentUserData.uid));
         const querySnapshot = await getDocs(q); window.historyData = [];
         querySnapshot.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
-        window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)); window.renderHistory('ALL');
+        window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+        window.renderHistory('ALL');
+
+        // Auto-sync any pending DOB Original PDF records in background so generated PDFs appear automatically
+        if (!skipAutoSync && window.historyData.length > 0) {
+            const pendingDobRecords = window.historyData.filter(item =>
+                item.fileId === 'SERVER_API_DOB_PRINT' && !item.formData?.HAS_PDF
+            ).slice(0, 5);
+            if (pendingDobRecords.length > 0) {
+                let anyUpdated = false;
+                for (const rec of pendingDobRecords) {
+                    const updated = await window.checkDobPrintOrderStatus(rec.id, null, true);
+                    if (updated) anyUpdated = true;
+                }
+                if (anyUpdated) {
+                    await window.loadUserHistory(true);
+                }
+            }
+        }
     } catch (err) { historyContainer.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 text-xs">Failed to load history.</td></tr>`; }
 };
 
@@ -1054,26 +1072,33 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
         if (data.adminCertCharged) { badgesHtml += `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Cert</span>`; }
         
         const isServerDobPrint = (data.fileId === 'SERVER_API_DOB_PRINT');
-        const apiStatus = String(data.formData?.API_STATUS || 'pending').toLowerCase();
+        const rawApiStatus = String(data.formData?.API_STATUS || 'pending').trim().toLowerCase();
         const hasPdf = Boolean(data.formData?.HAS_PDF);
+        const isDobSuccess = hasPdf || rawApiStatus === 'successful' || rawApiStatus === 'approved' || rawApiStatus === 'completed' || rawApiStatus === 'success';
+        const displayStatusLabel = isDobSuccess ? 'SUCCESSFUL' : (rawApiStatus === 'failed' || rawApiStatus === 'rejected' ? 'FAILED' : 'PENDING');
         const safeFileName = String(data.fileName || 'Document.pdf').replace(/'/g, "\\'");
 
         if (isServerDobPrint) {
-            badgesHtml += `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">Ref: ${data.formData?.APPLICATION_REF || 'N/A'}</span>`;
-            if (hasPdf || apiStatus === 'approved') {
-                badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-check-circle mr-0.5"></i>APPROVED</span>`;
+            badgesHtml += `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">BRN: ${data.formData?.BRN_NO || data.formData?.APPLICATION_REF || 'N/A'}</span>`;
+            if (isDobSuccess) {
+                badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-check-circle mr-0.5"></i>SUCCESSFUL</span>`;
+            } else if (displayStatusLabel === 'FAILED') {
+                badgesHtml += `<span class="bg-red-100 text-red-800 border border-red-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-circle-xmark mr-0.5"></i>FAILED</span>`;
             } else {
-                badgesHtml += `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5 animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>${apiStatus.toUpperCase()}</span>`;
+                badgesHtml += `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5 animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>PENDING</span>`;
             }
         }
 
         const actionBtnsHtml = isServerDobPrint
-            ? ((hasPdf || apiStatus === 'approved')
+            ? (isDobSuccess
                 ? `<div class="inline-flex items-center gap-1.5">
                        <button onclick="window.openServerDobPrintPdf('${data.id}', '${safeFileName}')" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button>
                        <button onclick="window.downloadServerDobPrintPdf('${data.id}')" class="inline-flex items-center gap-1 bg-green-600 text-white hover:bg-green-700 px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-download"></i> Download PDF</button>
                    </div>`
-                : `<button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>`)
+                : `<div class="inline-flex items-center gap-1.5">
+                       <button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>
+                       <button onclick="window.verifyAndDownloadDobPrintPdf('${data.id}', this)" class="inline-flex items-center gap-1 bg-green-600 text-white hover:bg-green-700 px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-download"></i> Download PDF</button>
+                   </div>`)
             : `<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button>`;
 
         historyContainer.innerHTML += `
@@ -1515,7 +1540,7 @@ window.openRazorpayModalNow = function() {
 };
 
 window.checkDobPrintOrderStatus = async function(docId, btnEl, silent = false) {
-    if (!docId || !window.fb.auth.currentUser) return;
+    if (!docId || !window.fb.auth.currentUser) return false;
     const origHtml = btnEl ? btnEl.innerHTML : '';
     if (btnEl) {
         btnEl.disabled = true;
@@ -1532,14 +1557,39 @@ window.checkDobPrintOrderStatus = async function(docId, btnEl, silent = false) {
             body: JSON.stringify({ action: 'check_status', docId })
         });
         const data = await res.json();
+        const isReady = Boolean(data.hasPdf || data.apiStatus === 'successful' || data.apiStatus === 'approved');
         if (!silent) {
-            alert(data.message || 'Status updated.');
+            alert(data.message || (isReady ? '✅ SUCCESSFUL! PDF डाउनलोड के लिए तैयार है।' : '⏳ स्टेटस: PENDING'));
+            await window.loadUserHistory(true);
         }
-        if (data.hasPdf || data.apiStatus === 'approved' || !silent) {
-            await window.loadUserHistory();
-        }
+        return isReady;
     } catch (err) {
         if (!silent) alert('Error checking status: ' + err.message);
+        return false;
+    } finally {
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = origHtml;
+        }
+    }
+};
+
+window.verifyAndDownloadDobPrintPdf = async function(docId, btnEl) {
+    if (!docId || !window.fb.auth.currentUser) return;
+    const origHtml = btnEl ? btnEl.innerHTML : '';
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Fetching PDF...';
+    }
+    try {
+        const isReady = await window.checkDobPrintOrderStatus(docId, null, true);
+        if (isReady) {
+            await window.loadUserHistory(true);
+            await window.downloadServerDobPrintPdf(docId);
+        } else {
+            await window.loadUserHistory(true);
+            alert('⏳ वर्तमान स्टेटस: PENDING\n\nअभी प्रिंट सर्वर पर आपकी PDF जनरेट हो रही है। जैसे ही स्टेटस SUCCESSFUL होगा, यहाँ से PDF डाउनलोड हो जाएगी।');
+        }
     } finally {
         if (btnEl) {
             btnEl.disabled = false;
@@ -1559,16 +1609,24 @@ window.openServerDobPrintPdf = async function(docId, fileName) {
     const htmlPreviewContainer = document.getElementById('htmlDocPreviewContainer');
     const spinner = document.getElementById('pdfLoadingSpinner');
     const printBtn = document.getElementById('modalPrintBtn');
+    const downloadBtn = document.getElementById('modalDownloadBtn');
+    const modalStampLabel = document.getElementById('modalStampToggleLabel');
 
+    if (modalStampLabel) modalStampLabel.classList.add('hidden');
     htmlPreviewContainer.style.display = 'none';
     htmlPreviewContainer.innerHTML = '';
     iframe.style.display = 'block';
     spinner.style.display = 'flex';
     iframe.src = proxyViewUrl;
 
+    if (downloadBtn) {
+        downloadBtn.onclick = function() {
+            window.open(proxyDownloadUrl, '_blank');
+        };
+    }
     if (printBtn) {
         printBtn.onclick = function() {
-            window.open(proxyDownloadUrl, '_blank');
+            window.open(proxyViewUrl, '_blank');
         };
     }
 
