@@ -1,4 +1,4 @@
-// === THEME MANAGER (DARK / LIGHT MODE) ===
+// === THEME MANAGER (DARK / LIGHT MODE) === 
 window.initTheme = function() {
     const saved = localStorage.getItem('ojas_theme');
     const isDark = saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
