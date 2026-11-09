@@ -3,7 +3,7 @@
 // (Forms, submitForm fix, FORM DRAFT PERSISTENCE & MINOR SERVICE FORM)
 // ============================================================================
 
-import "./config-templates.js"; 
+import "./config-templates.js";
 
 async function compressImage(file) {
     return new Promise((resolve) => {
@@ -190,6 +190,7 @@ window.submitForm = async function(event, serviceType) {
                 fileIdKey = serviceType === 'Caste' ? 'LOCAL_HTML_CASTE' : 'LOCAL_HTML_DOMICILE';
             }
             processedData.DOC_ID = targetDocId;
+            processedData.CREDITS_DEDUCTED = docCost;
 
             const docName = processedData.NAME || serviceType;
             const pdfFileName = `${docName} - ${serviceType}.pdf`;
@@ -318,12 +319,14 @@ window.submitForm = async function(event, serviceType) {
                 formElement.reset();
                 return;
             }
+            dataObj.CREDITS_DEDUCTED = docCost;
             await addDoc(collection(db, "history"), {
                 userId: window.currentUserData.uid,
                 fileName: pdfFileName,
                 fileId: result.fileId || 'N/A',
                 serviceType: serviceType,
                 formData: dataObj,
+                creditsDeducted: docCost,
                 timestamp: new Date()
             });
 
@@ -521,12 +524,15 @@ window.submitLocalAnnexureForm = async function(event, serviceType, fileIdKey) {
             return;
         }
 
+        const effectiveAnnexureCost = window.currentUserData.hasFreeAccess ? 0 : docCost;
+        formDataObj.CREDITS_DEDUCTED = effectiveAnnexureCost;
         await addDoc(collection(db, "history"), {
             userId: window.currentUserData.uid,
             fileName: pdfFileName,
             fileId: fileIdKey,
             serviceType: serviceType,
             formData: formDataObj,
+            creditsDeducted: effectiveAnnexureCost,
             timestamp: new Date()
         });
 
