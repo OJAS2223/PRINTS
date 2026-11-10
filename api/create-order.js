@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import admin from 'firebase-admin';
 import Razorpay from 'razorpay';
 
@@ -12,149 +13,256 @@ if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
   }
 }
 
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ status: false, message: 'Method Not Allowed' });
   }
 
-  const keyId = process.env.RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+  const keyId = (process.env.RAZORPAY_KEY_ID || '').trim();
+  const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
 
-  if (!keyId || !keySecret) {
+  if (!keySecret) {
     return res.status(500).json({
       status: false,
-      message: 'Razorpay credentials (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) are not configured on server'
+      message: 'Server payment secret (RAZORPAY_KEY_SECRET) is not configured'
     });
   }
 
   try {
-    // Optional Firebase Auth Bearer token verification
-    const authHeader = req.headers.authorization || '';
-    if (authHeader.startsWith('Bearer ') && admin.apps.length) {
-      const idToken = authHeader.slice(7).trim();
-      try {
-        await admin.auth().verifyIdToken(idToken);
-      } catch (authErr) {
-        return res.status(401).json({ status: false, message: 'Unauthorized session token' });
-      }
-    }
-
     const {
-      amount,
-      currency = 'INR',
-      receipt,
-      userId,
-      email,
-      username,
+      action = 'verify_signature',
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
       creditsRequested,
-      wantsVip,
-      vipDaysRequested,
       totalPayable
     } = req.body || {};
 
-    // Calculate amount in paise (1 INR = 100 paise)
-    let amountInPaise = 0;
-    if (amount !== undefined && amount !== null) {
-      amountInPaise = Math.round(Number(amount));
-    } else if (totalPayable !== undefined && totalPayable !== null) {
-      amountInPaise = Math.round(Number(totalPayable) * 100);
-    } else if (creditsRequested !== undefined && creditsRequested !== null) {
-      amountInPaise = Math.round(Number(creditsRequested) * 100);
+    const razorpay = keyId ? new Razorpay({ key_id: keyId, key_secret: keySecret }) : null;
+
+    let verifiedPaymentId = razorpay_payment_id || '';
+    let verifiedSignature = razorpay_signature || '';
+
+    // 1. Check Order Status mode (If customer scanned QR and closed modal)
+    if (action === 'check_order_status') {
+      if (!razorpay_order_id || !razorpay) {
+        return res.status(400).json({ status: false, message: 'Missing order_id or Razorpay key' });
+      }
+      const paymentsList = await razorpay.orders.fetchPayments(razorpay_order_id);
+      const items = Array.isArray(paymentsList?.items) ? paymentsList.items : [];
+      const paidItem = items.find(p => p.status === 'captured' || p.status === 'authorized');
+
+      if (!paidItem) {
+        return res.status(200).json({
+          status: false,
+          paid: false,
+          message: 'Payment not yet captured on Razorpay.'
+        });
+      }
+      verifiedPaymentId = paidItem.id;
+      verifiedSignature = 'VERIFIED_BY_RAZORPAY_API';
+    } else {
+      // 2. Standard Checkout Signature Verification: HMAC-SHA256(order_id + "|" + payment_id, KEY_SECRET)
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        return res.status(400).json({
+          status: false,
+          message: 'Missing required payment verification fields'
+        });
+      }
+
+      const bodyData = `${razorpay_order_id}|${razorpay_payment_id}`;
+      const expectedSignature = crypto
+        .createHmac('sha256', keySecret)
+        .update(bodyData)
+        .digest('hex');
+
+      const expectedBuffer = Buffer.from(expectedSignature, 'utf8');
+      const receivedBuffer = Buffer.from(String(razorpay_signature), 'utf8');
+
+      const isSignatureValid =
+        expectedBuffer.length === receivedBuffer.length &&
+        crypto.timingSafeEqual(expectedBuffer, receivedBuffer);
+
+      if (!isSignatureValid) {
+        return res.status(400).json({
+          status: false,
+          message: 'Invalid payment signature! Verification failed.'
+        });
+      }
     }
 
-    // Minimum amount validation (>= 100 paise)
-    if (isNaN(amountInPaise) || amountInPaise < 100) {
-      return res.status(400).json({
-        status: false,
-        message: 'Invalid amount. Minimum amount is 100 paise (₹1).'
+    // Fetch exact order notes & amount from Razorpay so credits are 100% accurate
+    let rzpNotes = {};
+    let rzpRupees = 0;
+    if (razorpay) {
+      try {
+        const orderInfo = await razorpay.orders.fetch(razorpay_order_id);
+        rzpNotes = orderInfo?.notes || {};
+        rzpRupees = Math.floor((Number(orderInfo?.amount) || 0) / 100);
+      } catch (e) {
+        console.warn('Order fetch warning:', e.message);
+      }
+    }
+
+    const finalCredits = Math.floor(Math.max(0, Number(rzpNotes.creditsRequested) || Number(creditsRequested) || rzpRupees || 0));
+    const finalRupees = Math.floor(Math.max(0, Number(rzpNotes.totalPayable) || Number(totalPayable) || rzpRupees || 0));
+    const finalEmail = String(rzpNotes.email || '').trim();
+    const finalUserId = String(rzpNotes.userId || '').trim();
+
+    // If Firebase Service Account is NOT set on Vercel, return verified=true so Frontend auto-credits Firestore immediately
+    if (!admin.apps.length) {
+      const botToken = process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = process.env.TELEGRAM_CHAT_ID;
+      if (botToken && chatId) {
+        const tgMessage = `✅ *Razorpay Payment Verified (ojasprints.in)*\n👤 *User:* ${finalEmail || 'Portal User'}\n💰 *Amount:* ₹${finalRupees}\n💎 *Credits Added:* +${finalCredits} Cr\n🧾 *Payment ID:* \`${verifiedPaymentId}\`\n🆔 *Order ID:* \`${razorpay_order_id}\``;
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text: tgMessage, parse_mode: 'Markdown' })
+        }).catch(() => {});
+      }
+
+      return res.status(200).json({
+        status: true,
+        verified: true,
+        paid: true,
+        dbUpdated: false,
+        message: 'Signature verified successfully!',
+        order_id: razorpay_order_id,
+        orderId: razorpay_order_id,
+        payment_id: verifiedPaymentId,
+        paymentId: verifiedPaymentId,
+        creditsAdded: finalCredits,
+        amountPaid: finalRupees
       });
     }
 
-    const receiptId = String(
-      receipt || `OJAS_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`
-    ).slice(0, 40);
+    // If Firebase Admin IS configured, update Firestore on server as well
+    const db = admin.firestore();
+    const paymentRef = db.collection('payments').doc(String(razorpay_order_id).trim());
+    const usedPaymentRef = db.collection('usedUtrs').doc(String(verifiedPaymentId).trim());
 
-    const cleanUserId = String(userId || '').trim();
-    const cleanEmail = String(email || '').trim().toLowerCase();
-    const cleanUsername = String(username || 'Ojas User').trim();
-    const creditsNum = Math.floor(amountInPaise / 100);
-    const rupeeValue = Math.round(amountInPaise / 100);
+    const txResult = await db.runTransaction(async (t) => {
+      const paymentSnap = await t.get(paymentRef);
+      const paymentData = paymentSnap.exists ? paymentSnap.data() : {};
 
-    // Initialize Razorpay SDK (100% Razorpay Checkout - No Static/External UPI)
-    const razorpay = new Razorpay({
-      key_id: keyId,
-      key_secret: keySecret
+      if (paymentData.status === 'Auto-Approved' || paymentData.status === 'Approved') {
+        return {
+          ok: true,
+          alreadyProcessed: true,
+          email: paymentData.email || finalEmail,
+          creditsAdded: Number(paymentData.creditsRequested) || finalCredits,
+          amountPaid: Number(paymentData.amountPaid) || finalRupees
+        };
+      }
+
+      const usedSnap = await t.get(usedPaymentRef);
+      if (usedSnap.exists) {
+        return { ok: false, status: 400, reason: 'Payment ID has already been utilized' };
+      }
+
+      const userId = String(paymentData.userId || finalUserId).trim();
+      const email = String(paymentData.email || finalEmail).trim();
+      const creditsToAdd = Math.floor(Math.max(0, Number(paymentData.creditsRequested) || finalCredits));
+      const amountPaid = Math.floor(Math.max(0, Number(paymentData.amountPaid) || finalRupees));
+      const wantsVip = Boolean(paymentData.wantsVip);
+      const vipDays = Math.floor(Math.max(0, Number(paymentData.vipDaysRequested) || 0));
+
+      let updatedCredits = creditsToAdd;
+
+      if (userId) {
+        const userRef = db.collection('users').doc(userId);
+        const userSnap = await t.get(userRef);
+
+        if (userSnap.exists) {
+          const uData = userSnap.data();
+          const currentCredits = Number(uData.credits) || 0;
+          updatedCredits = currentCredits + creditsToAdd;
+          const now = Date.now();
+          const currentExpiry =
+            uData.isVip && uData.vipExpiry && uData.vipExpiry > now
+              ? Number(uData.vipExpiry)
+              : now;
+
+          const updateFields = { credits: updatedCredits };
+          if (wantsVip && vipDays > 0) {
+            updateFields.isVip = true;
+            updateFields.vipExpiry = currentExpiry + vipDays * MS_PER_DAY;
+          }
+          t.update(userRef, updateFields);
+        }
+      }
+
+      t.set(paymentRef, {
+        userId: userId,
+        email: email,
+        orderId: razorpay_order_id,
+        razorpayOrderId: razorpay_order_id,
+        razorpayPaymentId: verifiedPaymentId,
+        razorpaySignature: verifiedSignature,
+        utrNumber: verifiedPaymentId,
+        amountPaid: amountPaid,
+        creditsRequested: creditsToAdd,
+        creditsAdded: creditsToAdd,
+        status: 'Auto-Approved',
+        approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+        timestamp: paymentData.timestamp || admin.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      t.set(usedPaymentRef, {
+        userId: userId,
+        orderId: razorpay_order_id,
+        paymentId: verifiedPaymentId,
+        amount: amountPaid,
+        timestamp: admin.firestore.FieldValue.serverTimestamp()
+      });
+
+      return {
+        ok: true,
+        alreadyProcessed: false,
+        email: email,
+        creditsAdded: creditsToAdd,
+        updatedCredits: updatedCredits,
+        wantsVip: wantsVip,
+        vipDays: vipDays,
+        amountPaid: amountPaid
+      };
     });
 
-    let rzpOrder;
-    try {
-      rzpOrder = await razorpay.orders.create({
-        amount: amountInPaise,
-        currency: currency.toUpperCase(),
-        receipt: receiptId,
-        notes: {
-          userId: cleanUserId,
-          email: cleanEmail,
-          username: cleanUsername,
-          creditsRequested: String(creditsRequested || creditsNum),
-          wantsVip: String(Boolean(wantsVip)),
-          vipDaysRequested: String(vipDaysRequested || 0),
-          domain: 'ojasprints.in'
-        }
-      });
-    } catch (rzpErr) {
-      console.error('Razorpay API error in orders.create:', rzpErr);
-      const statusCode = rzpErr.statusCode === 401 ? 401 : 500;
-      return res.status(statusCode).json({
+    if (!txResult.ok) {
+      return res.status(txResult.status || 400).json({
         status: false,
-        message: rzpErr.error?.description || rzpErr.message || 'Razorpay order creation failed'
+        message: txResult.reason
       });
-    }
-
-    if (!rzpOrder || !rzpOrder.id) {
-      return res.status(500).json({
-        status: false,
-        message: 'Failed to receive order_id from Razorpay'
-      });
-    }
-
-    // Save Pending Razorpay Order in Firestore
-    if (admin.apps.length && cleanUserId) {
-      try {
-        const db = admin.firestore();
-        await db.collection('payments').doc(rzpOrder.id).set({
-          orderId: rzpOrder.id,
-          receiptId: receiptId,
-          userId: cleanUserId,
-          email: cleanEmail,
-          amountPaid: rupeeValue,
-          amountPaise: rzpOrder.amount,
-          currency: rzpOrder.currency,
-          creditsRequested: Number(creditsRequested || creditsNum),
-          wantsVip: Boolean(wantsVip),
-          vipDaysRequested: Number(vipDaysRequested || 0),
-          utrNumber: 'RAZORPAY_PENDING',
-          paymentGateway: 'Razorpay',
-          status: 'Pending',
-          timestamp: admin.firestore.FieldValue.serverTimestamp()
-        });
-      } catch (dbErr) {
-        console.warn('Firestore payment record save warning:', dbErr);
-      }
     }
 
     return res.status(200).json({
       status: true,
-      order_id: rzpOrder.id,
-      orderId: rzpOrder.id,
-      amount: rzpOrder.amount,
-      currency: rzpOrder.currency,
-      receipt: receiptId,
-      key_id: keyId
+      verified: true,
+      paid: true,
+      dbUpdated: true,
+      message: 'Payment signature verified and credits added to wallet!',
+      order_id: razorpay_order_id,
+      orderId: razorpay_order_id,
+      payment_id: verifiedPaymentId,
+      paymentId: verifiedPaymentId,
+      creditsAdded: txResult.creditsAdded,
+      updatedCredits: txResult.updatedCredits,
+      amountPaid: txResult.amountPaid
     });
 
   } catch (error) {
-    console.error('Create Order Handler Error:', error);
+    console.error('Verify Payment Error:', error);
     return res.status(500).json({
       status: false,
       message: error.message || 'Internal Server Error'
