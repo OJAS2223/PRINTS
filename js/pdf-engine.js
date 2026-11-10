@@ -310,7 +310,7 @@ Verified URL: ${verifyUrl}`;
 };
 
 // ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹140) PROCESSORS =================
-// === AUTHENTIC RANDOM INDIAN GAZETTE ENTRIES POOL (ALL IN ENGLISH) ===
+// === LARGE POOL OF AUTHENTIC INDIAN GAZETTE ENTRIES (ALL IN ENGLISH) ===
 window.RANDOM_GAZETTE_INDIAN_POOL = [
     {
         body: "I, hitherto known as PRABHAS MISTRY son of Shri RAM SARUP SHARMA, employed as Mason, residing at L-117, Gali No. 10, Laxman Puri, Pahar Ganj, New Delhi-110055, have changed my name and shall hereafter be known as PRABHAKAR SHARMA.",
@@ -338,7 +338,7 @@ window.RANDOM_GAZETTE_INDIAN_POOL = [
         signCaption: "[Signature of Guardian]"
     },
     {
-        body: "I, hitherto known as SANDEEP AGARWAL son of Sh. BAL KRISHNA AGARWAL, employed as Jr. Engineer in C.P.W.D., residing at I-2088, Gaur Green City, Vaibhav Khand, Indirapuram, Ghaziabad, Uttar Pradesh-201014, have changed my name and shall hereafter be known as SANDEEP AGRAWAL.",
+        body: "I, hitherto known as SANDEEP AGARWAL son of Sh. BAL KRISHNA AGARWAL, employed as Jr. Engineer in C.P.W.D., residing at I-2088, Gaur Green City, Vaibhav Khand, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as SANDEEP AGRAWAL.",
         signName: "SANDEEP AGARWAL",
         signCaption: "[Signature (in existing old name)]"
     },
@@ -353,50 +353,53 @@ window.RANDOM_GAZETTE_INDIAN_POOL = [
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as KULDEEP JUDGE son of GURCHARAN SINGH, residing at Village Nurpur Sethan, Ferozepur-152004, Punjab, have changed my name and shall hereafter be known as KULDEEP SINGH.",
-        signName: "KULDEEP JUDGE",
+        body: "I, hitherto known as ROMILLA BAGGA wife of Sh. SEERAJ BAGGA, employed as MCD Primary School Teacher, residing at C-71, Neeti Bagh, New Delhi-110049, have changed my name and shall hereafter be known as ROMILLA SEERAJ BAGGA.",
+        signName: "ROMILLA BAGGA",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as DEEPAK KUMAR son of SURAT RAM, residing at H.No. 615/13, Gali No. 13, Mandoli Extn, Delhi-110093, have changed my name and shall hereafter be known as DEEPAK SHARMA.",
-        signName: "DEEPAK KUMAR",
+        body: "I, hitherto known as SATISH CHAND son of Sh. AMI CHAND, residing at 43, Block-P, Sector-12, Noida, Gautam Budh Nagar, Uttar Pradesh-201301, have changed my name and shall hereafter be known as SATISH TITORIA.",
+        signName: "SATISH CHAND",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, ACHINT GOYAL son of RADHEY SHYAM GOYAL, residing at House No.-27, Second Floor, Pocket-5A, Rohini Sector-7, North West, Delhi-110085, have changed the name of my minor daughter SAANVI GOYAL, aged about 9 years and she shall hereafter be known as Aanya GOYAL.",
-        signName: "ACHINT GOYAL",
-        signCaption: "[Signature of Guardian]"
+        body: "I, hitherto known as MUKUL K. MEHTA son of Sh. KULDIP MEHTA, employed as Chartered Accountant in Practice, residing at 706C, 1st Floor, Sector-22B, Near Anand Farm House, Gurgaon-122001, have changed my name and shall hereafter be known as MUKKUL MEHTA.",
+        signName: "MUKUL K. MEHTA",
+        signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as RAJAT MEHRA son of SUDHIR MEHRA, residing at 12, Rani Ka Bagh, Park Lane, Amritsar, Punjab-143001, have changed my name and shall hereafter be known as RAJJAT KUMAR MEHRA.",
-        signName: "RAJAT MEHRA",
+        body: "I, hitherto known as KAVITA NEGI wife of Sh. ANAND SINGH NEGI, a housewife, residing at 56, Gali No. 41, B-Block, Kaushik Enclave, Burari, Delhi-110084, have changed my name and shall hereafter be known as KAMLA NEGI.",
+        signName: "KAVITA NEGI",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, hitherto known as SANJEEV KUMAR son of Sh. SURENDRA KUMAR, employed as Technical Support Supervisor in Dell Computers, residing at 46, Gill Colony, Near Montessori School, Saharanpur, have changed my name and shall hereafter be known as SANJEEV KUMAR ARORA.",
+        signName: "SANJEEV KUMAR",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, hitherto known as BASANT son of Sh. ANUP KUMAR, residing at VPO-Morna, District-Muzaffarnagar, Uttar Pradesh, Pin-251316, have changed my name and shall hereafter be known as BASANT MAHESHWARI.",
+        signName: "BASANT",
         signCaption: "[Signature (in existing old name)]"
     }
 ];
 
-window.pickTwoRandomGazetteEntries = function(seedStr = '') {
-    const pool = window.RANDOM_GAZETTE_INDIAN_POOL;
-    let idx1 = Math.floor(Math.random() * pool.length);
-    let idx2 = (idx1 + 1 + Math.floor(Math.random() * (pool.length - 1))) % pool.length;
+window.pickTwoRandomGazetteEntries = function(excludeName = '') {
+    const cleanExclude = String(excludeName || '').trim().toUpperCase();
+    const pool = window.RANDOM_GAZETTE_INDIAN_POOL.filter(item => !cleanExclude || !item.signName.includes(cleanExclude));
+    const list = pool.length >= 2 ? pool : window.RANDOM_GAZETTE_INDIAN_POOL;
 
-    if (seedStr) {
-        let hash = 0;
-        for (let i = 0; i < seedStr.length; i++) {
-            hash = ((hash << 5) - hash) + seedStr.charCodeAt(i);
-            hash |= 0;
-        }
-        idx1 = Math.abs(hash) % pool.length;
-        idx2 = (idx1 + 3 + (Math.abs(hash >> 3) % (pool.length - 1))) % pool.length;
-        if (idx1 === idx2) idx2 = (idx1 + 1) % pool.length;
-    }
-    return [pool[idx1], pool[idx2]];
+    const idx1 = Math.floor(Math.random() * list.length);
+    let idx2 = Math.floor(Math.random() * (list.length - 1));
+    if (idx2 >= idx1) idx2 += 1;
+
+    return [list[idx1], list[idx2]];
 };
 
 window.processGazetteData = function(rawFormObj) {
-    // Fixed Issue No. 53 & Fixed Dates as requested
     const fixedIssueNo = "53";
-    const fixedEnDateRange = "NEW DELHI, SATURDAY, 24-Jun-2021 - 26-Mar-2013 (Ashadh 3, 1943)";
-    const fixedHiDateRange = "नई दिल्ली, शनिवार, 24-जून-2021 - 26-मार्च-2013 (आषाढ़ 3, 1943)";
+    const fixedEnDateRange = "NEW DELHI, SATURDAY, 24-Jun-2021—26-Mar-2013 (Ashadh 3, 1943)";
+    const fixedHiDateRange = "नई दिल्ली, शनिवार, 24-जून-2021—26-मार्च-2013 (आषाढ़ 3, 1943)";
     const fixedIssueDate = "24-Jun-2021";
 
     const gazetteNo = (rawFormObj.GAZETTE_NO || '').toString().trim().toUpperCase() || "CG-DL-W-2021-232514";
@@ -416,7 +419,7 @@ window.processGazetteData = function(rawFormObj) {
         relWordEn = 'wife of';
     }
 
-    // Customized Section (From Form)
+    // Section 2: Customized Data from Portal Form (Plain uppercase print style matching 157413.pdf)
     let englishBody = '';
     let signName = oldName;
     let signCaption = '[Signature (in existing old name)]';
@@ -440,8 +443,9 @@ window.processGazetteData = function(rawFormObj) {
         signCaption = '[Signature (in existing old name)]';
     }
 
-    // Pick 2 distinct Random Indian Entries in English (persisted if already saved in record)
-    const [rand1, rand2] = window.pickTwoRandomGazetteEntries(rawFormObj.RANDOM_SEED || `${oldName}_${newName}_${Date.now()}`);
+    // Pick 2 distinct Random Indian Entries every time a new Gazette is generated
+    // (And preserve them if viewing an already generated record from History)
+    const [rand1, rand2] = window.pickTwoRandomGazetteEntries(oldName);
 
     const randomBody1 = rawFormObj.RANDOM_ENGLISH_BODY_1 || rand1.body;
     const randomSign1 = rawFormObj.RANDOM_SIGN_NAME_1 || rand1.signName;
@@ -467,28 +471,22 @@ window.processGazetteData = function(rawFormObj) {
         ADDRESS: address,
         CHANGE_TYPE: changeMode,
 
-        // Section 1 (Left Column - Auto Random Indian Data #1 in English)
+        // Section 1 (Left Column Below NOTICE Box -> Random Indian Data #1)
         RANDOM_ENGLISH_BODY_1: randomBody1,
         RANDOM_SIGN_NAME_1: randomSign1,
         RANDOM_SIGN_CAPTION_1: randomCap1,
-        HINDI_NOTICE_BODY: randomBody1,
-        HINDI_SIGN_NAME: randomSign1,
-        HINDI_SIGN_CAPTION: randomCap1,
 
-        // Section 2 (Right Column Top - Custom Data from User Form)
+        // Section 2 (Right Column Top -> Custom Data from User Form)
         ENGLISH_NOTICE_BODY: englishBody,
         SIGN_NAME: signName,
         SIGN_CAPTION: signCaption,
 
-        // Section 3 (Right Column Bottom - Auto Random Indian Data #2 in English)
+        // Section 3 (Right Column Bottom -> Random Indian Data #2)
         RANDOM_ENGLISH_BODY_2: randomBody2,
         RANDOM_SIGN_NAME_2: randomSign2,
         RANDOM_SIGN_CAPTION_2: randomCap2,
-        SECOND_ENGLISH_BODY: randomBody2,
-        SECOND_SIGN_NAME: randomSign2,
-        SECOND_SIGN_CAPTION: randomCap2,
 
-        GI_CODE: '1-390 GI/2021',
+        GI_CODE: '1—390 GI/2013',
         PAGE_NO: rawFormObj.PAGE_NO || '1235'
     };
 };
