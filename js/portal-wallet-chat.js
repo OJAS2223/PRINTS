@@ -30,7 +30,7 @@ if (document.readyState === 'loading') {
 
 // ============================================================================
 // FILE: js/portal-wallet-chat.js (COMPLETE UPDATED VERSION)
-// (Auth, Razorpay Auto-Verify Wallet, Full Passbook Ledger, Live Chat & History)
+// (Auth, 100% Auto-Credit Razorpay Wallet, Passbook Ledger, Live Chat & History)
 // ============================================================================
 
 import "./config-templates.js?v=6.0";
@@ -55,6 +55,7 @@ window.userChatUnsubscribe = null;
 window.activePaymentUnsubscribe = null;
 window.currentActiveOrderId = null;
 window.currentRzpOrderData = null;
+window.isCreditingInProgress = false;
 window.currentUserChatData = { messages: [], unreadByUser: false };
 
 window.portalConfigState = {
@@ -270,7 +271,6 @@ function startUserProfileListener(uid) {
         const data = snap.data();
         window.currentUserData.credits = data.credits || 0;
 
-        // Sync stealth states cleanly
         window.currentUserData.allowEvoter = data.allowEvoter !== false;
         window.currentUserData.allowMinor = data.allowMinor !== false;
         window.currentUserData.allowDomicile = data.allowDomicile !== false;
@@ -282,7 +282,6 @@ function startUserProfileListener(uid) {
         window.currentUserData.allowDobPrint = data.allowDobPrint !== false;
         window.currentUserData.allowAnnexures = data.allowAnnexures !== false;
 
-        // Sync Targeted Personal Banner State
         window.currentUserData.personalBannerEnabled = !!data.personalBannerEnabled;
         window.currentUserData.personalBannerBadge = data.personalBannerBadge || "NOTICE";
         window.currentUserData.personalBannerTitle = data.personalBannerTitle || "";
@@ -763,7 +762,6 @@ function setupDashboard(userData) {
     const adminLink = document.getElementById('adminPanelLink');
     const gearAdminLink = document.getElementById('gearAdminPanelLink');
 
-    // Only unlock Admin Panel link if logged-in user is Admin; keep closed for normal users
     if (userData.isAdmin) {
         sessionStorage.setItem('ojas_separate_admin_verified', 'true');
         if (adminLink) adminLink.style.display = 'inline-flex';
@@ -882,7 +880,7 @@ window.changeUserPassword = async function(event) {
     }
 };
 
-// ================= 100% RAZORPAY STANDARD CHECKOUT (AUTO-VERIFY) =================
+// ================= 100% RAZORPAY STANDARD CHECKOUT & GUARANTEED AUTO-CREDIT =================
 window.calculateCredits = function() {
     const rawCreditAmt = Math.floor(Math.max(0, parseFloat(document.getElementById('rupeeAmount')?.value) || 0));
     window.currentRechargeCredits = rawCreditAmt;
@@ -895,6 +893,149 @@ window.calculateCredits = function() {
     if (calcCreditsEl) calcCreditsEl.innerText = `${rawCreditAmt} Cr`;
     const totalPayableDisplay = document.getElementById('totalPayableDisplay');
     if (totalPayableDisplay) totalPayableDisplay.innerText = `₹${window.currentTotalPayable}`;
+};
+
+// Guaranteed Firestore Auto-Credit Helper (Prevents duplicate credit & updates User Wallet + Passbook)
+window.creditWalletAfterVerifiedPayment = async function(verifyData) {
+    if (window.isCreditingInProgress) return;
+    window.isCreditingInProgress = true;
+
+    try {
+        const uid = window.currentUserData.uid;
+        const email = window.currentUserData.email;
+        const orderId = verifyData.orderId || window.currentActiveOrderId;
+        const paymentId = verifyData.paymentId || 'RAZORPAY_VERIFIED';
+        const creditsToAdd = Number(verifyData.creditsAdded) || Number(window.currentRechargeCredits) || 0;
+        const amountPaid = Number(verifyData.amountPaid) || Number(window.currentTotalPayable) || creditsToAdd;
+
+        if (creditsToAdd <= 0) {
+            throw new Error('Invalid credits amount.');
+        }
+
+        const payDocRef = doc(db, "payments", orderId);
+        const paySnap = await getDoc(payDocRef);
+
+        // Check if already credited to avoid double-addition
+        if (paySnap.exists()) {
+            const pData = paySnap.data();
+            if (pData.status === 'Auto-Approved' || pData.status === 'Approved') {
+                const uSnap = await getDoc(doc(db, "users", uid));
+                if (uSnap.exists()) {
+                    window.currentUserData.credits = Number(uSnap.data().credits) || 0;
+                    const crEl = document.getElementById('displayCredits');
+                    if (crEl) crEl.innerText = window.currentUserData.credits;
+                }
+                window.showPaymentSuccessScreen(amountPaid, creditsToAdd, paymentId);
+                return;
+            }
+        }
+
+        // 1. Fetch current user credits from Firestore & add new credits
+        const userRef = doc(db, "users", uid);
+        const userSnap = await getDoc(userRef);
+        const currentCredits = userSnap.exists() ? (Number(userSnap.data().credits) || 0) : (Number(window.currentUserData.credits) || 0);
+        const newCredits = currentCredits + creditsToAdd;
+
+        await updateDoc(userRef, {
+            credits: newCredits,
+            lastRechargedAt: new Date()
+        });
+
+        // 2. Save Auto-Approved payment record in Firestore Passbook
+        await setDoc(payDocRef, {
+            userId: uid,
+            email: email,
+            orderId: orderId,
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+            utrNumber: paymentId,
+            amountPaid: amountPaid,
+            creditsRequested: creditsToAdd,
+            creditsAdded: creditsToAdd,
+            wantsVip: false,
+            vipDaysRequested: 0,
+            vipPlanFee: 0,
+            status: 'Auto-Approved',
+            note: `Razorpay Instant Auto-Recharge (${paymentId})`,
+            timestamp: paySnap.exists() && paySnap.data().timestamp ? paySnap.data().timestamp : new Date(),
+            verifiedAt: new Date()
+        }, { merge: true });
+
+        // 3. Update UI immediately
+        window.currentUserData.credits = newCredits;
+        const crEl = document.getElementById('displayCredits');
+        if (crEl) crEl.innerText = newCredits;
+
+        notifyAdminSecurely({
+            type: "PAYMENT_AUTO_APPROVED",
+            user: email,
+            amount: amountPaid,
+            credits: creditsToAdd,
+            utr: paymentId,
+            orderId: orderId
+        });
+
+        window.showPaymentSuccessScreen(amountPaid, creditsToAdd, paymentId);
+    } finally {
+        window.isCreditingInProgress = false;
+    }
+};
+
+window.showPaymentSuccessScreen = function(amountPaid, creditsAdded, paymentId) {
+    if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe();
+    window.currentActiveOrderId = null;
+    const walletUI = document.getElementById('walletMainUI');
+    if (walletUI) {
+        walletUI.innerHTML = `
+            <div class="p-6 bg-green-50 rounded-2xl border-2 border-green-400 text-center space-y-2">
+                <i class="fa-solid fa-circle-check text-5xl text-green-600 mb-2 animate-bounce"></i>
+                <h2 class="text-xl font-black text-green-900">पेमेंट सफल! (Auto-Verified)</h2>
+                <p class="text-xs font-bold text-green-700">आपका ₹${amountPaid} का पेमेंट तुरंत वेरीफाई हो गया है और आपके वॉलेट में <strong>+${creditsAdded} Credits</strong> जोड़ दिए गए हैं!</p>
+                <p class="text-[11px] font-mono text-slate-500">Payment ID: ${paymentId}</p>
+                <div class="pt-3">
+                    <button onclick="window.switchService('payments_history')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2.5 px-6 rounded-xl text-xs shadow">वॉलेट पासबुक देखें</button>
+                </div>
+            </div>`;
+    }
+};
+
+window.checkActiveRazorpayOrderStatus = async function(silent = false) {
+    const orderId = window.currentActiveOrderId || window.currentRzpOrderData?.order_id;
+    if (!orderId) return;
+
+    const statusBanner = document.getElementById('rzpPaymentStatusBanner');
+    if (!silent && statusBanner) {
+        statusBanner.className = "p-3.5 rounded-xl bg-blue-50 border border-blue-300 text-blue-900 text-xs font-bold text-center mt-3";
+        statusBanner.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Razorpay से पेमेंट स्टेटस चेक किया जा रहा है...`;
+        statusBanner.style.display = 'block';
+    }
+
+    try {
+        const res = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'check_order_status',
+                razorpay_order_id: orderId,
+                creditsRequested: window.currentRechargeCredits,
+                totalPayable: window.currentTotalPayable
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.status && data.verified) {
+            await window.creditWalletAfterVerifiedPayment(data);
+        } else if (!silent && statusBanner) {
+            statusBanner.className = "p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold text-center mt-3 space-y-2";
+            statusBanner.innerHTML = `
+                <div><i class="fa-solid fa-circle-info text-amber-600 mr-1"></i> अभी पेमेंट कन्फर्म नहीं हुआ है। यदि आपने QR पर पेमेंट कर दिया है तो नीचे बटन दबाएं:</div>
+                <button type="button" onclick="window.checkActiveRazorpayOrderStatus(false)" class="bg-amber-500 hover:bg-amber-600 text-dark-950 font-black px-4 py-1.5 rounded-lg text-xs shadow-sm">
+                    <i class="fa-solid fa-rotate mr-1"></i> Check &amp; Auto-Credit Now
+                </button>`;
+            statusBanner.style.display = 'block';
+        }
+    } catch (e) {
+        if (!silent) console.error('Order status check error:', e);
+    }
 };
 
 window.generateQR = async function() {
@@ -940,9 +1081,9 @@ window.generateQR = async function() {
                 receipt: `OJAS_${Date.now()}`,
                 totalPayable: window.currentTotalPayable,
                 creditsRequested: window.currentRechargeCredits,
-                wantsVip: window.currentWantsVip,
-                vipDaysRequested: window.currentVipDays,
-                vipPlanFee: window.currentVipPlanFee
+                wantsVip: false,
+                vipDaysRequested: 0,
+                vipPlanFee: 0
             })
         });
 
@@ -959,26 +1100,27 @@ window.generateQR = async function() {
         }
 
         window.currentRzpOrderData = orderData;
-        window.currentActiveOrderId = orderData.orderId || orderData.order_id;
+        window.currentActiveOrderId = orderData.order_id;
 
-        if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe();
-        window.activePaymentUnsubscribe = onSnapshot(doc(db, "payments", window.currentActiveOrderId), async (snap) => {
-            if (snap.exists() && (snap.data().status === 'Auto-Approved' || snap.data().status === 'Approved')) {
-                if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe();
-                window.currentActiveOrderId = null;
-                const uSnap = await getDoc(doc(db, "users", window.currentUserData.uid));
-                if (uSnap.exists()) {
-                    const updatedUser = uSnap.data();
-                    window.currentUserData.credits = updatedUser.credits || 0;
-                    const crEl = document.getElementById('displayCredits');
-                    if (crEl) crEl.innerText = window.currentUserData.credits;
-                }
-                const walletUI = document.getElementById('walletMainUI');
-                if (walletUI) {
-                    walletUI.innerHTML = `<div class="p-6 bg-green-50 rounded-2xl border-2 border-green-400 text-center space-y-2"><i class="fa-solid fa-circle-check text-5xl text-green-600 mb-2 animate-bounce"></i><h2 class="text-xl font-black text-green-900">पेमेंट सफल! (Auto-Verified)</h2><p class="text-xs font-bold text-green-700">आपका ₹${window.currentTotalPayable} का पेमेंट वेरीफाई हो गया है और आपके अकाउंट में तुरंत क्रेडिट्स जोड़ दिए गए हैं!</p><div class="pt-3"><button onclick="window.switchService('payments_history')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2.5 px-6 rounded-xl text-xs shadow">वॉलेट पासबुक देखें</button></div></div>`;
-                }
-            }
-        });
+        // Save Pending Order in Firestore immediately so Passbook & Admin have full record
+        try {
+            await setDoc(doc(db, "payments", orderData.order_id), {
+                userId: window.currentUserData.uid,
+                email: window.currentUserData.email,
+                orderId: orderData.order_id,
+                razorpayOrderId: orderData.order_id,
+                amountPaid: window.currentTotalPayable,
+                creditsRequested: window.currentRechargeCredits,
+                wantsVip: false,
+                vipDaysRequested: 0,
+                vipPlanFee: 0,
+                utrNumber: orderData.order_id,
+                status: 'Pending',
+                timestamp: new Date()
+            });
+        } catch (dbErr) {
+            console.warn('Initial pending order save warning:', dbErr);
+        }
 
         window.openRazorpayModalNow();
     } catch (err) {
@@ -1105,20 +1247,16 @@ window.openRazorpayModalNow = function() {
             color: '#4f46e5'
         },
         modal: {
-            ondismiss: function () {
-                const statusBanner = document.getElementById('rzpPaymentStatusBanner');
-                if (statusBanner) {
-                    statusBanner.className = "p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold text-center mt-3";
-                    statusBanner.innerHTML = `<i class="fa-solid fa-circle-info text-amber-600 mr-1"></i> आपने पेमेंट विंडो बंद कर दी है। दोबारा पेमेंट करने के लिए नीचे बटन दबाएं।`;
-                    statusBanner.style.display = 'block';
-                }
+            ondismiss: async function () {
+                // Automatically check if QR payment was completed before modal was dismissed
+                await window.checkActiveRazorpayOrderStatus(false);
             }
         },
         handler: async function (response) {
             const statusBanner = document.getElementById('rzpPaymentStatusBanner');
             if (statusBanner) {
                 statusBanner.className = "p-3.5 rounded-xl bg-blue-50 border border-blue-300 text-blue-900 text-xs font-bold text-center mt-3";
-                statusBanner.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> पेमेंट सिग्नेचर वेरीफाई हो रहा है... कृपया प्रतीक्षा करें।`;
+                statusBanner.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> पेमेंट वेरीफाई हो रहा है और क्रेडिट्स जोड़े जा रहे हैं... कृपया प्रतीक्षा करें।`;
                 statusBanner.style.display = 'block';
             }
 
@@ -1127,35 +1265,28 @@ window.openRazorpayModalNow = function() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        action: 'verify_signature',
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature
+                        razorpay_signature: response.razorpay_signature,
+                        creditsRequested: window.currentRechargeCredits,
+                        totalPayable: window.currentTotalPayable
                     })
                 });
                 const verifyData = await verifyRes.json();
                 if (!verifyRes.ok || !verifyData.status) {
                     throw new Error(verifyData.message || 'Signature verification failed');
                 }
-                if (verifyData.updatedCredits !== undefined) {
-                    window.currentUserData.credits = verifyData.updatedCredits;
-                    const crEl = document.getElementById('displayCredits');
-                    if (crEl) crEl.innerText = verifyData.updatedCredits;
-                }
-                const walletUI = document.getElementById('walletMainUI');
-                if (walletUI) {
-                    walletUI.innerHTML = `
-                        <div class="p-6 bg-green-50 rounded-2xl border-2 border-green-400 text-center space-y-2">
-                            <i class="fa-solid fa-circle-check text-5xl text-green-600 mb-2 animate-bounce"></i>
-                            <h2 class="text-xl font-black text-green-900">पेमेंट सफल! (Auto-Verified)</h2>
-                            <p class="text-xs font-bold text-green-700">आपका ₹${window.currentTotalPayable} का पेमेंट तुरंत वेरीफाई हो गया है और आपके अकाउंट में +${verifyData.creditsAdded} Credits जोड़ दिए गए हैं!</p>
-                            <p class="text-[11px] font-mono text-slate-500">Payment ID: ${response.razorpay_payment_id}</p>
-                            <div class="pt-3">
-                                <button onclick="window.switchService('payments_history')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2.5 px-6 rounded-xl text-xs shadow">वॉलेट पासबुक देखें</button>
-                            </div>
-                        </div>`;
-                }
+
+                // Immediately add credits to user's Firestore account & Passbook
+                await window.creditWalletAfterVerifiedPayment({
+                    orderId: response.razorpay_order_id,
+                    paymentId: response.razorpay_payment_id,
+                    creditsAdded: verifyData.creditsAdded || window.currentRechargeCredits,
+                    amountPaid: verifyData.amountPaid || window.currentTotalPayable
+                });
             } catch (err) {
-                alert('पेमेंट वेरिफिकेशन में समस्या आई: ' + err.message + '\nयदि आपके पैसे कट गए हैं, तो कृपया नीचे Payment Ticket रेज़ करें।');
+                alert('पेमेंट वेरिफिकेशन में समस्या आई: ' + err.message + '\nयदि आपके पैसे कट गए हैं, तो कृपया नीचे Check & Auto-Credit या Payment Ticket बटन दबाएं।');
                 const tBox = document.getElementById('paymentIssueTicketBox');
                 if (tBox) tBox.style.display = 'block';
             }
@@ -1171,9 +1302,6 @@ window.openRazorpayModalNow = function() {
             statusBanner.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 mr-1"></i> पेमेंट फेल: ${errDesc}`;
             statusBanner.style.display = 'block';
         }
-        alert(`❌ पेमेंट पूरा नहीं हो सका: ${errDesc}\n\nयदि आपके अकाउंट से पैसे कट गए हैं, तो नीचे दिए गए बॉक्स में UTR / Payment ID डालकर Ticket जनरेट करें।`);
-        const tBox = document.getElementById('paymentIssueTicketBox');
-        if (tBox) tBox.style.display = 'block';
     });
     rzp.open();
 };
@@ -1292,7 +1420,6 @@ window.loadUserHistory = async function() {
         window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
         window.renderHistory('ALL');
 
-        // Auto-sync any pending DOB Original PDF records in background
         const pendingDobPrints = window.historyData.filter(item => {
             if (item.fileId !== 'SERVER_API_DOB_PRINT') return false;
             const st = String(item.formData?.API_STATUS || 'pending').toLowerCase();
@@ -1460,7 +1587,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
     });
 };
 
-// ================= COMPLETE WALLET PASSBOOK & LEDGER (RECHARGES + CARD DEDUCTIONS + REFUNDS + GIFTS) =================
+// ================= COMPLETE WALLET PASSBOOK & LEDGER =================
 window.setPassbookFilter = function(filterKey) {
     window.currentPassbookFilter = filterKey;
     const pills = ['ALL', 'RECHARGE', 'DEDUCTION', 'REFUND', 'GIFT'];
@@ -1479,7 +1606,7 @@ window.setPassbookFilter = function(filterKey) {
 window.loadUserPayments = async function() {
     const tableBody = document.getElementById('userPaymentsTableBody');
     if (!tableBody) return;
-    tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>आपकी पूरी वॉलेट पासबुक (रिचार्ज, कार्ड खर्च, रिफंड और गिफ्ट) लोड हो रही है...</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>आपकी पूरी वॉलेट पासबुक लोड हो रही है...</td></tr>`;
 
     try {
         const uid = window.currentUserData.uid;
@@ -1509,7 +1636,6 @@ window.loadUserPayments = async function() {
             return isNaN(parsed) ? 0 : parsed;
         };
 
-        // 1. Process Payments Collection (Recharges, Refunds, Admin Gifts, Admin Manual Deductions)
         paySnap.forEach((docSnap) => {
             const item = { id: docSnap.id, ...docSnap.data() };
             const itemTime = getTimeMs(item.timestamp);
@@ -1600,12 +1726,12 @@ window.loadUserPayments = async function() {
                     amountRupees: amtPaid,
                     refText: item.razorpayPaymentId || item.utrNumber || item.orderId || 'RAZORPAY',
                     statusText: st,
-                    statusStyle: statusStyle
+                    statusStyle: statusStyle,
+                    rawOrderId: item.razorpayOrderId || item.orderId || ''
                 });
             }
         });
 
-        // 2. Process History Collection (Every Card / Document Generation & Stamp/Cert Add-on Deductions)
         histSnap.forEach((docSnap) => {
             const docItem = { id: docSnap.id, ...docSnap.data() };
             window.historyData.push(docItem);
@@ -1645,7 +1771,6 @@ window.loadUserPayments = async function() {
                 });
             }
 
-            // Separate ₹20 Stamp Fee Entry
             if (docItem.adminStampCharged) {
                 const stampFee = Number(docItem.adminStampFee) || 20;
                 const stampTime = getTimeMs(docItem.adminStampChargedAt) || (docTime + 1000);
@@ -1665,7 +1790,6 @@ window.loadUserPayments = async function() {
                 });
             }
 
-            // Separate ₹20 Certificate Attach Fee Entry
             if (docItem.adminCertCharged) {
                 const certFee = Number(docItem.adminCertFee) || 20;
                 const certTime = getTimeMs(docItem.adminCertChargedAt) || (docTime + 2000);
@@ -1704,6 +1828,42 @@ window.loadUserPayments = async function() {
     } catch (err) {
         console.error('Passbook load error:', err);
         tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500 text-xs">Failed to load wallet passbook: ${err.message}</td></tr>`;
+    }
+};
+
+window.verifyPendingOrderFromPassbook = async function(orderId, creditsVal, amountVal, btnEl) {
+    if (!orderId) return;
+    const origHtml = btnEl ? btnEl.innerHTML : '';
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
+    }
+    try {
+        const res = await fetch('/api/verify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                action: 'check_order_status',
+                razorpay_order_id: orderId,
+                creditsRequested: creditsVal,
+                totalPayable: amountVal
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.status && data.verified) {
+            await window.creditWalletAfterVerifiedPayment(data);
+            alert(`✅ पेमेंट वेरीफाई हो गया! आपके वॉलेट में +${data.creditsAdded} Credits जोड़ दिए गए हैं।`);
+            window.loadUserPayments();
+        } else {
+            alert('अभी इस ऑर्डर का पेमेंट Razorpay पर पूरा नहीं दिखा रहा है।');
+        }
+    } catch (err) {
+        alert('Error: ' + err.message);
+    } finally {
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = origHtml;
+        }
     }
 };
 
@@ -1766,7 +1926,10 @@ window.renderUserPassbookLedger = function() {
         } else if (item.statusStyle === 'indigo') {
             statusBadge = `<span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-2.5 py-0.5 rounded-full text-[10px] font-black animate-pulse"><i class="fa-solid fa-ticket mr-1"></i>Ticket Raised</span>`;
         } else if (item.statusStyle === 'amber') {
-            statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-full text-[10px] font-black"><i class="fa-solid fa-clock mr-1"></i>${item.statusText}</span>`;
+            const verifyBtn = item.rawOrderId && String(item.rawOrderId).startsWith('order_')
+                ? `<button onclick="window.verifyPendingOrderFromPassbook('${item.rawOrderId}', ${item.pendingCredits || 0}, ${item.amountRupees || 0}, this)" class="ml-1.5 bg-amber-500 hover:bg-amber-600 text-dark-950 px-2 py-0.5 rounded-md text-[10px] font-black transition shadow-sm"><i class="fa-solid fa-rotate mr-0.5"></i>Auto-Verify</button>`
+                : '';
+            statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-full text-[10px] font-black"><i class="fa-solid fa-clock mr-1"></i>${item.statusText}</span>${verifyBtn}`;
         } else {
             statusBadge = `<span class="bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold">${item.statusText}</span>`;
         }
@@ -1977,7 +2140,6 @@ window.switchService = async function(serviceName) {
                 </button>
             </div>
 
-            <!-- 5 Summary Stat Cards -->
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                 <div class="p-3 rounded-2xl bg-dark-950 text-white border border-royal-500/40 shadow-sm">
                     <p class="text-[10px] font-bold text-royal-300 uppercase">वर्तमान बैलेंस (Wallet)</p>
@@ -2001,7 +2163,6 @@ window.switchService = async function(serviceName) {
                 </div>
             </div>
 
-            <!-- Filter Pills & Search -->
             <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                     <button id="pbPill-ALL" onclick="window.setPassbookFilter('ALL')" class="px-3 py-2 rounded-xl text-xs font-black bg-dark-900 text-royal-300 shadow-sm border border-royal-500/40 transition flex items-center justify-center gap-1.5">
@@ -2029,7 +2190,6 @@ window.switchService = async function(serviceName) {
                 </div>
             </div>
 
-            <!-- Passbook Ledger Table -->
             <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
                 <table class="w-full text-left border-collapse bg-white min-w-[660px]">
                     <thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider">
