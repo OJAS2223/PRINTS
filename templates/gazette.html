@@ -1,7 +1,7 @@
-<div class="affidavit-paper gazette-part4-paper" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 34px 48px 30px 48px !important; background-color: #ffffff !important; color: #000000 !important; box-sizing: border-box !important; overflow: hidden !important;">
+<div class="affidavit-paper gazette-part4-paper" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 28px 46px 26px 46px !important; background-color: #ffffff !important; color: #000000 !important; box-sizing: border-box !important; overflow: hidden !important;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;600;700&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
     <style>
         .gazette-part4-paper, .gazette-part4-paper * {
             box-sizing: border-box !important;
@@ -12,227 +12,309 @@
         }
         .gazette-part4-paper {
             background-color: #ffffff !important;
-            font-family: 'Times New Roman', Times, 'Noto Serif Devanagari', serif !important;
+            font-family: 'Tinos', 'Times New Roman', Times, 'Noto Serif Devanagari', serif !important;
         }
         .gazette-part4-paper .hi {
-            font-family: 'Noto Serif Devanagari', 'Mangal', 'Arial Unicode MS', serif !important;
+            font-family: 'Noto Serif Devanagari', 'Kokila', 'Mangal', serif !important;
+            letter-spacing: 0px !important;
         }
         .gazette-part4-paper .en {
-            font-family: 'Times New Roman', Times, serif !important;
+            font-family: 'Tinos', 'Times New Roman', Times, serif !important;
+            letter-spacing: 0px !important;
         }
+
+        /* 1. Top Right Registration Box */
         .gazette-part4-paper .reg-top-row {
             display: flex !important;
             justify-content: flex-end !important;
-            margin-bottom: 4px !important;
+            margin-bottom: 2px !important;
         }
         .gazette-part4-paper .reg-box {
-            border: 1.3px solid #000000 !important;
-            padding: 3px 10px !important;
+            border: 1.2px solid #000000 !important;
+            padding: 3px 12px 4px 12px !important;
+            text-align: center !important;
+            line-height: 1.25 !important;
+        }
+        .gazette-part4-paper .reg-box .hi {
             font-size: 11px !important;
             font-weight: 700 !important;
-            line-height: 1.25 !important;
-            text-align: center !important;
         }
+        .gazette-part4-paper .reg-box .en {
+            font-size: 10.5px !important;
+            font-weight: 700 !important;
+        }
+
+        /* 2. Authentic Masthead (Emblem + भारत का राजपत्र + The Gazette of India) */
         .gazette-part4-paper .masthead-wrap {
             text-align: center !important;
-            margin: 2px 0 4px 0 !important;
+            margin: 0px auto 2px auto !important;
+            position: relative !important;
         }
         .gazette-part4-paper .emblem-img {
-            width: 44px !important;
-            height: 62px !important;
+            width: 48px !important;
+            height: 66px !important;
             object-fit: contain !important;
             display: block !important;
-            margin: 0 auto 2px auto !important;
+            margin: 0 auto -6px auto !important;
+            filter: contrast(180%) grayscale(100%) !important;
         }
-        .gazette-part4-paper .title-hi {
+        .gazette-part4-paper .masthead-banner-row {
+            display: flex !important;
+            align-items: baseline !important;
+            justify-content: center !important;
+            gap: 14px !important;
+            line-height: 1 !important;
+            margin-top: 2px !important;
+        }
+        .gazette-part4-paper .title-hi-big {
             font-family: 'Noto Serif Devanagari', serif !important;
-            font-size: 34px !important;
+            font-size: 42px !important;
             font-weight: 700 !important;
-            line-height: 1.05 !important;
-            letter-spacing: 0.5px !important;
+            letter-spacing: 1px !important;
+            transform: scaleY(1.08) !important;
+            display: inline-block !important;
         }
-        .gazette-part4-paper .title-en {
-            font-family: 'UnifrakturMaguntia', 'Old English Text MT', 'Times New Roman', serif !important;
-            font-size: 32px !important;
+        .gazette-part4-paper .title-hi-ka {
+            font-family: 'Noto Serif Devanagari', serif !important;
+            font-size: 23px !important;
+            font-weight: 700 !important;
+            display: inline-block !important;
+            margin: 0 4px !important;
+        }
+        .gazette-part4-paper .title-en-gothic {
+            font-family: 'UnifrakturMaguntia', 'Old English Text MT', 'Blackletter', serif !important;
+            font-size: 36px !important;
             font-weight: 400 !important;
-            line-height: 1.1 !important;
-            margin-top: 1px !important;
+            line-height: 1.05 !important;
+            margin-top: 3px !important;
+            letter-spacing: 1.2px !important;
+            transform: scaleX(1.06) !important;
         }
+
+        /* 3. Weekly & Published by Authority */
         .gazette-part4-paper .weekly-authority {
             text-align: center !important;
-            margin-top: 4px !important;
-            margin-bottom: 6px !important;
+            margin-top: 5px !important;
+            margin-bottom: 5px !important;
         }
         .gazette-part4-paper .weekly-line {
-            font-size: 14px !important;
+            font-size: 13.5px !important;
             font-weight: 700 !important;
-            line-height: 1.25 !important;
+            line-height: 1.2 !important;
+        }
+        .gazette-part4-paper .weekly-divider {
+            width: 56px !important;
+            border-bottom: 1px solid #000000 !important;
+            margin: 2px auto !important;
         }
         .gazette-part4-paper .auth-hi {
-            font-size: 13px !important;
+            font-size: 12.5px !important;
             font-weight: 700 !important;
             line-height: 1.25 !important;
             margin-top: 2px !important;
         }
         .gazette-part4-paper .auth-en {
-            font-size: 12.5px !important;
+            font-size: 11.8px !important;
             font-weight: 700 !important;
-            line-height: 1.25 !important;
+            line-height: 1.2 !important;
         }
-        .gazette-part4-paper .rule-double-top {
-            border-top: 2px solid #000000 !important;
-            border-bottom: 1px solid #000000 !important;
-            padding: 5px 2px !important;
-            margin-bottom: 5px !important;
+
+        /* 4. Double Rule Date Bar (Exact 157413.pdf format) */
+        .gazette-part4-paper .date-bar-wrapper {
+            border-top: 2.2px solid #000000 !important;
+            border-bottom: 1.2px solid #000000 !important;
+            padding: 4px 0 !important;
+            margin-bottom: 4px !important;
         }
-        .gazette-part4-paper .date-bar-row {
+        .gazette-part4-paper .date-bar-inner {
+            border-top: 1px solid #000000 !important;
+            padding-top: 4px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: space-between !important;
-            font-size: 11.2px !important;
             font-weight: 700 !important;
-            line-height: 1.35 !important;
         }
         .gazette-part4-paper .issue-no-col {
             text-align: left !important;
             white-space: nowrap !important;
-            padding-right: 10px !important;
+            font-size: 11.2px !important;
+            line-height: 1.35 !important;
+            padding-right: 8px !important;
         }
         .gazette-part4-paper .date-center-col {
             text-align: center !important;
             flex: 1 !important;
-        }
-        .gazette-part4-paper .paging-note-block {
-            border-bottom: 1.5px solid #000000 !important;
-            padding-bottom: 5px !important;
-            margin-bottom: 8px !important;
-            text-align: center !important;
-            font-size: 11.2px !important;
-            font-weight: 700 !important;
             line-height: 1.35 !important;
         }
+        .gazette-part4-paper .date-center-col .en {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+        }
+        .gazette-part4-paper .date-center-col .hi {
+            font-size: 11.2px !important;
+            font-weight: 700 !important;
+        }
+
+        /* 5. Separate Paging Note */
+        .gazette-part4-paper .paging-note-block {
+            border-bottom: 1.2px solid #000000 !important;
+            padding-bottom: 4px !important;
+            margin-bottom: 6px !important;
+            text-align: center !important;
+            line-height: 1.3 !important;
+        }
+        .gazette-part4-paper .paging-note-block .hi {
+            font-size: 11.2px !important;
+            font-weight: 700 !important;
+        }
+        .gazette-part4-paper .paging-note-block .en {
+            font-size: 10.8px !important;
+            font-weight: 700 !important;
+        }
+
+        /* 6. Part IV Title Block */
         .gazette-part4-paper .part4-heading-block {
             text-align: center !important;
-            border-bottom: 2px solid #000000 !important;
-            padding-bottom: 8px !important;
-            margin-bottom: 10px !important;
+            border-bottom: 1.8px solid #000000 !important;
+            padding-bottom: 6px !important;
+            margin-bottom: 8px !important;
         }
         .gazette-part4-paper .part4-hi {
-            font-size: 16px !important;
+            font-size: 15.5px !important;
             font-weight: 700 !important;
-            line-height: 1.25 !important;
+            line-height: 1.2 !important;
         }
         .gazette-part4-paper .part4-en {
-            font-size: 14px !important;
+            font-size: 13.5px !important;
             font-weight: 700 !important;
-            line-height: 1.25 !important;
-            margin-bottom: 3px !important;
+            line-height: 1.2 !important;
+            margin-bottom: 2px !important;
         }
         .gazette-part4-paper .part4-sub-hi {
-            font-size: 13px !important;
+            font-size: 12.2px !important;
             font-weight: 700 !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
         }
         .gazette-part4-paper .part4-sub-en {
-            font-size: 12.5px !important;
+            font-size: 11.8px !important;
             font-weight: 700 !important;
-            line-height: 1.3 !important;
+            line-height: 1.25 !important;
         }
+
+        /* 7. Two-Column Body */
         .gazette-part4-paper .two-col-body {
             display: grid !important;
             grid-template-columns: 1fr 1fr !important;
-            height: 615px !important;
+            height: 625px !important;
             position: relative !important;
         }
         .gazette-part4-paper .col-left {
-            padding-right: 14px !important;
-            border-right: 1.3px solid #000000 !important;
+            padding-right: 12px !important;
+            border-right: 1.2px solid #000000 !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-start !important;
         }
         .gazette-part4-paper .col-right {
-            padding-left: 14px !important;
+            padding-left: 12px !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: flex-start !important;
         }
+
+        /* Left Column Notice Box */
         .gazette-part4-paper .notice-box {
             border: 1.4px solid #000000 !important;
             padding: 12px 12px 14px 12px !important;
             margin-top: 2px !important;
-            margin-bottom: 18px !important;
+            margin-bottom: 14px !important;
         }
         .gazette-part4-paper .notice-title {
             text-align: center !important;
-            font-size: 13.5px !important;
+            font-size: 13px !important;
             font-weight: 700 !important;
             margin-bottom: 8px !important;
-            letter-spacing: 0.3px !important;
         }
         .gazette-part4-paper .notice-text {
             text-align: justify !important;
-            font-size: 11px !important;
+            font-size: 10.6px !important;
             font-weight: 700 !important;
             line-height: 1.42 !important;
-            text-indent: 22px !important;
+            text-indent: 20px !important;
         }
         .gazette-part4-paper .notice-sign {
             text-align: right !important;
-            font-size: 11.2px !important;
+            font-size: 11px !important;
             font-weight: 700 !important;
             line-height: 1.3 !important;
-            margin-top: 12px !important;
+            margin-top: 10px !important;
         }
+        .gazette-part4-paper .left-mid-rule {
+            width: 100% !important;
+            border-bottom: 1px solid #000000 !important;
+            margin: 2px 0 10px 0 !important;
+        }
+
+        /* Content Headings & Paragraphs */
         .gazette-part4-paper .section-hdr-hi {
-            text-align: center !important;
-            font-size: 13.5px !important;
-            font-weight: 700 !important;
-            margin: 6px 0 10px 0 !important;
-        }
-        .gazette-part4-paper .section-hdr-en {
             text-align: center !important;
             font-size: 13px !important;
             font-weight: 700 !important;
-            margin: 2px 0 10px 0 !important;
+            margin: 2px 0 8px 0 !important;
+        }
+        .gazette-part4-paper .section-hdr-en {
+            text-align: center !important;
+            font-size: 12.5px !important;
+            font-weight: 700 !important;
+            margin: 2px 0 8px 0 !important;
         }
         .gazette-part4-paper .ad-para-hi {
             text-align: justify !important;
-            font-size: 12px !important;
-            line-height: 1.55 !important;
-            text-indent: 24px !important;
-            margin-bottom: 8px !important;
+            font-size: 11.8px !important;
+            font-weight: 500 !important;
+            line-height: 1.52 !important;
+            text-indent: 22px !important;
+            margin-bottom: 6px !important;
         }
         .gazette-part4-paper .ad-para-en {
             text-align: justify !important;
-            font-size: 12px !important;
-            line-height: 1.48 !important;
-            text-indent: 24px !important;
-            margin-bottom: 8px !important;
+            font-size: 11.6px !important;
+            font-weight: 400 !important;
+            line-height: 1.44 !important;
+            text-indent: 22px !important;
+            margin-bottom: 6px !important;
         }
-        .gazette-part4-paper .ad-sign-block {
+        .gazette-part4-paper .ad-sign-block-hi {
             text-align: right !important;
-            font-size: 11.8px !important;
+            font-size: 11.5px !important;
             line-height: 1.35 !important;
             margin-top: 8px !important;
-            margin-bottom: 14px !important;
+        }
+        .gazette-part4-paper .ad-sign-block-en {
+            text-align: right !important;
+            font-size: 11.3px !important;
+            line-height: 1.32 !important;
+            margin-top: 8px !important;
+            margin-bottom: 12px !important;
         }
         .gazette-part4-paper .col-divider-rule {
-            width: 110px !important;
-            border-bottom: 1.2px solid #000000 !important;
-            margin: 6px auto 14px auto !important;
+            width: 115px !important;
+            border-bottom: 1px solid #000000 !important;
+            margin: 6px auto 12px auto !important;
         }
+
+        /* 8. Bottom Footer */
         .gazette-part4-paper .gazette-footer-row {
             position: absolute !important;
-            bottom: 24px !important;
-            left: 48px !important;
-            right: 48px !important;
+            bottom: 22px !important;
+            left: 46px !important;
+            right: 46px !important;
             display: flex !important;
             justify-content: space-between !important;
             align-items: center !important;
-            font-size: 11.5px !important;
+            font-size: 11.2px !important;
             font-weight: 700 !important;
-            padding-top: 6px !important;
         }
     </style>
 
@@ -246,23 +328,28 @@
         </div>
     </div>
 
-    <!-- 2. NATIONAL EMBLEM & MASTHEAD -->
+    <!-- 2. NATIONAL EMBLEM & EXACT MASTHEAD DESIGN (भारत का राजपत्र / The Gazette of India) -->
     <div class="masthead-wrap">
         <img src="/images/s.png" onerror="this.onerror=null;this.src='/images/stamp.png';" class="emblem-img" alt="सत्यमेव जयते" />
-        <div class="title-hi">भारत का राजपत्र</div>
-        <div class="title-en">The Gazette of India</div>
+        <div class="masthead-banner-row">
+            <span class="title-hi-big">भारत</span>
+            <span class="title-hi-ka">का</span>
+            <span class="title-hi-big">राजपत्र</span>
+        </div>
+        <div class="title-en-gothic">The Gazette of India</div>
     </div>
 
     <!-- 3. WEEKLY / PUBLISHED BY AUTHORITY -->
     <div class="weekly-authority">
         <div class="weekly-line"><span class="hi">साप्ताहिक</span>/<span class="en">WEEKLY</span></div>
+        <div class="weekly-divider"></div>
         <div class="auth-hi hi">प्राधिकार से प्रकाशित</div>
         <div class="auth-en en">PUBLISHED BY AUTHORITY</div>
     </div>
 
     <!-- 4. FIXED ISSUE NO. 53 & FIXED DATE BAR -->
-    <div class="rule-double-top">
-        <div class="date-bar-row">
+    <div class="date-bar-wrapper">
+        <div class="date-bar-inner">
             <div class="issue-no-col">
                 <div class="hi">सं. 53]</div>
                 <div class="en">No. 53]</div>
@@ -288,7 +375,7 @@
         <div class="part4-sub-en en">[Advertisements and Notices issued by Private Individuals and Private Bodies]</div>
     </div>
 
-    <!-- 7. TWO-COLUMN BODY -->
+    <!-- 7. TWO-COLUMN BODY (EXACT 157413.PDF PAGE 1 LAYOUT) -->
     <div class="two-col-body">
         
         <!-- LEFT COLUMN -->
@@ -304,6 +391,8 @@
                 </div>
             </div>
 
+            <div class="left-mid-rule"></div>
+
             <div class="section-hdr-hi hi">नाम परिवर्तन</div>
 
             <div class="ad-para-hi hi">
@@ -312,8 +401,8 @@
             <div class="ad-para-hi hi">
                 यह प्रमाणित किया जाता है कि इस संबंध में मैंने सभी अन्य कानूनी आवश्यकताओं को पूरा कर लिया है।
             </div>
-            <div class="ad-sign-block hi">
-                <b>{{HINDI_SIGN_NAME}}</b><br/>
+            <div class="ad-sign-block-hi hi">
+                {{HINDI_SIGN_NAME}}<br/>
                 {{HINDI_SIGN_CAPTION}}
             </div>
         </div>
@@ -322,29 +411,29 @@
         <div class="col-right">
             <div class="section-hdr-en en">CHANGE OF NAME</div>
 
-            <!-- Primary Applicant Entry -->
+            <!-- Primary Applicant Entry (From Form) -->
             <div class="ad-para-en en">
                 {{ENGLISH_NOTICE_BODY}}
             </div>
             <div class="ad-para-en en">
                 It is certified that I have complied with other legal requirements in this connection.
             </div>
-            <div class="ad-sign-block en">
-                <b>{{SIGN_NAME}}</b><br/>
+            <div class="ad-sign-block-en en">
+                {{SIGN_NAME}}<br/>
                 {{SIGN_CAPTION}}
             </div>
 
             <div class="col-divider-rule"></div>
 
-            <!-- Secondary Standard Filler Entry -->
+            <!-- Second Entry (Matches 157413.pdf right column) -->
             <div class="ad-para-en en">
                 {{SECOND_ENGLISH_BODY}}
             </div>
             <div class="ad-para-en en">
                 It is certified that I have complied with other legal requirements in this connection.
             </div>
-            <div class="ad-sign-block en">
-                <b>{{SECOND_SIGN_NAME}}</b><br/>
+            <div class="ad-sign-block-en en">
+                {{SECOND_SIGN_NAME}}<br/>
                 {{SECOND_SIGN_CAPTION}}
             </div>
         </div>
@@ -355,6 +444,6 @@
     <div class="gazette-footer-row en">
         <div>{{GI_CODE}}</div>
         <div>({{PAGE_NO}})</div>
-        <div style="width: 70px;"></div>
+        <div style="width: 75px;"></div>
     </div>
 </div>
