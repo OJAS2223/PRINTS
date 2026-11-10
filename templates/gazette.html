@@ -1,396 +1,265 @@
-<div class="affidavit-paper gazette-part4-paper" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 26px 46px 24px 46px !important; background-color: #ffffff !important; background-image: url('/images/gazette_bg.png') !important; background-size: 100% 100% !important; background-repeat: no-repeat !important; color: #000000 !important; box-sizing: border-box !important; overflow: hidden !important;">
+<div class="affidavit-paper gazette-part4-paper" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 0 !important; margin: 0 !important; background-color: #ffffff !important; color: #111111 !important; box-sizing: border-box !important; overflow: hidden !important;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&display=swap" rel="stylesheet">
     <style>
         .gazette-part4-paper, .gazette-part4-paper * {
             box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            color: #000000 !important;
         }
         .gazette-part4-paper {
             font-family: 'Tinos', 'Times New Roman', Times, serif !important;
+            color: #141414 !important;
         }
         .gazette-part4-paper .hi {
             font-family: 'Noto Serif Devanagari', 'Kokila', 'Mangal', serif !important;
-            letter-spacing: 0px !important;
+            color: #141414 !important;
         }
         .gazette-part4-paper .en {
             font-family: 'Tinos', 'Times New Roman', Times, serif !important;
-            letter-spacing: 0px !important;
+            color: #141414 !important;
         }
 
-        /* 1. Top Right Registration Box */
-        .gazette-part4-paper .reg-top-row {
+        /* Full-Page Original Gazette Background Image */
+        .gazette-part4-paper .gazette-bg-img {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 794px !important;
+            height: 1122px !important;
+            object-fit: fill !important;
+            z-index: 1 !important;
+            pointer-events: none !important;
+            user-select: none !important;
+        }
+
+        /* 1. White Mask over Date & Issue No. Bar (Covers No. 52 & Dec 28, 2013) */
+        .gazette-part4-paper .mask-date-bar {
+            position: absolute !important;
+            top: 365px !important;
+            left: 52px !important;
+            width: 690px !important;
+            height: 52px !important;
+            background-color: #ffffff !important;
+            z-index: 2 !important;
             display: flex !important;
-            justify-content: flex-end !important;
-            margin-bottom: 2px !important;
-        }
-        .gazette-part4-paper .reg-box {
-            border: 1.3px solid #000000 !important;
-            padding: 3px 12px 4px 12px !important;
-            text-align: center !important;
-            line-height: 1.25 !important;
-            background-color: rgba(255,255,255,0.92) !important;
-        }
-        .gazette-part4-paper .reg-box .hi {
-            font-size: 11px !important;
-            font-weight: 700 !important;
-        }
-        .gazette-part4-paper .reg-box .en {
-            font-size: 10.5px !important;
-            font-weight: 700 !important;
-        }
-
-        /* 2. Authentic Scanned Masthead Image from Original Gazette PDF */
-        .gazette-part4-paper .masthead-wrap {
-            text-align: center !important;
-            margin: 2px auto 2px auto !important;
-        }
-        .gazette-part4-paper .orig-masthead-img {
-            width: 470px !important;
-            max-width: 92% !important;
-            height: auto !important;
-            display: block !important;
-            margin: 0 auto !important;
-            object-fit: contain !important;
-        }
-
-        /* 3. Weekly & Published by Authority */
-        .gazette-part4-paper .weekly-authority {
-            text-align: center !important;
-            margin-top: 4px !important;
-            margin-bottom: 5px !important;
-        }
-        .gazette-part4-paper .weekly-line {
-            font-size: 13.5px !important;
-            font-weight: 700 !important;
-            line-height: 1.2 !important;
-        }
-        .gazette-part4-paper .weekly-divider {
-            width: 56px !important;
-            border-bottom: 1.2px solid #000000 !important;
-            margin: 2px auto !important;
-        }
-        .gazette-part4-paper .auth-hi {
-            font-size: 12.5px !important;
-            font-weight: 700 !important;
-            line-height: 1.25 !important;
-            margin-top: 2px !important;
-        }
-        .gazette-part4-paper .auth-en {
-            font-size: 11.8px !important;
-            font-weight: 700 !important;
-            line-height: 1.2 !important;
-        }
-
-        /* 4. Double Rule Date Bar (No. 53 & Fixed Dates) */
-        .gazette-part4-paper .date-bar-wrapper {
-            border-top: 2.2px solid #000000 !important;
-            border-bottom: 1.2px solid #000000 !important;
-            padding: 3px 0 !important;
-            margin-bottom: 4px !important;
-        }
-        .gazette-part4-paper .date-bar-inner {
-            border-top: 1px solid #000000 !important;
-            padding-top: 4px !important;
-            display: flex !important;
-            align-items: center !important;
+            flex-direction: column !important;
             justify-content: space-between !important;
-            font-weight: 700 !important;
+            padding: 2px 4px !important;
         }
-        .gazette-part4-paper .issue-no-col {
+        .gazette-part4-paper .date-row-line {
+            display: flex !important;
+            align-items: baseline !important;
+            width: 100% !important;
+            line-height: 1.25 !important;
+        }
+        .gazette-part4-paper .issue-left {
+            width: 72px !important;
             text-align: left !important;
-            white-space: nowrap !important;
-            font-size: 11.2px !important;
-            line-height: 1.35 !important;
-            padding-right: 8px !important;
+            font-weight: 700 !important;
+            font-size: 12px !important;
+            flex-shrink: 0 !important;
         }
-        .gazette-part4-paper .date-center-col {
-            text-align: center !important;
+        .gazette-part4-paper .date-center-hi {
             flex: 1 !important;
-            line-height: 1.35 !important;
-        }
-        .gazette-part4-paper .date-center-col .en {
-            font-size: 11px !important;
-            font-weight: 700 !important;
-        }
-        .gazette-part4-paper .date-center-col .hi {
-            font-size: 11.2px !important;
-            font-weight: 700 !important;
-        }
-
-        /* 5. Separate Paging Note */
-        .gazette-part4-paper .paging-note-block {
-            border-bottom: 1.2px solid #000000 !important;
-            padding-bottom: 4px !important;
-            margin-bottom: 6px !important;
             text-align: center !important;
-            line-height: 1.3 !important;
-        }
-        .gazette-part4-paper .paging-note-block .hi {
-            font-size: 11.2px !important;
-            font-weight: 700 !important;
-        }
-        .gazette-part4-paper .paging-note-block .en {
-            font-size: 10.8px !important;
-            font-weight: 700 !important;
-        }
-
-        /* 6. Part IV Title Block */
-        .gazette-part4-paper .part4-heading-block {
-            text-align: center !important;
-            border-bottom: 1.8px solid #000000 !important;
-            padding-bottom: 6px !important;
-            margin-bottom: 8px !important;
-        }
-        .gazette-part4-paper .part4-hi {
-            font-size: 15.5px !important;
-            font-weight: 700 !important;
-            line-height: 1.2 !important;
-        }
-        .gazette-part4-paper .part4-en {
-            font-size: 13.5px !important;
-            font-weight: 700 !important;
-            line-height: 1.2 !important;
-            margin-bottom: 2px !important;
-        }
-        .gazette-part4-paper .part4-sub-hi {
             font-size: 12.2px !important;
             font-weight: 700 !important;
-            line-height: 1.25 !important;
+            padding-right: 30px !important;
         }
-        .gazette-part4-paper .part4-sub-en {
-            font-size: 11.8px !important;
-            font-weight: 700 !important;
-            line-height: 1.25 !important;
-        }
-
-        /* 7. Two-Column Body (All 3 Sections in English) */
-        .gazette-part4-paper .two-col-body {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            height: 620px !important;
-            position: relative !important;
-            background-color: rgba(255, 255, 255, 0.96) !important;
-        }
-        .gazette-part4-paper .col-left {
-            padding-right: 12px !important;
-            border-right: 1.2px solid #000000 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-start !important;
-        }
-        .gazette-part4-paper .col-right {
-            padding-left: 12px !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: flex-start !important;
-        }
-
-        /* Left Column Notice Box */
-        .gazette-part4-paper .notice-box {
-            border: 1.4px solid #000000 !important;
-            padding: 11px 12px 13px 12px !important;
-            margin-top: 2px !important;
-            margin-bottom: 12px !important;
-        }
-        .gazette-part4-paper .notice-title {
+        .gazette-part4-paper .date-center-en {
+            flex: 1 !important;
             text-align: center !important;
-            font-size: 13px !important;
-            font-weight: 700 !important;
-            margin-bottom: 7px !important;
-        }
-        .gazette-part4-paper .notice-text {
-            text-align: justify !important;
-            font-size: 10.6px !important;
-            font-weight: 700 !important;
-            line-height: 1.42 !important;
-            text-indent: 20px !important;
-        }
-        .gazette-part4-paper .notice-sign {
-            text-align: right !important;
-            font-size: 11px !important;
-            font-weight: 700 !important;
-            line-height: 1.3 !important;
-            margin-top: 9px !important;
-        }
-        .gazette-part4-paper .left-mid-rule {
-            width: 100% !important;
-            border-bottom: 1px solid #000000 !important;
-            margin: 2px 0 10px 0 !important;
-        }
-
-        /* English Change of Name Sections */
-        .gazette-part4-paper .section-hdr-en {
-            text-align: center !important;
-            font-size: 12.6px !important;
-            font-weight: 700 !important;
-            margin: 2px 0 8px 0 !important;
-            letter-spacing: 0.2px !important;
-        }
-        .gazette-part4-paper .ad-para-en {
-            text-align: justify !important;
-            font-size: 11.7px !important;
-            font-weight: 400 !important;
-            line-height: 1.45 !important;
-            text-indent: 22px !important;
-            margin-bottom: 6px !important;
-        }
-        .gazette-part4-paper .ad-sign-block-en {
-            text-align: right !important;
-            font-size: 11.4px !important;
-            line-height: 1.32 !important;
-            margin-top: 8px !important;
-            margin-bottom: 12px !important;
-        }
-        .gazette-part4-paper .col-divider-rule {
-            width: 115px !important;
-            border-bottom: 1px solid #000000 !important;
-            margin: 6px auto 12px auto !important;
-        }
-
-        /* 8. Bottom Footer */
-        .gazette-part4-paper .gazette-footer-row {
-            position: absolute !important;
-            bottom: 20px !important;
-            left: 46px !important;
-            right: 46px !important;
-            display: flex !important;
-            justify-content: space-between !important;
-            align-items: center !important;
             font-size: 11.2px !important;
             font-weight: 700 !important;
+            letter-spacing: 0.1px !important;
+            padding-right: 30px !important;
+        }
+
+        /* 2. White Mask over Left Column Below NOTICE Box (Covers Hindi नाम परिवर्तन) */
+        .gazette-part4-paper .mask-left-col-sec1 {
+            position: absolute !important;
+            top: 811px !important;
+            left: 55px !important;
+            width: 334px !important;
+            height: 212px !important;
+            background-color: #ffffff !important;
+            z-index: 2 !important;
+            padding: 2px 4px 0 4px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+        }
+
+        /* 3. White Mask over Right Column (Covers both right-side entries) */
+        .gazette-part4-paper .mask-right-col-sec2-3 {
+            position: absolute !important;
+            top: 622px !important;
+            left: 406px !important;
+            width: 336px !important;
+            height: 402px !important;
+            background-color: #ffffff !important;
+            z-index: 2 !important;
+            padding: 2px 4px 0 6px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+        }
+
+        /* Typography matching exact scanned Gazette print */
+        .gazette-part4-paper .sec-heading-en {
+            text-align: center !important;
+            font-family: 'Tinos', 'Times New Roman', Times, serif !important;
+            font-size: 11.6px !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.3px !important;
+            margin: 0 0 7px 0 !important;
+            line-height: 1.2 !important;
+        }
+        .gazette-part4-paper .gaz-para-en {
+            text-align: justify !important;
+            font-family: 'Tinos', 'Times New Roman', Times, serif !important;
+            font-size: 11.3px !important;
+            font-weight: 400 !important;
+            line-height: 1.34 !important;
+            text-indent: 18px !important;
+            margin: 0 0 5px 0 !important;
+            letter-spacing: 0.05px !important;
+        }
+        .gazette-part4-paper .gaz-sign-en {
+            text-align: right !important;
+            font-family: 'Tinos', 'Times New Roman', Times, serif !important;
+            font-size: 11.2px !important;
+            font-weight: 400 !important;
+            line-height: 1.32 !important;
+            margin-top: 4px !important;
+            padding-right: 2px !important;
+        }
+        .gazette-part4-paper .right-col-divider {
+            width: 105px !important;
+            border-bottom: 1px solid #141414 !important;
+            margin: 12px auto 12px auto !important;
         }
     </style>
 
     {{STAMP_OVERLAY}}
 
-    <!-- 1. TOP RIGHT REGISTERED NO. BOX -->
-    <div class="reg-top-row">
-        <div class="reg-box">
-            <div class="hi">रजिस्ट्री सं. डीएल (एन)-04/0007/2003-05</div>
-            <div class="en">REGISTERED No. DL(N)-04/0007/2003-05</div>
+    <!-- BACKGROUND IMAGE: Loads your uploaded Page_1_HighDPI_2.jpg -->
+    <img
+        id="gazetteBgImageEl"
+        class="gazette-bg-img"
+        src="/images/gazette_bg.jpg"
+        onerror="if(!this.dataset.t1){this.dataset.t1=1;this.src='/images/Page_1_HighDPI_2.jpg';}else if(!this.dataset.t2){this.dataset.t2=1;this.src='/images/Page_1_HighDPI.jpg';}else if(!this.dataset.t3){this.dataset.t3=1;this.src='/images/gazette_bg.png';}else{this.style.display='none';document.getElementById('gazetteFallbackFrame').style.display='block';}"
+        alt="Gazette Background"
+    />
+
+    <!-- FALLBACK FRAME (Only shown if image is not yet uploaded to /images/) -->
+    <div id="gazetteFallbackFrame" style="display:none; position:absolute; inset:0; z-index:1; padding: 66px 56px 30px 56px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:700; margin-bottom:8px;">
+            <span class="hi">रजिस्ट्री सं. डीएल(एन)-04/0007/2003—05</span>
+            <span class="en">REGISTERED No. DL(N)-04/0007/2003—05</span>
         </div>
-    </div>
-
-    <!-- 2. ORIGINAL SCANNED GAZETTE MASTHEAD IMAGE (EXACT FONT FROM PDF) -->
-    <div class="masthead-wrap">
-        <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAC7A6ADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD3+iiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACisLxl4p0/wV4Tv/ABFqjbbW0j3bR1dj0Ue5OB+NfN3hH47+NtW+L2g3Gq6p5Wm32pR27WKIPKWN3C4x3IBzn1oA+raKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAr4N+NX/JZfFf/YQP/oIr7yr4N+NX/ACWXxX/2ED/6CKAPvKiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK+DfjV/yWXxX/wBhA/8AoIr7yr4N+NX/ACWXxX/2ED/6CKAPvKiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAK+DfjV/yWXxX/wBhA/8AoIr7yr5x+K37OfiTxp8Q9X1/StU0qG0vpfMSOd5A68Ac4UjPFAH0dRXPeBtEvvDXgfRtF1KSOa8srVIZpIzlWZRgkZAP8q6GgAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigD/9k=" onerror="this.style.display='none'; document.getElementById('fallbackMasthead').style.display='block';" class="orig-masthead-img" alt="भारत का राजपत्र - The Gazette of India" />
-        <div id="fallbackMasthead" style="display:none; text-align:center;">
-            <img src="/images/s.png" style="width:46px; height:64px; object-fit:contain; margin:0 auto -4px auto;" alt="Emblem" />
-            <div class="hi" style="font-size:38px; font-weight:700; line-height:1.05;">भारत का राजपत्र</div>
-            <div class="en" style="font-size:32px; font-weight:700; font-style:italic; line-height:1.1;">The Gazette of India</div>
-        </div>
-    </div>
-
-    <!-- 3. WEEKLY / PUBLISHED BY AUTHORITY -->
-    <div class="weekly-authority">
-        <div class="weekly-line"><span class="hi">साप्ताहिक</span>/<span class="en">WEEKLY</span></div>
-        <div class="weekly-divider"></div>
-        <div class="auth-hi hi">प्राधिकार से प्रकाशित</div>
-        <div class="auth-en en">PUBLISHED BY AUTHORITY</div>
-    </div>
-
-    <!-- 4. FIXED ISSUE NO. 53 & FIXED DATE BAR -->
-    <div class="date-bar-wrapper">
-        <div class="date-bar-inner">
-            <div class="issue-no-col">
-                <div class="hi">सं. 53]</div>
-                <div class="en">No. 53]</div>
-            </div>
-            <div class="date-center-col">
-                <div class="en">NEW DELHI, SATURDAY, 24-Jun-2021 - 26-Mar-2013 (Ashadh 3, 1943)</div>
-                <div class="hi">नई दिल्ली, शनिवार, 24-जून-2021 - 26-मार्च-2013 (आषाढ़ 3, 1943)</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 5. SEPARATE PAGING NOTE -->
-    <div class="paging-note-block">
-        <div class="hi">इस भाग में भिन्न पृष्ठ संख्या दी जाती है जिससे कि यह अलग संकलन के रूप में रखा जा सके</div>
-        <div class="en">(Separate paging is given to this Part in order that it may be filed as a separate compilation)</div>
-    </div>
-
-    <!-- 6. PART IV HEADINGS -->
-    <div class="part4-heading-block">
-        <div class="part4-hi hi">भाग IV</div>
-        <div class="part4-en en">[PART IV]</div>
-        <div class="part4-sub-hi hi">[गैर-सरकारी व्यक्तियों और गैर-सरकारी संस्थाओं के विज्ञापन और सूचनाएं]</div>
-        <div class="part4-sub-en en">[Advertisements and Notices issued by Private Individuals and Private Bodies]</div>
-    </div>
-
-    <!-- 7. TWO-COLUMN BODY (ALL 3 SECTIONS IN ENGLISH: 2 RANDOM + 1 CUSTOM FROM FORM) -->
-    <div class="two-col-body">
-        
-        <!-- LEFT COLUMN: NOTICE BOX + SECTION 1 (AUTO RANDOM INDIAN DATA #1) -->
-        <div class="col-left">
-            <div class="notice-box">
-                <div class="notice-title en">NOTICE</div>
-                <div class="notice-text en">
-                    NO LEGAL RESPONSIBILITY IS ACCEPTED FOR THE PUBLICATION OF ADVERTISEMENTS/PUBLIC NOTICES IN THIS PART OF THE GAZETTE OF INDIA. PERSONS NOTIFYING THE ADVERTISEMENTS/PUBLIC NOTICES WILL REMAIN SOLELY, RESPONSIBLE FOR THE LEGAL CONSEQUENCES AND ALSO FOR ANY OTHER MISREPRESENTATION ETC.
+        <div style="text-align:center;">
+            <div style="display:flex; align-items:center; justify-content:center; gap:14px;">
+                <span class="hi" style="font-size:52px; font-weight:700; line-height:1;">भारत</span>
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <img src="/images/s.png" onerror="this.style.display='none'" style="width:52px; height:72px; object-fit:contain;" alt="Emblem" />
+                    <span class="hi" style="font-size:24px; font-weight:700; line-height:1; margin-top:2px;">का</span>
                 </div>
-                <div class="notice-sign en">
-                    BY ORDER<br/>
-                    Controller of Publication
-                </div>
+                <span class="hi" style="font-size:52px; font-weight:700; line-height:1;">राजपत्र</span>
             </div>
-
-            <div class="left-mid-rule"></div>
-
-            <div class="section-hdr-en en">CHANGE OF NAME</div>
-
-            <!-- Section 1: Random Indian Data #1 (English) -->
-            <div class="ad-para-en en">
-                {{RANDOM_ENGLISH_BODY_1}}
+            <div style="font-family:'UnifrakturMaguntia',serif; font-size:42px; line-height:1.05; margin-top:2px;">The Gazette of India</div>
+            <div style="font-size:13.5px; font-weight:700; margin-top:4px;"><span class="hi">साप्ताहिक</span>/<span class="en">WEEKLY</span></div>
+            <div style="width:60px; border-bottom:1px solid #000; margin:3px auto;"></div>
+            <div class="hi" style="font-size:14.5px; font-weight:700;">प्राधिकार से प्रकाशित</div>
+            <div class="en" style="font-size:13px; font-weight:700; margin-bottom:8px;">PUBLISHED BY AUTHORITY</div>
+        </div>
+        <div style="border-top:2px solid #000; border-bottom:1px solid #000; height:62px; margin-bottom:6px;"></div>
+        <div style="text-align:center; font-size:12px; font-weight:700; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:10px;">
+            <div class="hi">इस भाग में भिन्न पृष्ठ संख्या दी जाती है जिससे कि यह अलग संकलन के रूप में रखा जा सके</div>
+            <div class="en">(Separate paging is given to this Part in order that it may be filed as a separate compilation)</div>
+        </div>
+        <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px;">
+            <div class="hi" style="font-size:16px; font-weight:700;">भाग IV</div>
+            <div class="en" style="font-size:14px; font-weight:700; margin-bottom:4px;">[PART IV]</div>
+            <div class="hi" style="font-size:13.5px; font-weight:700;">[गैर-सरकारी व्यक्तियों और गैर-सरकारी संस्थाओं के विज्ञापन और सूचनाएं]</div>
+            <div class="en" style="font-size:13px; font-weight:700;">[Advertisements and Notices issued by Private Individuals and Private Bodies]</div>
+        </div>
+        <!-- Left Notice Box & Center Vertical Divider in Fallback -->
+        <div style="position:absolute; top:612px; bottom:100px; left:396px; border-left:1.2px solid #000;"></div>
+        <div style="position:absolute; top:625px; left:60px; width:320px; border:2px solid #000; padding:10px 12px;">
+            <div class="en" style="text-align:center; font-size:11.5px; font-weight:700; margin-bottom:6px;">NOTICE</div>
+            <div class="en" style="text-align:justify; font-size:10.3px; line-height:1.35; text-indent:18px;">
+                NO LEGAL RESPONSIBILITY IS ACCEPTED FOR THE PUBLICATION OF ADVERTISEMENTS/PUBLIC NOTICES IN THIS PART OF THE GAZETTE OF INDIA. PERSONS NOTIFYING THE ADVERTISEMENTS/PUBLIC NOTICES WILL REMAIN SOLELY, RESPONSIBLE FOR THE LEGAL CONSEQUENCES AND ALSO FOR ANY OTHER MISREPRESENTATION ETC.
             </div>
-            <div class="ad-para-en en">
-                It is certified that I have complied with other legal requirements in this connection.
-            </div>
-            <div class="ad-sign-block-en en">
-                {{RANDOM_SIGN_NAME_1}}<br/>
-                {{RANDOM_SIGN_CAPTION_1}}
+            <div class="en" style="text-align:right; font-size:10.5px; margin-top:8px;">
+                BY ORDER<br/><i>Controller of Publication</i>
             </div>
         </div>
-
-        <!-- RIGHT COLUMN: SECTION 2 (CUSTOM DATA FROM FORM) + SECTION 3 (AUTO RANDOM INDIAN DATA #2) -->
-        <div class="col-right">
-            <div class="section-hdr-en en">CHANGE OF NAME</div>
-
-            <!-- Section 2: Primary Custom Applicant Entry (From Portal Form) -->
-            <div class="ad-para-en en">
-                {{ENGLISH_NOTICE_BODY}}
-            </div>
-            <div class="ad-para-en en">
-                It is certified that I have complied with other legal requirements in this connection.
-            </div>
-            <div class="ad-sign-block-en en">
-                {{SIGN_NAME}}<br/>
-                {{SIGN_CAPTION}}
-            </div>
-
-            <div class="col-divider-rule"></div>
-
-            <!-- Section 3: Random Indian Data #2 (English) -->
-            <div class="ad-para-en en">
-                {{RANDOM_ENGLISH_BODY_2}}
-            </div>
-            <div class="ad-para-en en">
-                It is certified that I have complied with other legal requirements in this connection.
-            </div>
-            <div class="ad-sign-block-en en">
-                {{RANDOM_SIGN_NAME_2}}<br/>
-                {{RANDOM_SIGN_CAPTION_2}}
-            </div>
+        <div style="position:absolute; top:806px; left:175px; width:90px; border-bottom:1px solid #000;"></div>
+        <div class="en" style="position:absolute; bottom:74px; left:60px; right:60px; display:flex; justify-content:space-between; font-size:11px;">
+            <span>1—390 GI/2013</span>
+            <span>(1235)</span>
+            <span style="width:60px;"></span>
         </div>
-
     </div>
 
-    <!-- 8. BOTTOM FOOTER -->
-    <div class="gazette-footer-row en">
-        <div>{{GI_CODE}}</div>
-        <div>({{PAGE_NO}})</div>
-        <div style="width: 75px;"></div>
+    <!-- OVERLAY 1: FIXED ISSUE NO. 53 & FIXED DATE BAR -->
+    <div class="mask-date-bar">
+        <div class="date-row-line">
+            <div class="issue-left hi">सं. 53]</div>
+            <div class="date-center-hi hi">नई दिल्ली, शनिवार, 24-जून-2021—26-मार्च-2013 (आषाढ़ 3, 1943)</div>
+        </div>
+        <div class="date-row-line">
+            <div class="issue-left en">No. 53]</div>
+            <div class="date-center-en en">NEW DELHI, SATURDAY, 24-Jun-2021—26-Mar-2013 (Ashadh 3, 1943)</div>
+        </div>
+    </div>
+
+    <!-- OVERLAY 2: SECTION 1 (LEFT COLUMN BELOW NOTICE BOX -> RANDOM INDIAN DATA #1 IN ENGLISH) -->
+    <div class="mask-left-col-sec1">
+        <div class="sec-heading-en">CHANGE OF NAME</div>
+        <div class="gaz-para-en">
+            {{RANDOM_ENGLISH_BODY_1}}
+        </div>
+        <div class="gaz-para-en">
+            It is certified that I have complied with other legal requirements in this connection.
+        </div>
+        <div class="gaz-sign-en">
+            {{RANDOM_SIGN_NAME_1}}<br/>
+            {{RANDOM_SIGN_CAPTION_1}}
+        </div>
+    </div>
+
+    <!-- OVERLAY 3: SECTION 2 (CUSTOM DATA FROM FORM) & SECTION 3 (RANDOM INDIAN DATA #2 IN ENGLISH) -->
+    <div class="mask-right-col-sec2-3">
+        <div class="sec-heading-en">CHANGE OF NAME</div>
+
+        <!-- Section 2: Customized Data from Portal Form -->
+        <div class="gaz-para-en">
+            {{ENGLISH_NOTICE_BODY}}
+        </div>
+        <div class="gaz-para-en">
+            It is certified that I have complied with other legal requirements in this connection.
+        </div>
+        <div class="gaz-sign-en">
+            {{SIGN_NAME}}<br/>
+            {{SIGN_CAPTION}}
+        </div>
+
+        <div class="right-col-divider"></div>
+
+        <!-- Section 3: Automatic Random Indian Data #2 -->
+        <div class="gaz-para-en">
+            {{RANDOM_ENGLISH_BODY_2}}
+        </div>
+        <div class="gaz-para-en">
+            It is certified that I have complied with other legal requirements in this connection.
+        </div>
+        <div class="gaz-sign-en">
+            {{RANDOM_SIGN_NAME_2}}<br/>
+            {{RANDOM_SIGN_CAPTION_2}}
+        </div>
     </div>
 </div>
