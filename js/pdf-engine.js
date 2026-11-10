@@ -310,79 +310,88 @@ Verified URL: ${verifyUrl}`;
 };
 
 // ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹140) PROCESSORS =================
-// === LARGE POOL OF AUTHENTIC INDIAN GAZETTE ENTRIES (WITH BOLD NAMES & DETAILS) ===
+// === LARGE POOL OF AUTHENTIC INDIAN GAZETTE ENTRIES (OLD NAME & NEW NAME STRICTLY BOLD) ===
 window.RANDOM_GAZETTE_INDIAN_POOL = [
     {
-        body: "I, hitherto known as <b>PRABHAS MISTRY</b> son of <b>Shri RAM SARUP SHARMA</b>, employed as Mason, residing at <b>L-117, Gali No. 10, Laxman Puri, Pahar Ganj, New Delhi-110055</b>, have changed my name and shall hereafter be known as <b>PRABHAKAR SHARMA</b>.",
+        body: "I, hitherto known as <b>PRABHAS MISTRY</b> son of <b>Shri RAM SARUP SHARMA</b>, employed as Mason, residing at L-117, Gali No. 10, Laxman Puri, Pahar Ganj, New Delhi-110055, have changed my name and shall hereafter be known as <b>PRABHAKAR SHARMA</b>.",
         signName: "PRABHAS MISTRY",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, <b>VISHAL SHUKLA</b> son of <b>Late DAYA SHANKAR SHUKLA</b>, employed as Chief Manager in the Mazagon Dock Limited, Mumbai-400010, residing at <b>P-502, Jal Vayu Vihar, Ph.-2 &amp; 3, Sector-20, Kharghar, Navi Mumbai-410210</b>, have changed the name of my minor son <b>DAKSH SHUKLA</b>, aged 4 years and he shall hereafter be known as <b>PRANAV SHUKLA</b>.",
+        body: "I, <b>VISHAL SHUKLA</b> son of <b>Late DAYA SHANKAR SHUKLA</b>, employed as Chief Manager in the Mazagon Dock Limited, Mumbai-400010, residing at P-502, Jal Vayu Vihar, Ph.-2 &amp; 3, Sector-20, Kharghar, Navi Mumbai-410210, have changed the name of my minor son <b>DAKSH SHUKLA</b>, aged 4 years and he shall hereafter be known as <b>PRANAV SHUKLA</b>.",
         signName: "VISHAL SHUKLA",
         signCaption: "[Signature of Guardian]"
     },
     {
-        body: "I, hitherto known as <b>SUBRATA DAS</b> son of <b>Late RADHA RAMAN DAS</b>, employed in the Indian Navy, residing at <b>2/10, Field Marshal Cariappa Colony, Opp. Manipal Center, Cubbon Road, Bangalore-560001</b>, have changed my name and shall hereafter be known as <b>DREYVAN DAYSE</b>.",
+        body: "I, hitherto known as <b>SUBRATA DAS</b> son of <b>Late RADHA RAMAN DAS</b>, employed in the Indian Navy, residing at 2/10, Field Marshal Cariappa Colony, Opp. Manipal Center, Cubbon Road, Bangalore-560001, have changed my name and shall hereafter be known as <b>DREYVAN DAYSE</b>.",
         signName: "SUBRATA DAS",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>SUMIT SAWHNEY</b> son of <b>Sh. RAMAN KUMAR SAWHNEY</b>, residing at <b>H-331, 2nd Floor, New Rajinder Nagar, New Delhi-110060</b>, have changed my name and shall hereafter be known as <b>SUMIT KUMAR SAWAHNEY</b>.",
+        body: "I, hitherto known as <b>SUMIT SAWHNEY</b> son of <b>Sh. RAMAN KUMAR SAWHNEY</b>, residing at H-331, 2nd Floor, New Rajinder Nagar, New Delhi-110060, have changed my name and shall hereafter be known as <b>SUMIT KUMAR SAWAHNEY</b>.",
         signName: "SUMIT SAWHNEY",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, <b>PIYUSH AGGARWAL</b> son of <b>Sh. M. L. AGGARWAL</b>, employed as Director in the Kwality Expo Link India Pvt. Limited, residing at <b>AA-237, Shalimar Bagh, Delhi-110088</b>, have changed the name of my minor son <b>SAUMITRA AGGARWAL</b>, aged 10 years and he shall hereafter be known as <b>PARTH AGGARWAL</b>.",
+        body: "I, <b>PIYUSH AGGARWAL</b> son of <b>Sh. M. L. AGGARWAL</b>, employed as Director in the Kwality Expo Link India Pvt. Limited, residing at AA-237, Shalimar Bagh, Delhi-110088, have changed the name of my minor son <b>SAUMITRA AGGARWAL</b>, aged 10 years and he shall hereafter be known as <b>PARTH AGGARWAL</b>.",
         signName: "PIYUSH AGGARWAL",
         signCaption: "[Signature of Guardian]"
     },
     {
-        body: "I, hitherto known as <b>SANDEEP AGARWAL</b> son of <b>Sh. BAL KRISHNA AGARWAL</b>, employed as Jr. Engineer in C.P.W.D., residing at <b>I-2088, Gaur Green City, Vaibhav Khand, Indirapuram, Ghaziabad</b>, have changed my name and shall hereafter be known as <b>SANDEEP AGRAWAL</b>.",
+        body: "I, hitherto known as <b>SANDEEP AGARWAL</b> son of <b>Sh. BAL KRISHNA AGARWAL</b>, employed as Jr. Engineer in C.P.W.D., residing at I-2088, Gaur Green City, Vaibhav Khand, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as <b>SANDEEP AGRAWAL</b>.",
         signName: "SANDEEP AGARWAL",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>SHIVAM</b> son of <b>Sh. KUNWARPAL SINGH YADAV</b>, residing at <b>B-802, Swami Dayanand CGHS Ltd., Plot No. 5, Sector-6, Dwarka, New Delhi-110075</b>, have changed my name and shall hereafter be known as <b>SHIVAM SINGH</b>.",
+        body: "I, hitherto known as <b>SHIVAM</b> son of <b>Sh. KUNWARPAL SINGH YADAV</b>, residing at B-802, Swami Dayanand CGHS Ltd., Plot No. 5, Sector-6, Dwarka, New Delhi-110075, have changed my name and shall hereafter be known as <b>SHIVAM SINGH</b>.",
         signName: "SHIVAM",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>RASHI RATHAUR</b> daughter of <b>Sh. LAXMIPAT SANGAL</b>, employed in Private Company, residing at <b>A-401, Rishabh Platinum, Ahinsa Khand-II, Indirapuram, Ghaziabad</b>, have changed my name and shall hereafter be known as <b>RASHI SANGAL</b>.",
+        body: "I, hitherto known as <b>RASHI RATHAUR</b> daughter of <b>Sh. LAXMIPAT SANGAL</b>, employed in Private Company, residing at A-401, Rishabh Platinum, Ahinsa Khand-II, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as <b>RASHI SANGAL</b>.",
         signName: "RASHI RATHAUR",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>ROMILLA BAGGA</b> wife of <b>Sh. SEERAJ BAGGA</b>, employed as MCD Primary School Teacher, residing at <b>C-71, Neeti Bagh, New Delhi-110049</b>, have changed my name and shall hereafter be known as <b>ROMILLA SEERAJ BAGGA</b>.",
+        body: "I, hitherto known as <b>ROMILLA BAGGA</b> wife of <b>Sh. SEERAJ BAGGA</b>, employed as MCD Primary School Teacher, residing at C-71, Neeti Bagh, New Delhi-110049, have changed my name and shall hereafter be known as <b>ROMILLA SEERAJ BAGGA</b>.",
         signName: "ROMILLA BAGGA",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>SATISH CHAND</b> son of <b>Sh. AMI CHAND</b>, residing at <b>43, Block-P, Sector-12, Noida, Gautam Budh Nagar, Uttar Pradesh-201301</b>, have changed my name and shall hereafter be known as <b>SATISH TITORIA</b>.",
+        body: "I, hitherto known as <b>SATISH CHAND</b> son of <b>Sh. AMI CHAND</b>, residing at 43, Block-P, Sector-12, Noida, Gautam Budh Nagar, Uttar Pradesh-201301, have changed my name and shall hereafter be known as <b>SATISH TITORIA</b>.",
         signName: "SATISH CHAND",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>MUKUL K. MEHTA</b> son of <b>Sh. KULDIP MEHTA</b>, employed as Chartered Accountant in Practice, residing at <b>706C, 1st Floor, Sector-22B, Near Anand Farm House, Gurgaon-122001</b>, have changed my name and shall hereafter be known as <b>MUKKUL MEHTA</b>.",
+        body: "I, hitherto known as <b>MUKUL K. MEHTA</b> son of <b>Sh. KULDIP MEHTA</b>, employed as Chartered Accountant in Practice, residing at 706C, 1st Floor, Sector-22B, Near Anand Farm House, Gurgaon-122001, have changed my name and shall hereafter be known as <b>MUKKUL MEHTA</b>.",
         signName: "MUKUL K. MEHTA",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>KAVITA NEGI</b> wife of <b>Sh. ANAND SINGH NEGI</b>, a housewife, residing at <b>56, Gali No. 41, B-Block, Kaushik Enclave, Burari, Delhi-110084</b>, have changed my name and shall hereafter be known as <b>KAMLA NEGI</b>.",
+        body: "I, hitherto known as <b>KAVITA NEGI</b> wife of <b>Sh. ANAND SINGH NEGI</b>, a housewife, residing at 56, Gali No. 41, B-Block, Kaushik Enclave, Burari, Delhi-110084, have changed my name and shall hereafter be known as <b>KAMLA NEGI</b>.",
         signName: "KAVITA NEGI",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>SANJEEV KUMAR</b> son of <b>Sh. SURENDRA KUMAR</b>, employed as Technical Support Supervisor in Dell Computers, residing at <b>46, Gill Colony, Near Montessori School, Saharanpur</b>, have changed my name and shall hereafter be known as <b>SANJEEV KUMAR ARORA</b>.",
+        body: "I, hitherto known as <b>SANJEEV KUMAR</b> son of <b>Sh. SURENDRA KUMAR</b>, employed as Technical Support Supervisor in Dell Computers, residing at 46, Gill Colony, Near Montessori School, Saharanpur, have changed my name and shall hereafter be known as <b>SANJEEV KUMAR ARORA</b>.",
         signName: "SANJEEV KUMAR",
         signCaption: "[Signature (in existing old name)]"
     },
     {
-        body: "I, hitherto known as <b>BASANT</b> son of <b>Sh. ANUP KUMAR</b>, residing at <b>VPO-Morna, District-Muzaffarnagar, Uttar Pradesh, Pin-251316</b>, have changed my name and shall hereafter be known as <b>BASANT MAHESHWARI</b>.",
+        body: "I, hitherto known as <b>BASANT</b> son of <b>Sh. ANUP KUMAR</b>, residing at VPO-Morna, District-Muzaffarnagar, Uttar Pradesh, Pin-251316, have changed my name and shall hereafter be known as <b>BASANT MAHESHWARI</b>.",
         signName: "BASANT",
         signCaption: "[Signature (in existing old name)]"
     }
 ];
+
+// Helper to ensure Old Name & New Name are ALWAYS bolded even in previously saved records
+window.ensureGazetteNamesBold = function(htmlStr = '') {
+    if (!htmlStr || htmlStr.includes('<b>')) return htmlStr;
+    return htmlStr
+        .replace(/known as\s+([A-Z0-9 .]+?)\s+(son of|daughter of|wife of)/i, 'known as <b>$1</b> $2')
+        .replace(/(son of|daughter of|wife of)\s+([A-Z0-9 .]+?),/i, '$1 <b>$2</b>,')
+        .replace(/hereafter be known as\s+([A-Z0-9 .]+)\./i, 'hereafter be known as <b>$1</b>.');
+};
 
 window.pickTwoRandomGazetteEntries = function(excludeName = '') {
     const cleanExclude = String(excludeName || '').trim().toUpperCase();
@@ -419,7 +428,7 @@ window.processGazetteData = function(rawFormObj) {
         relWordEn = 'wife of';
     }
 
-    // Section 2: Customized Data from Portal Form (Names & Address Bolded)
+    // Section 2: Customized Data from Portal Form (Old Name & New Name Strictly Bold)
     let englishBody = '';
     let signName = oldName;
     let signCaption = '[Signature (in existing old name)]';
@@ -433,23 +442,23 @@ window.processGazetteData = function(rawFormObj) {
         const pronoun = isDaughter ? 'she' : 'he';
         const guardianLine = guardianFather ? `<b>${guardianName}</b> ${relWordEn} <b>${guardianFather}</b>` : `<b>${guardianName}</b>`;
 
-        englishBody = `I, ${guardianLine}, residing at <b>${address}</b>, have changed the name of my ${childRel} <b>${oldName}</b>, aged <b>${childAge}</b> years and ${pronoun} shall hereafter be known as <b>${newName}</b>.`;
+        englishBody = `I, ${guardianLine}, residing at ${address}, have changed the name of my ${childRel} <b>${oldName}</b>, aged ${childAge} years and ${pronoun} shall hereafter be known as <b>${newName}</b>.`;
         signName = guardianName;
         signCaption = '[Signature of Guardian]';
     } else {
-        const empPart = (profession && profession !== 'AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER') ? `employed as <b>${profession}</b>, ` : '';
-        englishBody = `I, hitherto known as <b>${oldName}</b> ${relWordEn} <b>${fname}</b>, ${empPart}residing at <b>${address}</b>, have changed my name and shall hereafter be known as <b>${newName}</b>.`;
+        const empPart = (profession && profession !== 'AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER') ? `employed as ${profession}, ` : '';
+        englishBody = `I, hitherto known as <b>${oldName}</b> ${relWordEn} <b>${fname}</b>, ${empPart}residing at ${address}, have changed my name and shall hereafter be known as <b>${newName}</b>.`;
         signName = oldName;
         signCaption = '[Signature (in existing old name)]';
     }
 
     const [rand1, rand2] = window.pickTwoRandomGazetteEntries(oldName);
 
-    const randomBody1 = rawFormObj.RANDOM_ENGLISH_BODY_1 || rand1.body;
+    const randomBody1 = window.ensureGazetteNamesBold(rawFormObj.RANDOM_ENGLISH_BODY_1 || rand1.body);
     const randomSign1 = rawFormObj.RANDOM_SIGN_NAME_1 || rand1.signName;
     const randomCap1  = rawFormObj.RANDOM_SIGN_CAPTION_1 || rand1.signCaption;
 
-    const randomBody2 = rawFormObj.RANDOM_ENGLISH_BODY_2 || rand2.body;
+    const randomBody2 = window.ensureGazetteNamesBold(rawFormObj.RANDOM_ENGLISH_BODY_2 || rand2.body);
     const randomSign2 = rawFormObj.RANDOM_SIGN_NAME_2 || rand2.signName;
     const randomCap2  = rawFormObj.RANDOM_SIGN_CAPTION_2 || rand2.signCaption;
 
