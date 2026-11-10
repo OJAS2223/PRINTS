@@ -316,76 +316,87 @@ window.generateGazetteNo = function() {
     return `CG-DL-W-${year}-${rand5}`;
 };
 
-window.processGazetteData = function(rawFormObj = {}) {
-    const oldName = (rawFormObj.OLD_NAME || 'SUBRATA DAS').toString().trim().toUpperCase();
-    const newName = (rawFormObj.NEW_NAME || rawFormObj.NAME || 'DREYVAN DAYSE').toString().trim().toUpperCase();
-    const fname = (rawFormObj.FNAME || 'Late RADHA RAMAN DAS').toString().trim();
-    const address = (rawFormObj.ADDRESS || '2/10, Field Marshal Cariappa Colony, Opp. Manipal Center, Cubbon Road, Bangalore-560001').toString().trim();
-    const profession = (rawFormObj.PROFESSION || 'employed in the Indian Navy').toString().trim();
+window.processGazetteData = function(rawFormObj) {
+    // Fixed Issue No. & Fixed Dates as requested
+    const fixedIssueNo = "53";
+    const fixedEnDateRange = "NEW DELHI, SATURDAY, 24-Jun-2021 - 26-Mar-2013 (Ashadh 3, 1943)";
+    const fixedHiDateRange = "नई दिल्ली, शनिवार, 24-जून-2021 - 26-मार्च-2013 (आषाढ़ 3, 1943)";
+    const fixedIssueDate = "24-Jun-2021";
 
-    const relCode = (rawFormObj.REL_TYPE || 'S/O').toString().trim().toUpperCase();
-    const relWordEn = relCode === 'D/O' ? 'daughter of' : (relCode === 'W/O' ? 'wife of' : 'son of');
-    const isMinor = (rawFormObj.APPLICANT_TYPE === 'MINOR');
-    const minorAge = (rawFormObj.MINOR_AGE || '4').toString().trim();
-    const minorRel = (rawFormObj.MINOR_REL || 'son').toString().trim().toLowerCase();
-    const pronoun = minorRel === 'daughter' ? 'she' : 'he';
+    const gazetteNo = (rawFormObj.GAZETTE_NO || '').toString().trim().toUpperCase() || "CG-DL-W-2021-232514";
 
-    // Default to exact 157413.pdf date/issue if not custom-selected
-    let issueNo = (rawFormObj.ISSUE_NO || '52').toString().trim();
-    let dateLineEn = 'NEW DELHI, SATURDAY, DECEMBER 28, 2013—JANUARY 3, 2014 (PAUSA 7, 1935)';
-    let dateLineHi = 'नई दिल्ली, शनिवार, दिसम्बर 28, 2013 - जनवरी 3, 2014 (पौष 7, 1935)';
-    let giCode = rawFormObj.GI_CODE || '1-390 GI/2013';
-    let pageNo = rawFormObj.PAGE_NO || '1235';
+    const oldName = (rawFormObj.OLD_NAME || '').toString().trim().toUpperCase();
+    const newName = (rawFormObj.NEW_NAME || rawFormObj.NAME || '').toString().trim().toUpperCase();
+    const fname = (rawFormObj.FNAME || '').toString().trim().toUpperCase();
+    const relType = (rawFormObj.REL_TYPE || 'son of').toString().trim();
+    const address = (rawFormObj.ADDRESS || '').toString().trim();
+    const changeMode = (rawFormObj.CHANGE_TYPE || 'ADULT_SELF').toString().trim().toUpperCase();
+    const profession = (rawFormObj.REASON || '').toString().trim();
 
-    if (rawFormObj.ISSUE_DATE && rawFormObj.ISSUE_DATE.toString().trim()) {
-        const d = new Date(rawFormObj.ISSUE_DATE);
-        if (!isNaN(d.getTime())) {
-            const endD = new Date(d.getTime() + 6 * 86400000);
-            const monthsEn = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
-            const monthsHi = ['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितम्बर','अक्टूबर','नवम्बर','दिसम्बर'];
-            const m1 = d.getMonth(), m2 = endD.getMonth();
-            const d1 = d.getDate(), d2 = endD.getDate();
-            const y1 = d.getFullYear(), y2 = endD.getFullYear();
-            const sakaYear = y1 - 78;
-            dateLineEn = `NEW DELHI, SATURDAY, ${monthsEn[m1]} ${d1}${y1 !== y2 ? ', ' + y1 : ''}—${monthsEn[m2]} ${d2}, ${y2} (PAUSA 7, ${sakaYear})`;
-            dateLineHi = `नई दिल्ली, शनिवार, ${monthsHi[m1]} ${d1}${y1 !== y2 ? ', ' + y1 : ''} - ${monthsHi[m2]} ${d2}, ${y2} (पौष 7, ${sakaYear})`;
-            giCode = `1-390 GI/${y1}`;
-        }
+    let relWordEn = 'son of';
+    if (relType === 'D/O' || relType.toLowerCase().includes('daughter')) {
+        relWordEn = 'daughter of';
+    } else if (relType === 'W/O' || relType.toLowerCase().includes('wife')) {
+        relWordEn = 'wife of';
     }
 
-    let englishParagraph = '';
-    let signNameEn = oldName;
-    let signCaptionEn = '[Signature (in existing old name)]';
+    let englishBody = '';
+    let signName = oldName;
+    let signCaption = '[Signature (in existing old name)]';
 
-    if (isMinor) {
+    if (changeMode === 'MINOR_SON' || changeMode === 'MINOR_DAUGHTER') {
         const guardianName = (rawFormObj.GUARDIAN_NAME || fname).toString().trim().toUpperCase();
         const guardianFather = (rawFormObj.GUARDIAN_FATHER || '').toString().trim().toUpperCase();
-        englishParagraph = `I, ${guardianName}${guardianFather ? ' ' + relWordEn + ' ' + guardianFather : ''}, residing at ${address}, have changed the name of my minor ${minorRel} ${oldName}, aged ${minorAge} years and ${pronoun} shall hereafter be known as ${newName}.`;
-        signNameEn = guardianName;
-        signCaptionEn = '[Signature of Guardian]';
+        const childAge = (rawFormObj.CHILD_AGE || '10').toString().trim();
+        const isDaughter = changeMode === 'MINOR_DAUGHTER';
+        const childRel = isDaughter ? 'minor daughter' : 'minor son';
+        const pronoun = isDaughter ? 'she' : 'he';
+        const guardianLine = guardianFather ? `<b>${guardianName}</b> ${relWordEn} <b>${guardianFather}</b>` : `<b>${guardianName}</b>`;
+
+        englishBody = `I, ${guardianLine}, residing at ${address}, have changed the name of my ${childRel} <b>${oldName}</b>, aged ${childAge} years and ${pronoun} shall hereafter be known as <b>${newName}</b>.`;
+        signName = guardianName;
+        signCaption = '[Signature of Guardian]';
     } else {
-        englishParagraph = `I, hitherto known as ${oldName} ${relWordEn} ${fname}${profession ? ', ' + profession : ''}, residing at ${address}, have changed my name and shall hereafter be known as ${newName}.`;
+        const empPart = (profession && profession !== 'AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER') ? `employed as ${profession}, ` : '';
+        englishBody = `I, hitherto known as <b>${oldName}</b> ${relWordEn} <b>${fname}</b>, ${empPart}residing at ${address}, have changed my name and shall hereafter be known as <b>${newName}</b>.`;
+        signName = oldName;
+        signCaption = '[Signature (in existing old name)]';
     }
 
-    const hindiParagraph = rawFormObj.HINDI_NOTICE_PARAGRAPH ||
-        `मैं अब तक प्रभास मिस्त्री पुत्र श्री राम सरूप शर्मा के नाम से जाना जाता हूँ। मैं राज मिस्त्री के पद पर नियुक्त हूँ। मैं एल-117, गली नं. 10, लक्ष्मन पुरी, पहाड़ गंज, नई दिल्ली-110055 पर रहता हूँ। मैंने अपना नाम बदल लिया है और इसके बाद प्रभाकर शर्मा से जाना जाऊँगा।`;
+    const hindiBody = rawFormObj.HINDI_BODY
+        ? rawFormObj.HINDI_BODY
+        : `मैं अब तक <b>प्रभास मिस्त्री</b> पुत्र <b>श्री राम सरूप शर्मा</b> के नाम से जाना जाता हूँ। मैं राज मिस्त्री के पद पर नियुक्त हूँ। मैं एल-117, गली नं. 10, लक्ष्मन पुरी, पहाड़ गंज, नई दिल्ली-110055 पर रहता हूँ। मैंने अपना नाम बदल लिया है और इसके बाद <b>प्रभाकर शर्मा</b> से जाना जाऊँगा।`;
     const hindiSignName = rawFormObj.HINDI_SIGN_NAME || 'प्रभास मिस्त्री';
+    const hindiSignCaption = '[हस्ताक्षर (वर्तमान पुराने नाम से)]';
+
+    const secondEnglishBody = `I, <b>VISHAL SHUKLA</b> son of <b>Late DAYA SHANKAR SHUKLA</b>, employed as Chief Manager in the Mazagon Dock Limited, Mumbai-400010, residing at P-502, Jal Vayu Vihar, Ph.-2 &amp; 3, Sector-20, Kharghar, Navi Mumbai-410210, have changed the name of my minor son <b>DAKSH SHUKLA</b>, aged 4 years and he shall hereafter be known as <b>PRANAV SHUKLA</b>.`;
 
     return {
         SERVICE_TYPE: 'Gazette Notification',
-        NAME: newName,
+        GAZETTE_NO: gazetteNo,
+        REG_YEAR_SHORT: '05',
+        ISSUE_NO: fixedIssueNo,
+        EN_DATE_RANGE: fixedEnDateRange,
+        HI_DATE_RANGE: fixedHiDateRange,
+        NAME: newName || oldName,
         OLD_NAME: oldName,
         NEW_NAME: newName,
-        ISSUE_NO: issueNo,
-        DATE_LINE_EN: dateLineEn,
-        DATE_LINE_HI: dateLineHi,
-        HINDI_NOTICE_PARAGRAPH: hindiParagraph,
+        REL_TYPE: relType,
+        FNAME: fname,
+        ISSUE_DATE: fixedIssueDate,
+        ADDRESS: address,
+        CHANGE_TYPE: changeMode,
+        HINDI_NOTICE_BODY: hindiBody,
         HINDI_SIGN_NAME: hindiSignName,
-        ENGLISH_NOTICE_PARAGRAPH: englishParagraph,
-        SIGN_NAME_EN: signNameEn,
-        SIGN_CAPTION_EN: signCaptionEn,
-        GI_CODE: giCode,
-        PAGE_NO: pageNo
+        HINDI_SIGN_CAPTION: hindiSignCaption,
+        ENGLISH_NOTICE_BODY: englishBody,
+        SIGN_NAME: signName,
+        SIGN_CAPTION: signCaption,
+        SECOND_ENGLISH_BODY: secondEnglishBody,
+        SECOND_SIGN_NAME: 'VISHAL SHUKLA',
+        SECOND_SIGN_CAPTION: '[Signature of Guardian]',
+        GI_CODE: '1-390 GI/2021',
+        PAGE_NO: rawFormObj.PAGE_NO || '1235'
     };
 };
 
