@@ -316,47 +316,76 @@ window.generateGazetteNo = function() {
     return `CG-DL-W-${year}-${rand5}`;
 };
 
-window.processGazetteData = function(rawFormObj) {
-    const formatToDMY = (dStr) => {
-        if (!dStr) return '';
-        const s = String(dStr).trim();
-        if (s.includes('-')) {
-            const p = s.split('-');
-            if (p.length === 3 && p[0].length === 4) return `${p[2]}/${p[1]}/${p[0]}`;
+window.processGazetteData = function(rawFormObj = {}) {
+    const oldName = (rawFormObj.OLD_NAME || 'SUBRATA DAS').toString().trim().toUpperCase();
+    const newName = (rawFormObj.NEW_NAME || rawFormObj.NAME || 'DREYVAN DAYSE').toString().trim().toUpperCase();
+    const fname = (rawFormObj.FNAME || 'Late RADHA RAMAN DAS').toString().trim();
+    const address = (rawFormObj.ADDRESS || '2/10, Field Marshal Cariappa Colony, Opp. Manipal Center, Cubbon Road, Bangalore-560001').toString().trim();
+    const profession = (rawFormObj.PROFESSION || 'employed in the Indian Navy').toString().trim();
+
+    const relCode = (rawFormObj.REL_TYPE || 'S/O').toString().trim().toUpperCase();
+    const relWordEn = relCode === 'D/O' ? 'daughter of' : (relCode === 'W/O' ? 'wife of' : 'son of');
+    const isMinor = (rawFormObj.APPLICANT_TYPE === 'MINOR');
+    const minorAge = (rawFormObj.MINOR_AGE || '4').toString().trim();
+    const minorRel = (rawFormObj.MINOR_REL || 'son').toString().trim().toLowerCase();
+    const pronoun = minorRel === 'daughter' ? 'she' : 'he';
+
+    // Default to exact 157413.pdf date/issue if not custom-selected
+    let issueNo = (rawFormObj.ISSUE_NO || '52').toString().trim();
+    let dateLineEn = 'NEW DELHI, SATURDAY, DECEMBER 28, 2013—JANUARY 3, 2014 (PAUSA 7, 1935)';
+    let dateLineHi = 'नई दिल्ली, शनिवार, दिसम्बर 28, 2013 - जनवरी 3, 2014 (पौष 7, 1935)';
+    let giCode = rawFormObj.GI_CODE || '1-390 GI/2013';
+    let pageNo = rawFormObj.PAGE_NO || '1235';
+
+    if (rawFormObj.ISSUE_DATE && rawFormObj.ISSUE_DATE.toString().trim()) {
+        const d = new Date(rawFormObj.ISSUE_DATE);
+        if (!isNaN(d.getTime())) {
+            const endD = new Date(d.getTime() + 6 * 86400000);
+            const monthsEn = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+            const monthsHi = ['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितम्बर','अक्टूबर','नवम्बर','दिसम्बर'];
+            const m1 = d.getMonth(), m2 = endD.getMonth();
+            const d1 = d.getDate(), d2 = endD.getDate();
+            const y1 = d.getFullYear(), y2 = endD.getFullYear();
+            const sakaYear = y1 - 78;
+            dateLineEn = `NEW DELHI, SATURDAY, ${monthsEn[m1]} ${d1}${y1 !== y2 ? ', ' + y1 : ''}—${monthsEn[m2]} ${d2}, ${y2} (PAUSA 7, ${sakaYear})`;
+            dateLineHi = `नई दिल्ली, शनिवार, ${monthsHi[m1]} ${d1}${y1 !== y2 ? ', ' + y1 : ''} - ${monthsHi[m2]} ${d2}, ${y2} (पौष 7, ${sakaYear})`;
+            giCode = `1-390 GI/${y1}`;
         }
-        return s;
-    };
-    const now = new Date();
-    const todayDMY = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+    }
 
-    const gazetteNo = (rawFormObj.GAZETTE_NO || '').toString().trim().toUpperCase() || window.generateGazetteNo();
-    const oldName = (rawFormObj.OLD_NAME || '').toString().trim().toUpperCase();
-    const newName = (rawFormObj.NEW_NAME || rawFormObj.NAME || '').toString().trim().toUpperCase();
-    const fname = (rawFormObj.FNAME || '').toString().trim().toUpperCase();
-    const relType = (rawFormObj.REL_TYPE || 'S/O').toString().trim().toUpperCase();
-    const dob = formatToDMY(rawFormObj.DOB) || todayDMY;
-    const issueDate = formatToDMY(rawFormObj.ISSUE_DATE) || todayDMY;
-    const address = (rawFormObj.ADDRESS || '').toString().trim().toUpperCase();
-    const changeType = (rawFormObj.CHANGE_TYPE || 'NAME CHANGE / CORRECTION').toString().trim().toUpperCase();
-    const reason = (rawFormObj.REASON || 'AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER').toString().trim().toUpperCase();
+    let englishParagraph = '';
+    let signNameEn = oldName;
+    let signCaptionEn = '[Signature (in existing old name)]';
 
-    const qrText = `GAZETTE OF INDIA | No: ${gazetteNo} | Old Name: ${oldName} | New Name: ${newName} | ${relType}: ${fname} | DOB: ${dob} | Issue Date: ${issueDate}`;
-    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&chl=" + encodeURIComponent(qrText);
+    if (isMinor) {
+        const guardianName = (rawFormObj.GUARDIAN_NAME || fname).toString().trim().toUpperCase();
+        const guardianFather = (rawFormObj.GUARDIAN_FATHER || '').toString().trim().toUpperCase();
+        englishParagraph = `I, ${guardianName}${guardianFather ? ' ' + relWordEn + ' ' + guardianFather : ''}, residing at ${address}, have changed the name of my minor ${minorRel} ${oldName}, aged ${minorAge} years and ${pronoun} shall hereafter be known as ${newName}.`;
+        signNameEn = guardianName;
+        signCaptionEn = '[Signature of Guardian]';
+    } else {
+        englishParagraph = `I, hitherto known as ${oldName} ${relWordEn} ${fname}${profession ? ', ' + profession : ''}, residing at ${address}, have changed my name and shall hereafter be known as ${newName}.`;
+    }
+
+    const hindiParagraph = rawFormObj.HINDI_NOTICE_PARAGRAPH ||
+        `मैं अब तक प्रभास मिस्त्री पुत्र श्री राम सरूप शर्मा के नाम से जाना जाता हूँ। मैं राज मिस्त्री के पद पर नियुक्त हूँ। मैं एल-117, गली नं. 10, लक्ष्मन पुरी, पहाड़ गंज, नई दिल्ली-110055 पर रहता हूँ। मैंने अपना नाम बदल लिया है और इसके बाद प्रभाकर शर्मा से जाना जाऊँगा।`;
+    const hindiSignName = rawFormObj.HINDI_SIGN_NAME || 'प्रभास मिस्त्री';
 
     return {
         SERVICE_TYPE: 'Gazette Notification',
-        GAZETTE_NO: gazetteNo,
-        NAME: newName || oldName,
+        NAME: newName,
         OLD_NAME: oldName,
         NEW_NAME: newName,
-        REL_TYPE: relType,
-        FNAME: fname,
-        DOB: dob,
-        ISSUE_DATE: issueDate,
-        ADDRESS: address,
-        CHANGE_TYPE: changeType,
-        REASON: reason,
-        QR_URL: qrUrl
+        ISSUE_NO: issueNo,
+        DATE_LINE_EN: dateLineEn,
+        DATE_LINE_HI: dateLineHi,
+        HINDI_NOTICE_PARAGRAPH: hindiParagraph,
+        HINDI_SIGN_NAME: hindiSignName,
+        ENGLISH_NOTICE_PARAGRAPH: englishParagraph,
+        SIGN_NAME_EN: signNameEn,
+        SIGN_CAPTION_EN: signCaptionEn,
+        GI_CODE: giCode,
+        PAGE_NO: pageNo
     };
 };
 
