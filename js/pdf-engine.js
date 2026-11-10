@@ -310,14 +310,90 @@ Verified URL: ${verifyUrl}`;
 };
 
 // ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹140) PROCESSORS =================
-window.generateGazetteNo = function() {
-    const year = new Date().getFullYear();
-    const rand5 = Math.floor(10000 + Math.random() * 90000);
-    return `CG-DL-W-${year}-${rand5}`;
+// === AUTHENTIC RANDOM INDIAN GAZETTE ENTRIES POOL (ALL IN ENGLISH) ===
+window.RANDOM_GAZETTE_INDIAN_POOL = [
+    {
+        body: "I, hitherto known as PRABHAS MISTRY son of Shri RAM SARUP SHARMA, employed as Mason, residing at L-117, Gali No. 10, Laxman Puri, Pahar Ganj, New Delhi-110055, have changed my name and shall hereafter be known as PRABHAKAR SHARMA.",
+        signName: "PRABHAS MISTRY",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, VISHAL SHUKLA son of Late DAYA SHANKAR SHUKLA, employed as Chief Manager in the Mazagon Dock Limited, Mumbai-400010, residing at P-502, Jal Vayu Vihar, Ph.-2 & 3, Sector-20, Kharghar, Navi Mumbai-410210, have changed the name of my minor son DAKSH SHUKLA, aged 4 years and he shall hereafter be known as PRANAV SHUKLA.",
+        signName: "VISHAL SHUKLA",
+        signCaption: "[Signature of Guardian]"
+    },
+    {
+        body: "I, hitherto known as SUBRATA DAS son of Late RADHA RAMAN DAS, employed in the Indian Navy, residing at 2/10, Field Marshal Cariappa Colony, Opp. Manipal Center, Cubbon Road, Bangalore-560001, have changed my name and shall hereafter be known as DREYVAN DAYSE.",
+        signName: "SUBRATA DAS",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, hitherto known as SUMIT SAWHNEY son of Sh. RAMAN KUMAR SAWHNEY, residing at H-331, 2nd Floor, New Rajinder Nagar, New Delhi-110060, have changed my name and shall hereafter be known as SUMIT KUMAR SAWAHNEY.",
+        signName: "SUMIT SAWHNEY",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, PIYUSH AGGARWAL son of Sh. M. L. AGGARWAL, employed as Director in the Kwality Expo Link India Pvt. Limited, residing at AA-237, Shalimar Bagh, Delhi-110088, have changed the name of my minor son SAUMITRA AGGARWAL, aged 10 years and he shall hereafter be known as PARTH AGGARWAL.",
+        signName: "PIYUSH AGGARWAL",
+        signCaption: "[Signature of Guardian]"
+    },
+    {
+        body: "I, hitherto known as SANDEEP AGARWAL son of Sh. BAL KRISHNA AGARWAL, employed as Jr. Engineer in C.P.W.D., residing at I-2088, Gaur Green City, Vaibhav Khand, Indirapuram, Ghaziabad, Uttar Pradesh-201014, have changed my name and shall hereafter be known as SANDEEP AGRAWAL.",
+        signName: "SANDEEP AGARWAL",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, hitherto known as SHIVAM son of Sh. KUNWARPAL SINGH YADAV, residing at B-802, Swami Dayanand CGHS Ltd., Plot No. 5, Sector-6, Dwarka, New Delhi-110075, have changed my name and shall hereafter be known as SHIVAM SINGH.",
+        signName: "SHIVAM",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, hitherto known as RASHI RATHAUR daughter of Sh. LAXMIPAT SANGAL, employed in Private Company, residing at A-401, Rishabh Platinum, Ahinsa Khand-II, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as RASHI SANGAL.",
+        signName: "RASHI RATHAUR",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, hitherto known as KULDEEP JUDGE son of GURCHARAN SINGH, residing at Village Nurpur Sethan, Ferozepur-152004, Punjab, have changed my name and shall hereafter be known as KULDEEP SINGH.",
+        signName: "KULDEEP JUDGE",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, hitherto known as DEEPAK KUMAR son of SURAT RAM, residing at H.No. 615/13, Gali No. 13, Mandoli Extn, Delhi-110093, have changed my name and shall hereafter be known as DEEPAK SHARMA.",
+        signName: "DEEPAK KUMAR",
+        signCaption: "[Signature (in existing old name)]"
+    },
+    {
+        body: "I, ACHINT GOYAL son of RADHEY SHYAM GOYAL, residing at House No.-27, Second Floor, Pocket-5A, Rohini Sector-7, North West, Delhi-110085, have changed the name of my minor daughter SAANVI GOYAL, aged about 9 years and she shall hereafter be known as Aanya GOYAL.",
+        signName: "ACHINT GOYAL",
+        signCaption: "[Signature of Guardian]"
+    },
+    {
+        body: "I, hitherto known as RAJAT MEHRA son of SUDHIR MEHRA, residing at 12, Rani Ka Bagh, Park Lane, Amritsar, Punjab-143001, have changed my name and shall hereafter be known as RAJJAT KUMAR MEHRA.",
+        signName: "RAJAT MEHRA",
+        signCaption: "[Signature (in existing old name)]"
+    }
+];
+
+window.pickTwoRandomGazetteEntries = function(seedStr = '') {
+    const pool = window.RANDOM_GAZETTE_INDIAN_POOL;
+    let idx1 = Math.floor(Math.random() * pool.length);
+    let idx2 = (idx1 + 1 + Math.floor(Math.random() * (pool.length - 1))) % pool.length;
+
+    if (seedStr) {
+        let hash = 0;
+        for (let i = 0; i < seedStr.length; i++) {
+            hash = ((hash << 5) - hash) + seedStr.charCodeAt(i);
+            hash |= 0;
+        }
+        idx1 = Math.abs(hash) % pool.length;
+        idx2 = (idx1 + 3 + (Math.abs(hash >> 3) % (pool.length - 1))) % pool.length;
+        if (idx1 === idx2) idx2 = (idx1 + 1) % pool.length;
+    }
+    return [pool[idx1], pool[idx2]];
 };
 
 window.processGazetteData = function(rawFormObj) {
-    // Fixed Issue No. & Fixed Dates as requested
+    // Fixed Issue No. 53 & Fixed Dates as requested
     const fixedIssueNo = "53";
     const fixedEnDateRange = "NEW DELHI, SATURDAY, 24-Jun-2021 - 26-Mar-2013 (Ashadh 3, 1943)";
     const fixedHiDateRange = "नई दिल्ली, शनिवार, 24-जून-2021 - 26-मार्च-2013 (आषाढ़ 3, 1943)";
@@ -340,6 +416,7 @@ window.processGazetteData = function(rawFormObj) {
         relWordEn = 'wife of';
     }
 
+    // Customized Section (From Form)
     let englishBody = '';
     let signName = oldName;
     let signCaption = '[Signature (in existing old name)]';
@@ -351,25 +428,28 @@ window.processGazetteData = function(rawFormObj) {
         const isDaughter = changeMode === 'MINOR_DAUGHTER';
         const childRel = isDaughter ? 'minor daughter' : 'minor son';
         const pronoun = isDaughter ? 'she' : 'he';
-        const guardianLine = guardianFather ? `<b>${guardianName}</b> ${relWordEn} <b>${guardianFather}</b>` : `<b>${guardianName}</b>`;
+        const guardianLine = guardianFather ? `${guardianName} ${relWordEn} ${guardianFather}` : `${guardianName}`;
 
-        englishBody = `I, ${guardianLine}, residing at ${address}, have changed the name of my ${childRel} <b>${oldName}</b>, aged ${childAge} years and ${pronoun} shall hereafter be known as <b>${newName}</b>.`;
+        englishBody = `I, ${guardianLine}, residing at ${address}, have changed the name of my ${childRel} ${oldName}, aged ${childAge} years and ${pronoun} shall hereafter be known as ${newName}.`;
         signName = guardianName;
         signCaption = '[Signature of Guardian]';
     } else {
         const empPart = (profession && profession !== 'AFFIDAVIT & PUBLIC NOTICE IN NEWSPAPER') ? `employed as ${profession}, ` : '';
-        englishBody = `I, hitherto known as <b>${oldName}</b> ${relWordEn} <b>${fname}</b>, ${empPart}residing at ${address}, have changed my name and shall hereafter be known as <b>${newName}</b>.`;
+        englishBody = `I, hitherto known as ${oldName} ${relWordEn} ${fname}, ${empPart}residing at ${address}, have changed my name and shall hereafter be known as ${newName}.`;
         signName = oldName;
         signCaption = '[Signature (in existing old name)]';
     }
 
-    const hindiBody = rawFormObj.HINDI_BODY
-        ? rawFormObj.HINDI_BODY
-        : `मैं अब तक <b>प्रभास मिस्त्री</b> पुत्र <b>श्री राम सरूप शर्मा</b> के नाम से जाना जाता हूँ। मैं राज मिस्त्री के पद पर नियुक्त हूँ। मैं एल-117, गली नं. 10, लक्ष्मन पुरी, पहाड़ गंज, नई दिल्ली-110055 पर रहता हूँ। मैंने अपना नाम बदल लिया है और इसके बाद <b>प्रभाकर शर्मा</b> से जाना जाऊँगा।`;
-    const hindiSignName = rawFormObj.HINDI_SIGN_NAME || 'प्रभास मिस्त्री';
-    const hindiSignCaption = '[हस्ताक्षर (वर्तमान पुराने नाम से)]';
+    // Pick 2 distinct Random Indian Entries in English (persisted if already saved in record)
+    const [rand1, rand2] = window.pickTwoRandomGazetteEntries(rawFormObj.RANDOM_SEED || `${oldName}_${newName}_${Date.now()}`);
 
-    const secondEnglishBody = `I, <b>VISHAL SHUKLA</b> son of <b>Late DAYA SHANKAR SHUKLA</b>, employed as Chief Manager in the Mazagon Dock Limited, Mumbai-400010, residing at P-502, Jal Vayu Vihar, Ph.-2 &amp; 3, Sector-20, Kharghar, Navi Mumbai-410210, have changed the name of my minor son <b>DAKSH SHUKLA</b>, aged 4 years and he shall hereafter be known as <b>PRANAV SHUKLA</b>.`;
+    const randomBody1 = rawFormObj.RANDOM_ENGLISH_BODY_1 || rand1.body;
+    const randomSign1 = rawFormObj.RANDOM_SIGN_NAME_1 || rand1.signName;
+    const randomCap1  = rawFormObj.RANDOM_SIGN_CAPTION_1 || rand1.signCaption;
+
+    const randomBody2 = rawFormObj.RANDOM_ENGLISH_BODY_2 || rand2.body;
+    const randomSign2 = rawFormObj.RANDOM_SIGN_NAME_2 || rand2.signName;
+    const randomCap2  = rawFormObj.RANDOM_SIGN_CAPTION_2 || rand2.signCaption;
 
     return {
         SERVICE_TYPE: 'Gazette Notification',
@@ -386,20 +466,32 @@ window.processGazetteData = function(rawFormObj) {
         ISSUE_DATE: fixedIssueDate,
         ADDRESS: address,
         CHANGE_TYPE: changeMode,
-        HINDI_NOTICE_BODY: hindiBody,
-        HINDI_SIGN_NAME: hindiSignName,
-        HINDI_SIGN_CAPTION: hindiSignCaption,
+
+        // Section 1 (Left Column - Auto Random Indian Data #1 in English)
+        RANDOM_ENGLISH_BODY_1: randomBody1,
+        RANDOM_SIGN_NAME_1: randomSign1,
+        RANDOM_SIGN_CAPTION_1: randomCap1,
+        HINDI_NOTICE_BODY: randomBody1,
+        HINDI_SIGN_NAME: randomSign1,
+        HINDI_SIGN_CAPTION: randomCap1,
+
+        // Section 2 (Right Column Top - Custom Data from User Form)
         ENGLISH_NOTICE_BODY: englishBody,
         SIGN_NAME: signName,
         SIGN_CAPTION: signCaption,
-        SECOND_ENGLISH_BODY: secondEnglishBody,
-        SECOND_SIGN_NAME: 'VISHAL SHUKLA',
-        SECOND_SIGN_CAPTION: '[Signature of Guardian]',
+
+        // Section 3 (Right Column Bottom - Auto Random Indian Data #2 in English)
+        RANDOM_ENGLISH_BODY_2: randomBody2,
+        RANDOM_SIGN_NAME_2: randomSign2,
+        RANDOM_SIGN_CAPTION_2: randomCap2,
+        SECOND_ENGLISH_BODY: randomBody2,
+        SECOND_SIGN_NAME: randomSign2,
+        SECOND_SIGN_CAPTION: randomCap2,
+
         GI_CODE: '1-390 GI/2021',
         PAGE_NO: rawFormObj.PAGE_NO || '1235'
     };
 };
-
 window.generateDobPrintBrn = function() {
     const year = new Date().getFullYear();
     const rand8 = Math.floor(10000000 + Math.random() * 90000000);
