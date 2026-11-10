@@ -30,7 +30,7 @@ if (document.readyState === 'loading') {
 
 // ============================================================================
 // FILE: js/admin-logic.js (COMPLETE UPDATED VERSION)
-// (Single Login Guard, DOB Original PDF Preview/Download Sync, Passbook & Refund)
+// (Single Login Guard, Safe Filtered/Checkbox Delete, DOB Original PDF Sync & Passbook)
 // ============================================================================
 
 import "./config-templates.js?v=6.0";
@@ -45,7 +45,7 @@ const ADMIN_EMAIL = window.ADMIN_EMAIL;
 const FREE_VIP_EMAILS = window.FREE_VIP_EMAILS;
 const MS_PER_DAY = window.MS_PER_DAY;
 
-// ================= STAMP FILES AUTO-DETECT & RANDOM CONFIG =================
+// ================= STAMP FILES AUTO-DETECT & CITY CONFIG =================
 const CITY_STAMP_CONFIG = [
     { id: 'baraut', name: 'Baraut (बड़ौत)', files: ['baraut.png', 'stamp_baraut.png', 'stamp1.png', 'stamp.png'] },
     { id: 'baghpat', name: 'Baghpat (बागपत)', files: ['baghpat.png', 'stamp_baghpat.png', 'stamp2.png'] },
@@ -227,7 +227,7 @@ window.unlockAdminWorkspace = async function(user) {
     window.switchAdminMainTab(savedTab);
 };
 
-// Strictly require Main Portal Login (/portal); never show a separate login page on /ovi
+// Strictly require Main Portal Login (/portal); redirect unauthorized users immediately to /portal
 onAuthStateChanged(auth, async (user) => {
     const isPortalAdminVerified = sessionStorage.getItem('ojas_separate_admin_verified') === 'true';
     const emailLower = user?.email ? user.email.trim().toLowerCase() : '';
@@ -1120,11 +1120,11 @@ window.deletePaymentRecord = async function(paymentDocId) {
     try { await deleteDoc(doc(db, "payments", paymentDocId)); window.loadAllPayments(); } catch (err) {}
 };
 
-// ================= HISTORY, STAMP, CERTIFICATE & SERVER DOB ORIGINAL PDF LOGIC =================
+// ================= HISTORY, STAMP, CERTIFICATE & SAFE FILTERED DELETE LOGIC =================
 window.adminHistoryLastVisibleDoc = null;
 window.adminHistoryHasMore = true;
 window.adminHistoryIsLoading = false;
-window.adminHistoryBatchSize = 20;
+window.adminHistoryBatchSize = 50;
 window.adminHistoryObserver = null;
 
 window.loadAdminHistory = async function(isReset = true) {
@@ -1136,7 +1136,7 @@ window.loadAdminHistory = async function(isReset = true) {
         window.adminHistoryLastVisibleDoc = null;
         window.adminHistoryHasMore = true;
         if (container) {
-            container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold bg-white rounded-2xl border border-slate-100"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>ताज़ा 20 रिकॉर्ड्स लोड हो रहे हैं...</div>`;
+            container.innerHTML = `<div class="p-10 text-center text-slate-400 font-bold bg-white rounded-2xl border border-slate-100"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>रिकॉर्ड्स लोड हो रहे हैं...</div>`;
         }
     }
 
@@ -1243,7 +1243,7 @@ window.loadAdminHistory = async function(isReset = true) {
         if (btn) {
             btn.disabled = !window.adminHistoryHasMore;
             btn.innerHTML = window.adminHistoryHasMore
-                ? '<i class="fa-solid fa-angles-down mr-1"></i> और 20 रिकॉर्ड्स लोड करें (Load More)'
+                ? '<i class="fa-solid fa-angles-down mr-1"></i> और रिकॉर्ड्स लोड करें (Load More)'
                 : '✅ सभी रिकॉर्ड्स लोड हो चुके हैं';
             btn.className = window.adminHistoryHasMore
                 ? "bg-dark-900 hover:bg-black text-royal-300 font-black px-6 py-2.5 rounded-xl text-xs shadow-sm transition flex items-center gap-2 mx-auto"
@@ -1295,7 +1295,6 @@ window.adminCheckDobPrintStatus = async function(docId, btnEl, silent = false) {
         if (!silent) {
             alert(data.message || (isReady ? '✅ SUCCESSFUL! PDF डाउनलोड और प्रीव्यू के लिए तैयार है।' : '⏳ Status: PENDING'));
         }
-        // Update local cache and re-render
         const snap = await getDoc(doc(db, "history", docId));
         if (snap.exists()) {
             const idx = window.adminAllHistoryData.findIndex(r => r.id === docId);
@@ -1666,26 +1665,44 @@ window.toggleCertificateCheckbox = async function(origIndex, isChecked) {
     window.renderAdminHistory();
 };
 
-// === RENDER ADMIN HISTORY (FIXED FOR SERVER_API_DOB_PRINT PREVIEW, DOWNLOAD & STATUS) ===
-window.renderAdminHistory = function() {
-    const container = document.getElementById('adminHistoryListContainer');
+// === HELPER: GET EXACT FILTERED RECORDS (MATCHES USER + TYPE + DATE + SEARCH) ===
+window.getExactFilteredAdminHistory = function() {
     const fUser = document.getElementById('filterUser')?.value || 'ALL';
     const fType = document.getElementById('filterType')?.value || 'ALL';
     const fDate = document.getElementById('filterDate')?.value || '';
     const fSearch = (document.getElementById('adminHistorySearchInput')?.value || '').trim().toLowerCase();
-    const indexedData = window.adminAllHistoryData.map((item, idx) => ({ ...item, _origIndex: idx }));
+
+    const indexedData = (window.adminAllHistoryData || []).map((item, idx) => ({ ...item, _origIndex: idx }));
     let filteredData = indexedData;
-    if (fUser !== 'ALL') filteredData = filteredData.filter(item => item.userId === fUser);
-    if (fType !== 'ALL') filteredData = filteredData.filter(item => item.serviceType === fType);
+
+    // 1. Filter by specific User
+    if (fUser !== 'ALL') {
+        filteredData = filteredData.filter(item => String(item.userId) === String(fUser));
+    }
+
+    // 2. Filter by specific Document Type
+    if (fType !== 'ALL') {
+        filteredData = filteredData.filter(item => {
+            const st = String(item.serviceType || '').trim();
+            if (fType === 'Minor') return st === 'Minor' || st === 'DOB';
+            if (fType === 'Passport') return st === 'Passport' || st === 'Passport Services';
+            if (fType === 'DOB Print') return st === 'DOB Print' || st === 'DOB Original PDF';
+            return st === fType;
+        });
+    }
+
+    // 3. Filter by Search text
     if (fSearch) {
         filteredData = filteredData.filter(item => {
             const fName = (item.fileName || '').toLowerCase();
             const fData = item.formData || {};
-            const appName = (fData.applicantName || fData.parentName || fData.childName || fData.NAME || '').toLowerCase();
+            const appName = (fData.applicantName || fData.parentName || fData.childName || fData.NAME || fData.NEW_NAME || '').toLowerCase();
             const email = (window.allUsersMap[item.userId] || '').toLowerCase();
             return fName.includes(fSearch) || appName.includes(fSearch) || email.includes(fSearch);
         });
     }
+
+    // 4. Filter by Date
     if (fDate) {
         filteredData = filteredData.filter(item => {
             const sec = item.timestamp?.seconds || (item.timestamp ? Math.floor(new Date(item.timestamp).getTime() / 1000) : 0);
@@ -1695,10 +1712,61 @@ window.renderAdminHistory = function() {
         });
     }
 
-    document.getElementById('historyCount').innerText = `दिख रहे हैं: ${filteredData.length} फाइल्स ${window.adminHistoryHasMore ? '(नीचे स्क्रॉल करके और देखें)' : '(सभी लोडेड)'}`;
+    return {
+        filteredData,
+        fUser,
+        fType,
+        fDate,
+        fSearch,
+        hasActiveFilter: (fUser !== 'ALL' || fType !== 'ALL' || Boolean(fDate) || Boolean(fSearch))
+    };
+};
+
+// === SELECT / DESELECT ALL SHOWN CHECKBOXES ===
+window.toggleSelectAllAdminHistory = function(isChecked) {
+    document.querySelectorAll('.admin-history-row-chk').forEach(chk => {
+        chk.checked = isChecked;
+    });
+    window.updateSelectedDeleteButtonCount();
+};
+
+window.updateSelectedDeleteButtonCount = function() {
+    const checkedCount = document.querySelectorAll('.admin-history-row-chk:checked').length;
+    const btn = document.getElementById('bulkDeleteBtn');
+    if (!btn) return;
+    if (checkedCount > 0) {
+        btn.innerHTML = `<i class="fa-solid fa-trash-can"></i> Delete Selected (${checkedCount})`;
+        btn.className = "bg-red-600 hover:bg-red-700 text-white border border-red-700 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5 shadow-sm";
+    } else {
+        btn.innerHTML = `<i class="fa-solid fa-trash-can"></i> Delete Filtered`;
+        btn.className = "bg-red-50 hover:bg-red-600 text-red-600 hover:text-white border border-red-200 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5";
+    }
+};
+
+// === RENDER ADMIN HISTORY (WITH MULTI-SELECT CHECKBOXES & SAFE DELETE) ===
+window.renderAdminHistory = function() {
+    const container = document.getElementById('adminHistoryListContainer');
+    if (!container) return;
+
+    const { filteredData } = window.getExactFilteredAdminHistory();
+
+    document.getElementById('historyCount').innerHTML = `
+        <span class="inline-flex flex-wrap items-center gap-3">
+            <span>दिख रहे हैं: <strong>${filteredData.length}</strong> फाइल्स</span>
+            ${filteredData.length > 0 ? `
+                <label class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-lg text-[11px] font-black cursor-pointer select-none border border-slate-300">
+                    <input type="checkbox" id="chkSelectAllHistory" onchange="window.toggleSelectAllAdminHistory(this.checked)" class="w-3.5 h-3.5 accent-red-600 rounded cursor-pointer">
+                    <span>Select All Shown (${filteredData.length})</span>
+                </label>
+            ` : ''}
+        </span>
+    `;
+
+    window.updateSelectedDeleteButtonCount();
     container.innerHTML = '';
+
     if (filteredData.length === 0) {
-        container.innerHTML = `<div class="p-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-100"><i class="fa-regular fa-folder-open text-4xl mb-2 text-slate-300"></i><br>कोई फाइल नहीं मिली।</div>`;
+        container.innerHTML = `<div class="p-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-100"><i class="fa-regular fa-folder-open text-4xl mb-2 text-slate-300"></i><br>इस फ़िल्टर में कोई फाइल नहीं मिली।</div>`;
         return;
     }
 
@@ -1720,7 +1788,6 @@ window.renderAdminHistory = function() {
         const certState = window.certificateSelectionMap[data._origIndex] || { enabled: false, certificateFileId: data.certificateFileId || '' };
         const isCertChecked = !!certState.enabled;
 
-        // Server DOB Original PDF status evaluation
         let rawApiStatus = String(data.formData?.API_STATUS ?? 'pending').trim().toLowerCase();
         if (rawApiStatus === 'true' || rawApiStatus === '1' || rawApiStatus === 'ok' || rawApiStatus === '') {
             rawApiStatus = 'pending';
@@ -1754,7 +1821,7 @@ window.renderAdminHistory = function() {
                 <i class="fa-solid fa-stamp text-emerald-700"></i> Auto Stamped (m.png)
             </span>
         ` : (isAnnexure ? `
-            <div class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-950 border-green-400' : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'} border px-2.5 py-1.5 rounded-xl text-xs font-black shadow-sm">
+            <div class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-900 border-green-400' : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'} border px-2.5 py-1.5 rounded-xl text-xs font-black shadow-sm">
                 <label class="inline-flex items-center gap-1 cursor-pointer select-none">
                     <input type="checkbox" id="stampChk-${data._origIndex}" ${isStampChecked ? 'checked' : ''} onchange="window.toggleRowStampCheckbox(${data._origIndex}, this.checked)" class="w-4 h-4 accent-green-600 rounded cursor-pointer">
                     <span><i class="fa-solid fa-stamp ${isStampChecked ? 'text-green-700' : 'text-amber-600'} mr-0.5"></i> ${isStampChecked ? 'Stamped' : 'Stamp'}</span>
@@ -1777,17 +1844,14 @@ window.renderAdminHistory = function() {
             <a href="/portal?editAnnexure=${data.id}" target="_blank" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="डॉक्यूमेंट एडिट करें"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
         ` : '';
 
-        // Action Buttons for Server DOB Original PDF vs Standard Documents
         let mainActionBtnsHtml = '';
         if (isServerDobPrint) {
             if (isDobCompleted) {
-                // PDF is already generated & delivered to user -> Show Preview & Download PDF (NO Refund button!)
                 mainActionBtnsHtml = `
                     <button onclick="window.adminOpenServerDobPrintPdf('${data.id}', '${safeFileName}')" class="inline-flex items-center gap-1.5 bg-royal-50 text-royal-700 px-3 py-2 rounded-xl text-xs font-black hover:bg-royal-500 hover:text-white transition border border-royal-200 shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button>
                     <button onclick="window.adminDownloadServerDobPrintPdf('${data.id}')" class="inline-flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white px-3.5 py-2 rounded-xl text-xs font-black transition shadow-sm"><i class="fa-solid fa-download"></i> Download PDF</button>
                 `;
             } else {
-                // Still Pending or Failed -> Show Check Status + Refund option (if not refunded yet)
                 const refundBtn = !isDobRefunded
                     ? `<button onclick="window.adminRefundDobOrder('${data.id}')" class="inline-flex items-center gap-1 bg-teal-50 text-teal-900 border border-teal-300 hover:bg-teal-600 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="कैंसिल होने पर यूज़र को 140 Cr रिफंड करें"><i class="fa-solid fa-rotate-left"></i> Refund 140 Cr</button>`
                     : '';
@@ -1805,53 +1869,125 @@ window.renderAdminHistory = function() {
 
         container.innerHTML += `
             <div class="bg-white p-3.5 md:p-4 rounded-2xl border ${isStampChecked || isCertChecked || isDobCompleted ? 'border-royal-300 bg-slate-50/50' : 'border-slate-200'} shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 hover:border-royal-400 transition">
-                <div class="space-y-1 overflow-hidden w-full">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md text-[10px] font-black uppercase">${data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType}</span>
-                        ${dobStatusBadgesHtml}
-                        ${data.adminStampCharged ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md text-[10px] font-black"><i class="fa-solid fa-stamp mr-0.5"></i>20 Cr Stamp</span>` : ""}
-                        ${data.adminCertCharged ? `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-md text-[10px] font-black"><i class="fa-solid fa-certificate mr-0.5"></i>20 Cr Cert</span>` : ""}
-                        ${userBadge}
-                        <span class="text-[11px] text-slate-400 font-medium ml-auto xl:ml-0">${dateStr} • ${timeStr}</span>
+                <div class="flex items-start gap-3 overflow-hidden w-full">
+                    <input type="checkbox" value="${data.id}" onchange="window.updateSelectedDeleteButtonCount()" class="admin-history-row-chk w-4 h-4 mt-1 accent-red-600 rounded cursor-pointer shrink-0" title="इस फाइल को डिलीट के लिए चुनें">
+                    <div class="space-y-1 overflow-hidden w-full">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md text-[10px] font-black uppercase">${data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType}</span>
+                            ${dobStatusBadgesHtml}
+                            ${data.adminStampCharged ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md text-[10px] font-black"><i class="fa-solid fa-stamp mr-0.5"></i>20 Cr Stamp</span>` : ""}
+                            ${data.adminCertCharged ? `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-md text-[10px] font-black"><i class="fa-solid fa-certificate mr-0.5"></i>20 Cr Cert</span>` : ""}
+                            ${userBadge}
+                            <span class="text-[11px] text-slate-400 font-medium ml-auto xl:ml-0">${dateStr} • ${timeStr}</span>
+                        </div>
+                        <p class="font-black text-slate-800 text-xs md:text-sm truncate">${data.fileName}</p>
                     </div>
-                    <p class="font-black text-slate-800 text-xs md:text-sm truncate">${data.fileName}</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-end shrink-0 border-t xl:border-t-0 pt-2 xl:pt-0 border-slate-100">
                     ${certificateCheckboxHtml}
                     ${stampCheckboxHtml}
                     ${editAnnexureBtnHtml}
                     ${mainActionBtnsHtml}
-                    <button onclick="window.deleteHistoryRecord('${data.id}')" class="w-9 h-9 inline-flex items-center justify-center bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition border border-red-100"><i class="fa-solid fa-trash"></i></button>
+                    <button onclick="window.deleteHistoryRecord('${data.id}')" class="w-9 h-9 inline-flex items-center justify-center bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition border border-red-100" title="केवल यही 1 फाइल डिलीट करें"><i class="fa-solid fa-trash"></i></button>
                 </div>
             </div>
         `;
     });
 };
 
+// === 1. SINGLE FILE DELETE (STRICTLY DELETES ONLY 1 DOCUMENT ID) ===
 window.deleteHistoryRecord = async function(docId) {
-    if (!confirm('क्या आप इस फाइल को हमेशा के लिए डिलीट करना चाहते हैं?')) return;
-    try { await deleteDoc(doc(db, "history", docId)); window.loadAdminHistory(); } catch (err) {}
+    const cleanId = String(docId || '').trim();
+    if (!cleanId) return alert('अमान्य डॉक्यूमेंट ID!');
+
+    const targetRec = (window.adminAllHistoryData || []).find(item => item.id === cleanId);
+    const fileLabel = targetRec ? `${targetRec.fileName} (${targetRec.serviceType})` : cleanId;
+
+    if (!confirm(`🗑️ Single File Delete:\n\nक्या आप केवल इस 1 फाइल को डिलीट करना चाहते हैं?\n📄 फाइल: ${fileLabel}`)) return;
+
+    try {
+        await deleteDoc(doc(db, "history", cleanId));
+        window.adminAllHistoryData = (window.adminAllHistoryData || []).filter(item => item.id !== cleanId);
+        window.renderAdminHistory();
+    } catch (err) {
+        alert('फाइल डिलीट करने में समस्या आई: ' + err.message);
+    }
 };
 
+// === 2. SAFE BULK / FILTERED DELETE (STRICTLY DELETES ONLY SELECTED FILTER OR CHECKBOXES) ===
 window.bulkDeleteFilteredHistory = async function() {
-    const fUser = document.getElementById('filterUser').value;
-    const fType = document.getElementById('filterType').value;
-    let filteredData = window.adminAllHistoryData;
-    if (fUser !== 'ALL') filteredData = filteredData.filter(item => item.userId === fUser);
-    if (fType !== 'ALL') filteredData = filteredData.filter(item => item.serviceType === fType);
-    if (filteredData.length === 0) return alert('डिलीट करने के लिए कोई फाइल नहीं है!');
-    if (!confirm(`चेतावनी!\nक्या आप वाकई इन ${filteredData.length} फाइलों को हमेशा के लिए डिलीट करना चाहते हैं?`)) return;
+    // Priority 1: Check if admin has manually ticked specific checkboxes
+    const checkedBoxes = Array.from(document.querySelectorAll('.admin-history-row-chk:checked'));
+    let targetIdsToDelete = [];
+    let confirmMessage = '';
+
+    if (checkedBoxes.length > 0) {
+        targetIdsToDelete = checkedBoxes.map(chk => String(chk.value).trim()).filter(Boolean);
+        confirmMessage = `🗑️ Selected Files Delete:\n\nआपने ${targetIdsToDelete.length} फाइलों पर टिक (Select) किया है।\nक्या आप केवल इन ${targetIdsToDelete.length} चुनी हुई फाइलों को डिलीट करना चाहते हैं?`;
+    } else {
+        // Priority 2: Check active filters (User, Type, Date, Search)
+        const { filteredData, fUser, fType, fDate, fSearch, hasActiveFilter } = window.getExactFilteredAdminHistory();
+
+        // STRICT SAFETY LOCK: Block bulk delete if NO filter is selected!
+        if (!hasActiveFilter) {
+            return alert(
+                '⚠️ सुरक्षा लॉक (Database Protection):\n\n' +
+                'पूरा डेटाबेस एक साथ डिलीट होने से बचाने के लिए बिना फ़िल्टर के Bulk Delete बंद है!\n\n' +
+                '👉 कृपया पहले:\n' +
+                '1. कोई एक User, Document Type, या Date सेलेक्ट करें, या\n' +
+                '2. जिन फाइलों को डिलीट करना है उनके आगे दिए गए बॉक्स (Checkbox) पर टिक लगाएं।'
+            );
+        }
+
+        if (filteredData.length === 0) {
+            return alert('इस फ़िल्टर में डिलीट करने के लिए कोई फाइल नहीं है!');
+        }
+
+        targetIdsToDelete = filteredData.map(item => String(item.id || '').trim()).filter(Boolean);
+
+        const userLabel = fUser === 'ALL' ? 'All Users' : (window.allUsersMap[fUser] || 'Selected User');
+        const typeLabel = fType === 'ALL' ? 'All Types' : fType;
+        const dateLabel = fDate ? ` | Date: ${fDate}` : '';
+        const searchLabel = fSearch ? ` | Search: "${fSearch}"` : '';
+
+        confirmMessage =
+            `⚠️ Filtered Delete Confirmation:\n\n` +
+            `• यूज़र फ़िल्टर: ${userLabel}\n` +
+            `• डॉक्यूमेंट टाइप: ${typeLabel}${dateLabel}${searchLabel}\n` +
+            `• कुल डिलीट होने वाली फाइलें: ${targetIdsToDelete.length} फाइल्स\n\n` +
+            `क्या आप वाकई केवल इन ${targetIdsToDelete.length} फ़िल्टर की गई फाइलों को डिलीट करना चाहते हैं? (इसके अलावा कोई भी फाइल डिलीट नहीं होगी)`;
+    }
+
+    if (targetIdsToDelete.length === 0) return;
+    if (!confirm(confirmMessage)) return;
+
     const btn = document.getElementById('bulkDeleteBtn');
-    const origHTML = btn.innerHTML;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
-    btn.disabled = true;
+    const origHTML = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Deleting...';
+        btn.disabled = true;
+    }
+
     try {
-        await Promise.all(filteredData.map(item => deleteDoc(doc(db, "history", item.id))));
-        alert(`Success! ${filteredData.length} फाइलें डिलीट कर दी गईं।`);
-        window.loadAdminHistory();
-    } catch (err) {} finally {
-        btn.innerHTML = origHTML;
-        btn.disabled = false;
+        const deletedSet = new Set();
+        for (const docId of targetIdsToDelete) {
+            if (docId) {
+                await deleteDoc(doc(db, "history", docId));
+                deletedSet.add(docId);
+            }
+        }
+
+        window.adminAllHistoryData = (window.adminAllHistoryData || []).filter(item => !deletedSet.has(item.id));
+        window.renderAdminHistory();
+        alert(`✅ सफलतापूर्वक केवल ${deletedSet.size} चुनी गई फाइलें डिलीट की गईं! बाकी सभी रिकॉर्ड्स सुरक्षित हैं।`);
+    } catch (err) {
+        alert('डिलीट करने में एरर आया: ' + err.message);
+    } finally {
+        if (btn) {
+            btn.innerHTML = origHTML;
+            btn.disabled = false;
+            window.updateSelectedDeleteButtonCount();
+        }
     }
 };
 
