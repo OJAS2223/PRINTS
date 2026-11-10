@@ -1,4 +1,4 @@
-<div class="affidavit-paper gazette-part4-paper" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 0 !important; margin: 0 !important; background-color: #ffffff !important; color: #111111 !important; box-sizing: border-box !important; overflow: hidden !important;">
+<div class="affidavit-paper gazette-part4-paper" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 0 !important; margin: 0 !important; background-color: #ffffff !important; color: #000000 !important; box-sizing: border-box !important; overflow: hidden !important;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@500;600;700&family=Tinos:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -9,27 +9,36 @@
             print-color-adjust: exact !important;
         }
         .gazette-part4-paper {
+            background-color: #ffffff !important;
             font-family: 'Tinos', 'Times New Roman', Times, serif !important;
-            color: #111111 !important;
+            color: #000000 !important;
         }
         .gazette-part4-paper .hi {
             font-family: 'Noto Serif Devanagari', 'Kokila', 'Mangal', serif !important;
-            color: #111111 !important;
+            color: #000000 !important;
         }
         .gazette-part4-paper .en {
             font-family: 'Tinos', 'Times New Roman', Times, serif !important;
-            color: #111111 !important;
+            color: #000000 !important;
+        }
+        .gazette-part4-paper b, .gazette-part4-paper strong {
+            font-weight: 700 !important;
+            color: #000000 !important;
+        }
+        .gazette-part4-paper .pure-white-box {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
         }
     </style>
 
     {{STAMP_OVERLAY}}
 
-    <!-- 1. FULL-PAGE BACKGROUND IMAGE WITH AUTOMATIC CANVAS TEXT ERASER -->
+    <!-- 1. FULL-PAGE BACKGROUND IMAGE (PURE WHITE BRIGHTNESS + COMPLETE TEXT ERASER) -->
     <img
         id="gazetteBgImageEl"
         src="/images/gazette_bg.jpg"
         crossorigin="anonymous"
-        style="position: absolute !important; top: 0 !important; left: 0 !important; width: 794px !important; height: 1122px !important; object-fit: fill !important; z-index: 1 !important; pointer-events: none !important; user-select: none !important;"
+        style="position: absolute !important; top: 0 !important; left: 0 !important; width: 794px !important; height: 1122px !important; object-fit: fill !important; z-index: 1 !important; pointer-events: none !important; user-select: none !important; background-color: #ffffff !important;"
         onload="
             if (!this.dataset.cleaned) {
                 this.dataset.cleaned = '1';
@@ -38,15 +47,30 @@
                     c.width = 794;
                     c.height = 1122;
                     var ctx = c.getContext('2d');
-                    ctx.drawImage(this, 0, 0, 794, 1122);
                     ctx.fillStyle = '#ffffff';
-                    /* Erase Old Date Bar (No. 52 & Dec 28, 2013) */
-                    ctx.fillRect(42, 355, 710, 55);
-                    /* Erase Left Column Hindi Section below NOTICE Box (नाम परिवर्तन) */
-                    ctx.fillRect(42, 792, 351, 218);
-                    /* Erase Right Column Old Entries (CHANGE OF NAME - SUBRATA DAS & VISHAL SHUKLA) */
-                    ctx.fillRect(401, 606, 352, 404);
-                    this.src = c.toDataURL('image/jpeg', 0.98);
+                    ctx.fillRect(0, 0, 794, 1122);
+                    ctx.drawImage(this, 0, 0, 794, 1122);
+
+                    /* Make grey scan background 100% pure white while keeping black text sharp */
+                    var imgData = ctx.getImageData(0, 0, 794, 1122);
+                    var d = imgData.data;
+                    for (var i = 0; i < d.length; i += 4) {
+                        if (d[i] > 200 && d[i + 1] > 200 && d[i + 2] > 200) {
+                            d[i] = 255;
+                            d[i + 1] = 255;
+                            d[i + 2] = 255;
+                        }
+                    }
+                    ctx.putImageData(imgData, 0, 0);
+
+                    ctx.fillStyle = '#ffffff';
+                    /* 1. Erase Full Old Date Bar (352px to 430px) */
+                    ctx.fillRect(36, 352, 722, 78);
+                    /* 2. Erase Left Column Hindi Section all the way down to 1042px */
+                    ctx.fillRect(38, 800, 356, 242);
+                    /* 3. Erase Right Column Old Entries all the way down to 1042px */
+                    ctx.fillRect(399, 604, 358, 438);
+                    this.src = c.toDataURL('image/jpeg', 0.99);
                 } catch (e) {}
             }
         "
@@ -58,73 +82,70 @@
         alt="Gazette Background"
     />
 
-    <!-- 2. OVERLAY 1: FIXED ISSUE NO. 53 & FIXED DATE BAR (356px from top) -->
-    <div style="position: absolute !important; top: 356px !important; left: 48px !important; width: 698px !important; height: 53px !important; z-index: 5 !important; overflow: hidden !important;">
-        <!-- Unstoppable Solid White Image Mask -->
+    <!-- 2. OVERLAY 1: FIXED ISSUE NO. 53 & FIXED DATE BAR (PURE WHITE + LARGER BOLD FONT) -->
+    <div class="pure-white-box" style="position: absolute !important; top: 353px !important; left: 52px !important; width: 690px !important; height: 76px !important; z-index: 5 !important; overflow: hidden !important; background-color: #ffffff !important; border-top: 3px double #000000 !important; border-bottom: 1.5px solid #000000 !important;">
         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; z-index: 1 !important;" alt="" />
-        <div style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; display: flex !important; flex-direction: column !important; justify-content: center !important; gap: 4px !important; padding: 2px 6px !important;">
-            <div style="display: flex !important; align-items: baseline !important; width: 100% !important; line-height: 1.2 !important;">
-                <span class="hi" style="width: 75px !important; text-align: left !important; font-weight: 700 !important; font-size: 12px !important; flex-shrink: 0 !important;">सं. 53]</span>
-                <span class="hi" style="flex: 1 !important; text-align: center !important; font-weight: 700 !important; font-size: 12.2px !important; padding-right: 35px !important;">नई दिल्ली, शनिवार, 24-जून-2021—26-मार्च-2013 (आषाढ़ 3, 1943)</span>
+        <div style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; display: flex !important; flex-direction: column !important; justify-content: center !important; gap: 6px !important; padding: 2px 4px !important;">
+            <div style="display: flex !important; align-items: baseline !important; width: 100% !important; line-height: 1.25 !important;">
+                <span class="hi" style="width: 72px !important; text-align: left !important; font-weight: 700 !important; font-size: 13.5px !important; flex-shrink: 0 !important;">सं. 53]</span>
+                <span class="hi" style="flex: 1 !important; text-align: center !important; font-weight: 700 !important; font-size: 13.5px !important; padding-right: 24px !important;">नई दिल्ली, शनिवार, 24-जून-2021—26-मार्च-2013 (आषाढ़ 3, 1943)</span>
             </div>
-            <div style="display: flex !important; align-items: baseline !important; width: 100% !important; line-height: 1.2 !important;">
-                <span class="en" style="width: 75px !important; text-align: left !important; font-weight: 700 !important; font-size: 11.4px !important; flex-shrink: 0 !important;">No. 53]</span>
-                <span class="en" style="flex: 1 !important; text-align: center !important; font-weight: 700 !important; font-size: 11.2px !important; padding-right: 35px !important;">NEW DELHI, SATURDAY, 24-Jun-2021—26-Mar-2013 (Ashadh 3, 1943)</span>
+            <div style="display: flex !important; align-items: baseline !important; width: 100% !important; line-height: 1.25 !important;">
+                <span class="en" style="width: 72px !important; text-align: left !important; font-weight: 700 !important; font-size: 12.6px !important; flex-shrink: 0 !important;">No. 53]</span>
+                <span class="en" style="flex: 1 !important; text-align: center !important; font-weight: 700 !important; font-size: 12.2px !important; padding-right: 24px !important;">NEW DELHI, SATURDAY, 24-Jun-2021—26-Mar-2013 (Ashadh 3, 1943)</span>
             </div>
         </div>
     </div>
 
-    <!-- 3. OVERLAY 2: SECTION 1 (LEFT COLUMN BELOW NOTICE BOX -> RANDOM INDIAN DATA #1 IN ENGLISH) -->
-    <div style="position: absolute !important; top: 794px !important; left: 48px !important; width: 344px !important; height: 214px !important; z-index: 5 !important; overflow: hidden !important;">
-        <!-- Unstoppable Solid White Image Mask -->
+    <!-- 3. OVERLAY 2: SECTION 1 (LEFT COLUMN BELOW NOTICE BOX -> PURE WHITE + LARGER FONT + BOLD NAMES) -->
+    <div class="pure-white-box" style="position: absolute !important; top: 802px !important; left: 44px !important; width: 349px !important; height: 240px !important; z-index: 5 !important; overflow: hidden !important; background-color: #ffffff !important;">
         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; z-index: 1 !important;" alt="" />
-        <div class="en" style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; padding: 4px 8px 0 10px !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important;">
-            <div style="text-align: center !important; font-size: 11.5px !important; font-weight: 700 !important; letter-spacing: 0.3px !important; margin: 0 0 6px 0 !important; line-height: 1.2 !important;">CHANGE OF NAME</div>
-            <div style="text-align: justify !important; font-size: 11.1px !important; font-weight: 400 !important; line-height: 1.33 !important; text-indent: 18px !important; margin: 0 0 5px 0 !important;">
+        <div class="en" style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; padding: 4px 10px 0 12px !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important;">
+            <div style="text-align: center !important; font-size: 13.2px !important; font-weight: 700 !important; letter-spacing: 0.3px !important; margin: 0 0 7px 0 !important; line-height: 1.2 !important;">CHANGE OF NAME</div>
+            <div style="text-align: justify !important; font-size: 12.3px !important; font-weight: 500 !important; line-height: 1.38 !important; text-indent: 20px !important; margin: 0 0 6px 0 !important;">
                 {{RANDOM_ENGLISH_BODY_1}}
             </div>
-            <div style="text-align: justify !important; font-size: 11.1px !important; font-weight: 400 !important; line-height: 1.33 !important; text-indent: 18px !important; margin: 0 0 4px 0 !important;">
+            <div style="text-align: justify !important; font-size: 12.2px !important; font-weight: 500 !important; line-height: 1.36 !important; text-indent: 20px !important; margin: 0 0 5px 0 !important;">
                 It is certified that I have complied with other legal requirements in this connection.
             </div>
-            <div style="text-align: right !important; font-size: 11px !important; font-weight: 400 !important; line-height: 1.3 !important; margin-top: 4px !important;">
-                {{RANDOM_SIGN_NAME_1}}<br/>
-                {{RANDOM_SIGN_CAPTION_1}}
+            <div style="text-align: right !important; font-size: 12.2px !important; line-height: 1.32 !important; margin-top: 4px !important;">
+                <b>{{RANDOM_SIGN_NAME_1}}</b><br/>
+                <span style="font-size: 11.6px !important; font-weight: 600 !important;">{{RANDOM_SIGN_CAPTION_1}}</span>
             </div>
         </div>
     </div>
 
-    <!-- 4. OVERLAY 3: RIGHT COLUMN -> SECTION 2 (CUSTOM DATA FROM FORM) & SECTION 3 (RANDOM INDIAN DATA #2) -->
-    <div style="position: absolute !important; top: 608px !important; left: 402px !important; width: 344px !important; height: 400px !important; z-index: 5 !important; overflow: hidden !important;">
-        <!-- Unstoppable Solid White Image Mask -->
+    <!-- 4. OVERLAY 3: RIGHT COLUMN -> SECTION 2 (CUSTOM) & SECTION 3 (RANDOM #2) (PURE WHITE + LARGER FONT + BOLD NAMES) -->
+    <div class="pure-white-box" style="position: absolute !important; top: 606px !important; left: 401px !important; width: 350px !important; height: 436px !important; z-index: 5 !important; overflow: hidden !important; background-color: #ffffff !important;">
         <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; z-index: 1 !important;" alt="" />
-        <div class="en" style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; padding: 4px 10px 0 8px !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important;">
-            <div style="text-align: center !important; font-size: 11.5px !important; font-weight: 700 !important; letter-spacing: 0.3px !important; margin: 0 0 7px 0 !important; line-height: 1.2 !important;">CHANGE OF NAME</div>
+        <div class="en" style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; padding: 4px 12px 0 10px !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important;">
+            <div style="text-align: center !important; font-size: 13.2px !important; font-weight: 700 !important; letter-spacing: 0.3px !important; margin: 0 0 8px 0 !important; line-height: 1.2 !important;">CHANGE OF NAME</div>
 
             <!-- Section 2: Customized Data from Portal Form -->
-            <div style="text-align: justify !important; font-size: 11.2px !important; font-weight: 400 !important; line-height: 1.35 !important; text-indent: 18px !important; margin: 0 0 5px 0 !important;">
+            <div style="text-align: justify !important; font-size: 12.5px !important; font-weight: 500 !important; line-height: 1.4 !important; text-indent: 20px !important; margin: 0 0 6px 0 !important;">
                 {{ENGLISH_NOTICE_BODY}}
             </div>
-            <div style="text-align: justify !important; font-size: 11.2px !important; font-weight: 400 !important; line-height: 1.35 !important; text-indent: 18px !important; margin: 0 0 4px 0 !important;">
+            <div style="text-align: justify !important; font-size: 12.3px !important; font-weight: 500 !important; line-height: 1.38 !important; text-indent: 20px !important; margin: 0 0 5px 0 !important;">
                 It is certified that I have complied with other legal requirements in this connection.
             </div>
-            <div style="text-align: right !important; font-size: 11.1px !important; font-weight: 400 !important; line-height: 1.32 !important; margin-top: 4px !important;">
-                {{SIGN_NAME}}<br/>
-                {{SIGN_CAPTION}}
+            <div style="text-align: right !important; font-size: 12.4px !important; line-height: 1.34 !important; margin-top: 4px !important;">
+                <b>{{SIGN_NAME}}</b><br/>
+                <span style="font-size: 11.6px !important; font-weight: 600 !important;">{{SIGN_CAPTION}}</span>
             </div>
 
             <!-- Divider Line Between Section 2 and Section 3 -->
-            <div style="width: 105px !important; border-bottom: 1px solid #111111 !important; margin: 12px auto 12px auto !important;"></div>
+            <div style="width: 115px !important; border-bottom: 1.4px solid #000000 !important; margin: 12px auto 12px auto !important;"></div>
 
             <!-- Section 3: Automatic Random Indian Data #2 -->
-            <div style="text-align: justify !important; font-size: 11.2px !important; font-weight: 400 !important; line-height: 1.35 !important; text-indent: 18px !important; margin: 0 0 5px 0 !important;">
+            <div style="text-align: justify !important; font-size: 12.3px !important; font-weight: 500 !important; line-height: 1.38 !important; text-indent: 20px !important; margin: 0 0 6px 0 !important;">
                 {{RANDOM_ENGLISH_BODY_2}}
             </div>
-            <div style="text-align: justify !important; font-size: 11.2px !important; font-weight: 400 !important; line-height: 1.35 !important; text-indent: 18px !important; margin: 0 0 4px 0 !important;">
+            <div style="text-align: justify !important; font-size: 12.2px !important; font-weight: 500 !important; line-height: 1.36 !important; text-indent: 20px !important; margin: 0 0 5px 0 !important;">
                 It is certified that I have complied with other legal requirements in this connection.
             </div>
-            <div style="text-align: right !important; font-size: 11.1px !important; font-weight: 400 !important; line-height: 1.32 !important; margin-top: 4px !important;">
-                {{RANDOM_SIGN_NAME_2}}<br/>
-                {{RANDOM_SIGN_CAPTION_2}}
+            <div style="text-align: right !important; font-size: 12.2px !important; line-height: 1.32 !important; margin-top: 4px !important;">
+                <b>{{RANDOM_SIGN_NAME_2}}</b><br/>
+                <span style="font-size: 11.6px !important; font-weight: 600 !important;">{{RANDOM_SIGN_CAPTION_2}}</span>
             </div>
         </div>
     </div>
