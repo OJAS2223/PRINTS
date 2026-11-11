@@ -1,6 +1,6 @@
 // ============================================================================
 // FILE 2: js/portal-forms.js (UPDATED COMPLETE)
-// (Forms, submitForm fix, FORM DRAFT PERSISTENCE, DOB DELHI, GAZETTE & PASSPORT)
+// (Forms, submitForm fix, FORM DRAFT PERSISTENCE, DOB DELHI DROPDOWN & GAZETTE FORM)
 // ============================================================================ 
 
 import "./config-templates.js";
@@ -15,12 +15,12 @@ async function compressImage(file) {
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                const MAX_WIDTH = 320; 
+                const MAX_WIDTH = 250; 
                 const scaleSize = MAX_WIDTH / img.width;
                 canvas.width = MAX_WIDTH;
                 canvas.height = img.height * scaleSize;
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                resolve(canvas.toDataURL('image/jpeg', 0.6)); 
+                resolve(canvas.toDataURL('image/jpeg', 0.2)); 
             };
         };
     });
@@ -254,8 +254,8 @@ window.submitForm = async function(event, serviceType) {
             return;
         }
 
-        // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE, e-VOTER ID, DOB DELHI, GAZETTE, PASSPORT & DOB PRINT ===
-        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor' || serviceType === 'Gazette Notification' || serviceType === 'Gazette' || serviceType === 'Passport' || serviceType === 'Passport Services' || serviceType === 'DOB Print') {
+        // === INSTANT LOCAL GENERATION FOR CASTE, DOMICILE, e-VOTER ID, DOB DELHI, GAZETTE & DOB PRINT ===
+        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor' || serviceType === 'Gazette Notification' || serviceType === 'Gazette' || serviceType === 'DOB Print') {
             const preGenDocRef = isEditMode
                 ? doc(db, "history", window.currentEditingAnnexure.docId)
                 : doc(collection(db, "history"));
@@ -274,10 +274,6 @@ window.submitForm = async function(event, serviceType) {
                 processedData = window.processGazetteData(dataObj);
                 fileIdKey = 'LOCAL_HTML_GAZETTE';
                 serviceType = 'Gazette Notification';
-            } else if (serviceType === 'Passport' || serviceType === 'Passport Services') {
-                processedData = window.processPassportData(dataObj);
-                fileIdKey = 'LOCAL_HTML_PASSPORT';
-                serviceType = 'Passport';
             } else if (serviceType === 'DOB Print') {
                 processedData = window.processDobPrintData(dataObj);
                 fileIdKey = 'LOCAL_HTML_DOB_PRINT';
@@ -338,9 +334,11 @@ window.submitForm = async function(event, serviceType) {
             return;
         }
 
-        // === GOOGLE DRIVE SUBMISSION FOR MINOR ===
+        // === GOOGLE DRIVE SUBMISSION FOR MINOR (AND OTHER DRIVE SERVICES) ===
         let targetUrl = "";
-        if (serviceType === 'Minor') targetUrl = window.API_URLS["minor"];
+        if (serviceType === 'DOB Delhi' || serviceType === 'DOB Minor') targetUrl = window.API_URLS["DOB_DELHI"];
+        else if (serviceType === 'Passport' || serviceType === 'Passport Services') targetUrl = window.API_URLS["passport"] || window.API_URLS["certificate"];
+        else if (serviceType === 'Minor') targetUrl = window.API_URLS["minor"];
 
         if (serviceType === 'Minor') {
             if (dataObj.MA && dataObj.MA.trim()) {
@@ -1103,6 +1101,7 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                 ${getWatermarkHtml('dob_delhi')}
                 <form onsubmit="window.submitForm(event, 'DOB Delhi')" class="space-y-3.5 relative z-10">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <!-- 1. Registration No -->
                         <div>
                             <div class="flex justify-between items-center mb-1">
                                 <label class="text-[11px] font-bold text-royal-700 uppercase">Registration No (पंजीकरण संख्या) <span class="text-red-500">*</span></label>
@@ -1110,10 +1109,14 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                             </div>
                             <input type="text" id="inpMcdRegNo" name="REG_NO" placeholder="e.g. MCDOLIR-2219-007395634" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-black tracking-wider bg-royal-50/40 focus:bg-white outline-none uppercase relative z-10">
                         </div>
+
+                        <!-- 2. Full Name -->
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Child / Person Name (नाम / Name) <span class="text-red-500">*</span></label>
                             <input type="text" name="NAME" placeholder="e.g. SAHIL ASHRAF" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
                         </div>
+
+                        <!-- 3. Gender -->
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Gender (लिंग / Gender) <span class="text-red-500">*</span></label>
                             <select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
@@ -1122,28 +1125,38 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                                 <option value="TRANSGENDER">TRANSGENDER</option>
                             </select>
                         </div>
+
+                        <!-- 4. Date of Birth -->
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (जन्म की तिथि) <span class="text-red-500">*</span></label>
                             <input type="date" id="inpMcdDob" name="DOB" onchange="const dorEl = document.getElementById('inpMcdDor'); if(dorEl && !dorEl.value) dorEl.value = this.value;" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
                         </div>
+
+                        <!-- 5. Mother Name -->
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Name of Mother (माता का नाम) <span class="text-red-500">*</span></label>
                             <input type="text" name="MNAME" placeholder="e.g. FOUZIA TEMURI" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
                         </div>
+
+                        <!-- 6. Father Name -->
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Name of Father (पिता का नाम) <span class="text-red-500">*</span></label>
                             <input type="text" name="FNAME" placeholder="e.g. MAHMOOD ASHRAF" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
                         </div>
+
+                        <!-- 7. Date of Registration -->
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Registration (पंजीकरण की तिथि) <span class="text-red-500">*</span></label>
                             <input type="date" id="inpMcdDor" name="DOR" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
                         </div>
+
+                        <!-- 8. Date of Issue -->
                         <div>
                             <label class="block text-[11px] font-bold text-royal-700 uppercase mb-1">Date of Issue (जारी करने की तिथि) <span class="text-red-500">*</span></label>
                             <input type="date" name="DOI" value="${todayISO}" required class="w-full p-3 border border-royal-300 rounded-xl text-sm font-bold bg-royal-50/40 focus:bg-white outline-none relative z-10">
                         </div>
 
-                        <!-- Place of Birth DROPDOWN -->
+                        <!-- 9. Place of Birth DROPDOWN (3 Hospitals near Kamra Bangash + Placeholder Address + OTHER) -->
                         <div class="md:col-span-2 bg-indigo-50/60 p-3.5 rounded-2xl border border-indigo-200 space-y-2 relative z-10">
                             <label class="block text-[11px] font-black text-indigo-950 uppercase">
                                 <i class="fa-solid fa-hospital text-royal-600 mr-1"></i> Place of Birth (जन्म का स्थान — अस्पताल या पता चुनें) <span class="text-red-500">*</span>
@@ -1156,6 +1169,7 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                                 <option value="OTHER">5. OTHER (खुद टाइप करके अस्पताल या जन्म स्थान का पता डालें)</option>
                             </select>
 
+                            <!-- Custom Place of Birth Input (Opens when OTHER is selected) -->
                             <div id="dobDelhiPobCustomWrapper" style="display: none;" class="pt-1">
                                 <input
                                     type="text"
@@ -1166,10 +1180,12 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                                     class="w-full p-3 border-2 border-amber-400 rounded-xl text-sm font-bold bg-amber-50 focus:bg-white outline-none uppercase"
                                 >
                             </div>
+
+                            <!-- Synced POB value sent to PDF Engine -->
                             <input type="hidden" id="inpMcdPob" name="POB" value="2529,KAMRA BANGASH SIR SAYED AHMED ROAD CHANDNI MAHAL DELHI-110006">
                         </div>
 
-                        <!-- SINGLE COMBINED MOTHER/FATHER ADDRESS BOX -->
+                        <!-- 10. SINGLE COMBINED MOTHER/FATHER ADDRESS BOX (Auto-Fills Both Birth-Time & Permanent Address) -->
                         <div class="md:col-span-2 bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-300 space-y-1.5 relative z-10">
                             <div class="flex flex-wrap items-center justify-between gap-1">
                                 <label class="text-[11px] font-black text-emerald-950 uppercase">
@@ -1189,6 +1205,7 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                             <p class="text-[11px] font-bold text-emerald-800">
                                 <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>केवल इसी एक बॉक्स में पता टाइप करें — यह <strong>Address at the time of Birth</strong> और <strong>Permanent Address</strong> दोनों जगह अपने-आप भर जाएगा।
                             </p>
+                            <!-- Hidden auto-synced fields for Permanent & General Address -->
                             <input type="hidden" id="inpMcdPermAddr" name="PERM_ADDR" value="">
                             <input type="hidden" id="inpMcdAddress" name="ADDRESS" value="">
                             <input type="hidden" id="inpMcdBirthAddress" name="BIRTH_ADDRESS" value="">
@@ -1208,15 +1225,15 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
         isFormRendered = true;
     }
 
-    // PASSPORT SERVICES (Instant Local HTML matching SALIMM.jpg)
+    // PASSPORT SERVICES
     else if (serviceName === 'passport') {
-        const passportBtnText = 'Generate Indian Passport (30 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
+        const passportBtnText = 'Generate Passport Document (30 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
 
         container.innerHTML = `
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
                 <div>
-                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-passport text-sky-500 mr-1.5"></i> Indian Passport (भारतीय पासपोर्ट • Republic of India)</h3>
-                    <p class="text-[11px] font-bold text-slate-500">ओरिजिनल लेआउट, फॉन्ट और ऑटो MRZ कोड के साथ तुरंत पासपोर्ट जनरेट करें • शुल्क: 30 Credits (₹30)</p>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-passport text-sky-500 mr-1.5"></i> Passport Services (पासपोर्ट सर्विस)</h3>
+                    <p class="text-[11px] font-bold text-slate-500">पासपोर्ट डॉक्यूमेंट जनरेट करें • शुल्क: 30 Credits (₹30)</p>
                 </div>
                 <span class="bg-sky-100 text-sky-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-sky-300 uppercase">30 Credits (₹30)</span>
             </div>
@@ -1224,69 +1241,16 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                 ${getWatermarkHtml('passport')}
                 <form onsubmit="window.submitForm(event, 'Passport')" class="space-y-3.5 relative z-10">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                        <!-- 1. Passport No -->
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <label class="text-[11px] font-bold text-sky-800 uppercase">Passport No. (पासपोर्ट नं.) <span class="text-red-500">*</span></label>
-                                <button type="button" onclick="document.getElementById('inpPassportNo').value = (window.generateRandomPassportNo ? window.generateRandomPassportNo() : 'L' + Math.floor(1000000 + Math.random()*9000000));" class="text-[10px] bg-sky-100 hover:bg-sky-200 text-sky-900 font-black px-2 py-0.5 rounded border border-sky-300 transition"><i class="fa-solid fa-shuffle mr-1"></i>Auto Generate</button>
-                            </div>
-                            <input type="text" id="inpPassportNo" name="PASSPORT_NO" value="L${Math.floor(1000000 + Math.random() * 9000000)}" maxlength="8" required class="w-full p-3 border border-sky-300 rounded-xl text-sm font-black tracking-wider bg-sky-50/40 focus:bg-white outline-none uppercase relative z-10">
-                        </div>
-
-                        <!-- 2. Given Name(s) -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Given Name(s) (दिया गया नाम) <span class="text-red-500">*</span></label>
-                            <input type="text" name="NAME" placeholder="e.g. SALIM" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
-                        </div>
-
-                        <!-- 3. Surname (Optional) -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Surname (उपनाम — खाली छोड़ सकते हैं)</label>
-                            <input type="text" name="SURNAME" placeholder="e.g. KHAN (या खाली छोड़ें)" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
-                        </div>
-
-                        <!-- 4. Sex -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Sex (लिंग — M / F) <span class="text-red-500">*</span></label>
-                            <select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
-                                <option value="M">M (MALE / पुरुष)</option>
-                                <option value="F">F (FEMALE / महिला)</option>
-                            </select>
-                        </div>
-
-                        <!-- 5. Date of Birth -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Date of Birth (जन्मतिथि) <span class="text-red-500">*</span></label>
-                            <input type="date" name="DOB" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
-                        </div>
-
-                        <!-- 6. Place of Birth -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Place of Birth (जन्म स्थान) <span class="text-red-500">*</span></label>
-                            <input type="text" name="POB" value="BAGHPAT, UTTAR PRADESH" placeholder="e.g. BAGHPAT, UTTAR PRADESH" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
-                        </div>
-
-                        <!-- 7. Place of Issue -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Place of Issue (जारी करने का स्थान) <span class="text-red-500">*</span></label>
-                            <input type="text" name="POI" value="GHAZIABAD" placeholder="e.g. GHAZIABAD / DELHI / LUCKNOW" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
-                        </div>
-
-                        <!-- 8. Date of Issue & Auto 10-Year Date of Expiry -->
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="block text-[11px] font-bold text-sky-700 uppercase mb-1">Date of Issue <span class="text-red-500">*</span></label>
-                                <input type="date" id="inpPassIssueDate" name="ISSUE_DATE" value="${todayISO}" onchange="if(this.value){const d=new Date(this.value);d.setFullYear(d.getFullYear()+10);d.setDate(d.getDate()-1);const expEl=document.getElementById('inpPassExpiryDate');if(expEl)expEl.value=d.toISOString().split('T')[0];}" required class="w-full p-3 border border-sky-300 rounded-xl text-xs font-bold bg-sky-50 focus:bg-white outline-none relative z-10">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-emerald-700 uppercase mb-1">Date of Expiry (10 Yr)</label>
-                                <input type="date" id="inpPassExpiryDate" name="EXPIRY_DATE" value="${(() => { const d = new Date(); d.setFullYear(d.getFullYear() + 10); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0]; })()}" required class="w-full p-3 border border-emerald-300 rounded-xl text-xs font-bold bg-emerald-50 focus:bg-white outline-none relative z-10">
-                            </div>
-                        </div>
-
-                        <!-- 9. Upload Photo -->
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name (पूरा नाम)</label><input type="text" name="NAME" placeholder="Enter Full Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father / Husband Name</label><input type="text" name="FNAME" placeholder="Enter Father/Husband Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mother Name (वैकल्पिक)</label><input type="text" name="MNAME" placeholder="Enter Mother Name" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Sex / Gender</label><select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (DOB)</label><input type="date" name="DOB" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-sky-700 uppercase mb-1">Issue Date (जारी करने की तारीख)</label><input type="date" name="ISSUE_DATE" value="${todayISO}" required class="w-full p-3 border border-sky-300 rounded-xl text-sm bg-sky-50 focus:bg-white outline-none relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Pin Code</label><input type="text" name="PIN" placeholder="Enter Pin Code" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Address (पूरा पता)</label><input type="text" name="ADDRESS" placeholder="Enter Complete Address" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
                         <div class="md:col-span-2">
-                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Upload Passport Photo (पासपोर्ट फोटो अपलोड करें) <span class="text-red-500">*</span></label>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Upload Photo (पासपोर्ट फोटो)</label>
                             <input type="file" name="PHOTO" accept="image/*" required class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-slate-50 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-sky-100 file:text-sky-700 cursor-pointer relative z-10">
                         </div>
                     </div>
@@ -1312,11 +1276,13 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
             <div class="relative overflow-hidden rounded-2xl p-1 -mx-1">
                 ${getWatermarkHtml('gazette')}
                 <form onsubmit="window.submitForm(event, 'Gazette Notification')" class="space-y-3.5 relative z-10">
+                    <!-- Hidden compatibility fields -->
                     <input type="hidden" id="inpGazetteNo" name="GAZETTE_NO" value="CG-DL-W-2021-232514">
                     <input type="hidden" id="inpGazetteApplicantTypeHidden" name="APPLICANT_TYPE" value="ADULT">
                     <input type="hidden" id="inpGazetteChildRelHidden" name="CHILD_REL" value="son">
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <!-- 1. Application Type (Adult Self vs Minor Son / Daughter) -->
                         <div>
                             <label class="block text-[11px] font-bold text-purple-800 uppercase mb-1">Applicant Category (आवेदक का प्रकार) <span class="text-red-500">*</span></label>
                             <select name="CHANGE_TYPE" onchange="window.toggleGazetteChangeMode(this.value)" class="w-full p-3 border border-purple-300 rounded-xl text-sm font-black bg-purple-50/50 focus:bg-white outline-none relative z-10 cursor-pointer">
@@ -1326,12 +1292,13 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                             </select>
                         </div>
 
-                        <!-- INTERCHANGED: Child Age in Years (Opens ONLY when Minor is selected) -->
+                        <!-- 2. INTERCHANGED: Child Age in Years (Opens ONLY when Minor is selected, otherwise hidden) -->
                         <div id="gazetteChildAgeTopWrapper" style="display: none;">
                             <label class="block text-[11px] font-bold text-amber-900 uppercase mb-1">Age of Child in Years (बच्चे की उम्र) <span class="text-red-500">*</span></label>
                             <input type="number" id="inpGazetteChildAge" name="CHILD_AGE" placeholder="e.g. 6" min="1" max="17" class="w-full p-3 border border-amber-400 rounded-xl text-sm font-black bg-amber-50/60 focus:bg-white outline-none relative z-10">
                         </div>
 
+                        <!-- Minor Extra Guardian Fields (Shown ONLY when Minor Son/Daughter is selected) -->
                         <div id="gazetteMinorFields" style="display: none;" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3.5 p-3.5 bg-amber-50/80 border border-amber-300 rounded-2xl">
                             <div>
                                 <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Guardian / Parent Name (अभिभावक का नाम - BOLD) <span class="text-red-500">*</span></label>
@@ -1343,17 +1310,19 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                             </div>
                         </div>
 
+                        <!-- 3. Old Name (Printed in BOLD) -->
                         <div>
                             <label id="lblGazetteOldName" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Old Name (पुराना नाम / गलत नाम - BOLD) <span class="text-red-500">*</span></label>
                             <input type="text" name="OLD_NAME" placeholder="e.g. SUBRATA DAS" required class="w-full p-3 border border-slate-300 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
                         </div>
 
+                        <!-- 4. New Name (Printed in BOLD) -->
                         <div>
                             <label id="lblGazetteNewName" class="block text-[11px] font-bold text-emerald-700 uppercase mb-1">New Name (नया सही नाम - BOLD) <span class="text-red-500">*</span></label>
                             <input type="text" name="NEW_NAME" placeholder="e.g. DREYVAN DAYSE" required class="w-full p-3 border border-emerald-300 rounded-xl text-sm font-black bg-emerald-50/40 focus:bg-white outline-none uppercase relative z-10">
                         </div>
 
-                        <!-- INTERCHANGED: Relation + Father / Husband Name together -->
+                        <!-- 5. INTERCHANGED: Relation + Father / Husband Name together -->
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Relation (संबंध) <span class="text-red-500">*</span></label>
@@ -1369,11 +1338,13 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                             </div>
                         </div>
 
+                        <!-- 6. Occupation / Profession (Optional) -->
                         <div>
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Occupation / Employment (पेशा — Optional / वैकल्पिक)</label>
                             <input type="text" name="REASON" placeholder="e.g. Private Service / Business (या खाली छोड़ें)" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
                         </div>
 
+                        <!-- 7. Complete Residential Address -->
                         <div class="md:col-span-2">
                             <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Complete Address (पूरा पता — जैसा गजट में छपेगा) <span class="text-red-500">*</span></label>
                             <input type="text" name="ADDRESS" placeholder="e.g. H.No. 43, Block-P, Sector-12, Noida, Gautam Budh Nagar, Uttar Pradesh-201301" required class="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10">
