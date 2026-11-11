@@ -67,10 +67,13 @@ window.syncDobDelhiUnifiedAddress = function(inputEl) {
     if (permanentAddrEl) permanentAddrEl.value = upperVal;
 };
 
+// Gazette Notification: Interchanged Child Age (Top Row, only visible for Minor) & Relation (Bottom Row)
 window.toggleGazetteChangeMode = function(val) {
     const minorSec = document.getElementById('gazetteMinorFields');
+    const ageTopBox = document.getElementById('gazetteChildAgeTopWrapper');
     const gInp = document.getElementById('inpGazetteGuardian');
     const aInp = document.getElementById('inpGazetteChildAge');
+    const relSelect = document.getElementById('selGazetteRelType');
     const appTypeHidden = document.getElementById('inpGazetteApplicantTypeHidden');
     const childRelHidden = document.getElementById('inpGazetteChildRelHidden');
     const lblOld = document.getElementById('lblGazetteOldName');
@@ -78,19 +81,24 @@ window.toggleGazetteChangeMode = function(val) {
     const lblFather = document.getElementById('lblGazetteFatherName');
 
     if (val === 'MINOR_SON' || val === 'MINOR_DAUGHTER' || val === 'MINOR') {
+        if (ageTopBox) ageTopBox.style.display = 'block';
         if (minorSec) minorSec.style.display = 'grid';
         if (gInp) gInp.required = true;
         if (aInp) aInp.required = true;
         if (appTypeHidden) appTypeHidden.value = 'MINOR';
         if (childRelHidden) childRelHidden.value = (val === 'MINOR_DAUGHTER') ? 'daughter' : 'son';
+        if (relSelect) relSelect.value = (val === 'MINOR_DAUGHTER') ? 'daughter of' : 'son of';
+
         if (lblOld) lblOld.innerHTML = 'Child Old Name (बच्चे का पुराना नाम - BOLD) <span class="text-red-500">*</span>';
         if (lblNew) lblNew.innerHTML = 'Child New Name (बच्चे का नया सही नाम - BOLD) <span class="text-red-500">*</span>';
-        if (lblFather) lblFather.innerHTML = 'Guardian\'s Father Name (अभिभावक के पिता का नाम - BOLD) <span class="text-red-500">*</span>';
+        if (lblFather) lblFather.innerHTML = 'Father / Husband Name (पिता का नाम - BOLD) <span class="text-red-500">*</span>';
     } else {
+        if (ageTopBox) ageTopBox.style.display = 'none';
         if (minorSec) minorSec.style.display = 'none';
-        if (gInp) gInp.required = false;
-        if (aInp) aInp.required = false;
+        if (gInp) { gInp.required = false; gInp.value = ''; }
+        if (aInp) { aInp.required = false; aInp.value = ''; }
         if (appTypeHidden) appTypeHidden.value = 'ADULT';
+
         if (lblOld) lblOld.innerHTML = 'Old Name (पुराना नाम / गलत नाम - BOLD) <span class="text-red-500">*</span>';
         if (lblNew) lblNew.innerHTML = 'New Name (नया सही नाम - BOLD) <span class="text-red-500">*</span>';
         if (lblFather) lblFather.innerHTML = 'Father / Husband Name (पिता / पति का नाम - BOLD) <span class="text-red-500">*</span>';
@@ -133,7 +141,7 @@ window.restoreFormDataFromSession = function(serviceName) {
     } catch (e) {}
 };
 
-// === SERVICES SUBMISSION (Caste, Domicile & e-Voter ID Local Instant HTML; Minor on Google Drive & Free) ===
+// === SERVICES SUBMISSION ===
 window.submitForm = async function(event, serviceType) {
     event.preventDefault();
     const { db, doc, setDoc, updateDoc, collection, addDoc } = window.fb;
@@ -1253,7 +1261,7 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
         isFormRendered = true;
     }
 
-    // GAZETTE NOTIFICATION (गैजेट नोटिफिकेशन • UPDATED FOR NEW 3-SECTION TEMPLATE • ₹100 / 100 Credits)
+    // GAZETTE NOTIFICATION (गैजेट नोटिफिकेशन • INTERCHANGED CHILD AGE & RELATION • ₹100 / 100 Credits)
     else if (serviceName === 'gazette') {
         if (!window.currentUserData || !window.canCurrentUserSeeService('gazette')) { window.switchService(window.getFirstAllowedTab()); return true; }
 
@@ -1284,29 +1292,21 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                             </select>
                         </div>
 
-                        <!-- 2. Relation Type -->
-                        <div>
-                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Relation (संबंध - son of / daughter of / wife of) <span class="text-red-500">*</span></label>
-                            <select name="REL_TYPE" class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10 cursor-pointer">
-                                <option value="son of">son of (पुत्र)</option>
-                                <option value="daughter of">daughter of (पुत्री)</option>
-                                <option value="wife of">wife of (पत्नी)</option>
-                            </select>
+                        <!-- 2. INTERCHANGED: Child Age in Years (Opens ONLY when Minor is selected, otherwise hidden) -->
+                        <div id="gazetteChildAgeTopWrapper" style="display: none;">
+                            <label class="block text-[11px] font-bold text-amber-900 uppercase mb-1">Age of Child in Years (बच्चे की उम्र) <span class="text-red-500">*</span></label>
+                            <input type="number" id="inpGazetteChildAge" name="CHILD_AGE" placeholder="e.g. 6" min="1" max="17" class="w-full p-3 border border-amber-400 rounded-xl text-sm font-black bg-amber-50/60 focus:bg-white outline-none relative z-10">
                         </div>
 
-                        <!-- Minor Extra Fields (Shown when Minor Son/Daughter is selected) -->
-                        <div id="gazetteMinorFields" style="display: none;" class="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3.5 p-3.5 bg-amber-50/80 border border-amber-300 rounded-2xl">
+                        <!-- Minor Extra Guardian Fields (Shown ONLY when Minor Son/Daughter is selected) -->
+                        <div id="gazetteMinorFields" style="display: none;" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3.5 p-3.5 bg-amber-50/80 border border-amber-300 rounded-2xl">
                             <div>
                                 <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Guardian / Parent Name (अभिभावक का नाम - BOLD) <span class="text-red-500">*</span></label>
                                 <input type="text" id="inpGazetteGuardian" name="GUARDIAN_NAME" placeholder="e.g. VISHAL SHUKLA" class="w-full p-2.5 border border-amber-300 rounded-xl text-sm font-bold bg-white outline-none uppercase">
                             </div>
                             <div>
-                                <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Guardian's Father Name (अभिभावक के पिता)</label>
+                                <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Guardian's Father Name (अभिभावक के पिता का नाम)</label>
                                 <input type="text" name="GUARDIAN_FATHER" placeholder="e.g. Late DAYA SHANKAR SHUKLA" class="w-full p-2.5 border border-amber-300 rounded-xl text-sm font-bold bg-white outline-none uppercase">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold text-amber-950 uppercase mb-1">Child Age in Years (बच्चे की उम्र) <span class="text-red-500">*</span></label>
-                                <input type="number" id="inpGazetteChildAge" name="CHILD_AGE" value="6" placeholder="e.g. 6" min="1" max="17" class="w-full p-2.5 border border-amber-300 rounded-xl text-sm font-bold bg-white outline-none">
                             </div>
                         </div>
 
@@ -1322,10 +1322,20 @@ window.renderServiceFormHtml = function(serviceName, container, submitBtnText, s
                             <input type="text" name="NEW_NAME" placeholder="e.g. DREYVAN DAYSE" required class="w-full p-3 border border-emerald-300 rounded-xl text-sm font-black bg-emerald-50/40 focus:bg-white outline-none uppercase relative z-10">
                         </div>
 
-                        <!-- 5. Father / Husband Name (Printed in BOLD) -->
-                        <div>
-                            <label id="lblGazetteFatherName" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Father / Husband Name (पिता / पति का नाम - BOLD) <span class="text-red-500">*</span></label>
-                            <input type="text" name="FNAME" placeholder="e.g. Late RADHA RAMAN DAS / Sh. RAMESH CHAND" required class="w-full p-3 border border-slate-300 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                        <!-- 5. INTERCHANGED: Relation + Father / Husband Name together -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Relation (संबंध) <span class="text-red-500">*</span></label>
+                                <select id="selGazetteRelType" name="REL_TYPE" class="w-full p-3 border border-slate-300 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none relative z-10 cursor-pointer">
+                                    <option value="son of">son of (पुत्र)</option>
+                                    <option value="daughter of">daughter of (पुत्री)</option>
+                                    <option value="wife of">wife of (पत्नी)</option>
+                                </select>
+                            </div>
+                            <div class="col-span-2">
+                                <label id="lblGazetteFatherName" class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Father / Husband Name (BOLD) <span class="text-red-500">*</span></label>
+                                <input type="text" name="FNAME" placeholder="e.g. Late RADHA RAMAN DAS" required class="w-full p-3 border border-slate-300 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none uppercase relative z-10">
+                            </div>
                         </div>
 
                         <!-- 6. Occupation / Profession (Optional) -->
