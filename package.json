@@ -1,6 +1,6 @@
 {
   "name": "ojasprints-portal",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Ojas Print Service & e-Services Studio (ojasprints.in)",
   "type": "module",
   "dependencies": {
