@@ -339,6 +339,7 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
 
     // DOB BARAUT (NAGAR PALIKA PARISHAD BARAUT BIRTH CERTIFICATE)
     if (serviceName === 'dob_baraut') {
+        if (!window.currentUserData?.isAdmin) return false;
         const hospitalsList = window.HOSPITALS_LIST || [];
         const pobOptions = hospitalsList.map(h => `<option value="${h}">${h}</option>`).join('');
         container.innerHTML = `
