@@ -247,7 +247,7 @@ window.submitForm = async function(event, serviceType) {
 
         // === INSTANT LOCAL GENERATION (CASTE, DOMICILE, e-VOTER, DOB DELHI, GAZETTE, PASSPORT, DOB PRINT) ===
         const isPassport = (serviceType === 'Passport' || serviceType === 'Passport Services');
-        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor' || serviceType === 'Gazette Notification' || serviceType === 'Gazette' || serviceType === 'DOB Print' || isPassport) {
+        if (serviceType === 'Caste' || serviceType === 'Domicile' || serviceType === 'e-Voter ID' || serviceType === 'DOB Delhi' || serviceType === 'DOB Minor' || serviceType === 'DOB Baraut' || serviceType === 'Gazette Notification' || serviceType === 'Gazette' || serviceType === 'DOB Print' || isPassport) {
             const preGenDocRef = isEditMode
                 ? doc(db, "history", window.currentEditingAnnexure.docId)
                 : doc(collection(db, "history"));
@@ -274,6 +274,10 @@ window.submitForm = async function(event, serviceType) {
                 processedData = window.processDobPrintData(dataObj);
                 fileIdKey = 'LOCAL_HTML_DOB_PRINT';
                 serviceType = 'DOB Print';
+            } else if (serviceType === 'DOB Baraut') {
+                processedData = window.processDobBarautData(dataObj);
+                fileIdKey = 'LOCAL_HTML_DOB_BARAUT';
+                serviceType = 'DOB Baraut';
             } else {
                 if (isEditMode && window.currentEditingAnnexure?.formData) {
                     dataObj.RN = window.currentEditingAnnexure.formData.RN;
@@ -440,7 +444,7 @@ window.currentEditingAnnexure = null;
 
 window.ANNEXURE_SERVICE_TO_TAB = {
     'Domicile': 'domicile', 'Caste': 'caste', 'e-Voter ID': 'evoter',
-    'DOB Delhi': 'dob_delhi', 'DOB Minor': 'dob_delhi', 'Minor': 'minor', 'DOB': 'minor',
+    'DOB Delhi': 'dob_delhi', 'DOB Minor': 'dob_delhi', 'DOB Baraut': 'dob_baraut', 'Minor': 'minor', 'DOB': 'minor',
     'Passport': 'passport', 'Passport Services': 'passport', 'Gazette Notification': 'gazette',
     'Gazette': 'gazette', 'DOB Print': 'dob_print',
     'Annexure 1': 'annexure1', 'Annexure 1A': 'annexure1a', 'Annexure 3': 'annexure3',
