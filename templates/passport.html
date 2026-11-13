@@ -1,7 +1,7 @@
 <div class="affidavit-paper passport-paper-sheet" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 0 !important; margin: 0 !important; background-color: #ffffff !important; color: #111111 !important; box-sizing: border-box !important; overflow: hidden !important;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@500;600;700&family=Roboto+Mono:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@500;600;700&family=Roboto+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         .passport-paper-sheet, .passport-paper-sheet * {
             box-sizing: border-box !important;
@@ -9,7 +9,7 @@
             print-color-adjust: exact !important;
         }
         .passport-data-font {
-            font-family: 'Roboto Mono', 'Share Tech Mono', 'Consolas', monospace !important;
+            font-family: 'Roboto Mono', 'Consolas', monospace !important;
             font-weight: 600 !important;
             color: #1c2126 !important;
             letter-spacing: 0.45px !important;
@@ -18,11 +18,11 @@
             white-space: nowrap !important;
         }
         .passport-mrz-font {
-            font-family: 'Share Tech Mono', 'Roboto Mono', 'OCR-B', 'Consolas', monospace !important;
-            font-weight: 800 !important;
-            font-size: 13.6px !important;
+            font-family: 'Roboto Mono', 'OCR-B', 'Consolas', monospace !important;
+            font-weight: 600 !important;
+            font-size: 12.6px !important;
             color: #1a1f24 !important;
-            letter-spacing: 2.15px !important;
+            letter-spacing: 2.45px !important;
             line-height: 1.45 !important;
             white-space: nowrap !important;
             text-transform: uppercase !important;
@@ -128,7 +128,7 @@
         {{DOE_SLASH}}
     </div>
 
-    <!-- 5. BOTTOM 2-LINE ICAO MRZ ZONE (Full-width spaced to match real passport) -->
+    <!-- 5. BOTTOM 2-LINE ICAO MRZ ZONE (Full-width OCR-B style) -->
     <div style="position: absolute !important; top: 753px !important; left: 179px !important; width: 458px !important; z-index: 6 !important; overflow: hidden !important;">
         <div class="passport-mrz-font">{{MRZ_LINE_1}}</div>
         <div class="passport-mrz-font" style="margin-top: 7px !important;">{{MRZ_LINE_2}}</div>
