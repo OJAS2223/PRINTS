@@ -107,7 +107,7 @@ window.openSavedPhotoPreview = function(photoSrc, personName = 'Applicant') {
 
 // ================= PASSPORT PROCESSOR (LINKS TO templates/passport.html) =================
 window.generateRandomPassportNo = function() {
-    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const letters = "T";
     const prefix = letters.charAt(Math.floor(Math.random() * letters.length));
     const digits = Math.floor(1000000 + Math.random() * 9000000);
     return prefix + digits;
