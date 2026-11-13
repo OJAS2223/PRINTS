@@ -106,6 +106,7 @@ window.SERVICE_RATES = {
     'Caste': 10,
     'e-Voter ID': 10,
     'DOB Delhi': 50,
+    'DOB Baraut': 50,
     'DOB Minor': 50,
     'Passport': 30,
     'Passport Services': 30,
@@ -132,7 +133,7 @@ window.getServiceCreditCost = function(serviceType) {
     const sLower = String(serviceType).toLowerCase();
     if (sLower.includes('gazette')) return 100;
     if (sLower === 'dob print' || sLower === 'dob_print' || sLower.includes('dob original')) return 140;
-    if (sLower === 'minor' || sLower === 'dob' || sLower.includes('delhi') || sLower === 'dob_minor' || sLower === 'dob_delhi') return 50;
+    if (sLower === 'minor' || sLower === 'dob' || sLower.includes('delhi') || sLower.includes('baraut') || sLower === 'dob_minor' || sLower === 'dob_delhi' || sLower === 'dob_baraut') return 50;
     if (sLower.includes('passport')) return 30;
     return 10;
 };
