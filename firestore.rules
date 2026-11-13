@@ -1,0 +1,116 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Super Admin (Full Control) — safely check email exists & is string
+    function isSuperAdmin() {
+      return request.auth != null &&
+             request.auth.token.email != null &&
+             request.auth.token.email is string && (
+               request.auth.token.email.lower() == "hkosiun1221@gmail.com" ||
+               request.auth.token.email.lower() == "ovi@print.com"
+             );
+    }
+
+    // 2. Sub-Admin (Both email variants allowed)
+    function isSubAdmin() {
+      return request.auth != null &&
+             request.auth.token.email != null &&
+             request.auth.token.email is string && (
+               request.auth.token.email.lower() == "prince@gmail.com" ||
+               request.auth.token.email.lower() == "prince@print.com"
+             );
+    }
+
+    // 3. Any Admin (Super Admin OR Sub-Admin)
+    function isAnyAdmin() {
+      return isSuperAdmin() || isSubAdmin();
+    }
+
+    // Portal Settings & Live Banners
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAnyAdmin();
+    }
+
+    // Users Collection: User can never increase own credits or VIP status
+    match /users/{userId} {
+      allow read: if isAnyAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow create, delete: if isSuperAdmin();
+      allow update: if isAnyAdmin() || (
+        request.auth != null &&
+        request.auth.uid == userId &&
+        request.resource.data.credits <= resource.data.credits &&
+        request.resource.data.get('isVip', false) == resource.data.get('isVip', false) &&
+        request.resource.data.get('vipExpiry', 0) == resource.data.get('vipExpiry', 0)
+      );
+    }
+
+    // Document History (get: true for public QR verification at /verify/:id)
+    match /history/{docId} {
+      allow get: if true;
+      allow list: if isAnyAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow create: if isAnyAdmin() || (request.auth != null && request.resource.data.userId == request.auth.uid);
+      allow update: if isAnyAdmin() || (
+        request.auth != null &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.get('creditsDeducted', 0) == resource.data.get('creditsDeducted', 0)
+      );
+      allow delete: if isAnyAdmin();
+    }
+
+    // Payments & 24-48h Payment Tickets
+    match /payments/{paymentId} {
+      allow read: if isAnyAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      allow create: if isAnyAdmin() || (
+        request.auth != null &&
+        request.resource.data.userId == request.auth.uid &&
+        (request.resource.data.status == "Pending" ||
+         request.resource.data.status == "Pending (Ticket Raised)" ||
+         request.resource.data.status == "Pending (Ticket Raised - 24-48h)")
+      );
+      allow update: if isAnyAdmin() || (
+        request.auth != null &&
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == resource.data.userId &&
+        request.resource.data.get('amountPaid', 0) == resource.data.get('amountPaid', 0) &&
+        request.resource.data.get('creditsRequested', 0) == resource.data.get('creditsRequested', 0) &&
+        (request.resource.data.status == "Cancelled" ||
+         request.resource.data.status == "Cancelled (Expired 72h)" ||
+         request.resource.data.status == "Pending (Ticket Raised)" ||
+         request.resource.data.status == "Pending (Ticket Raised - 24-48h)")
+      );
+      allow delete: if isAnyAdmin();
+    }
+
+    // Support Chat Tickets (allows unauthenticated Forgot Password tickets with required fields)
+    match /supportTickets/{ticketId} {
+      allow create: if request.resource.data.keys().hasAll(['message', 'timestamp']) &&
+                       request.resource.data.message is string &&
+                       request.resource.data.message.size() > 0 &&
+                       request.resource.data.message.size() <= 2000;
+      allow read, update: if isAnyAdmin() || (request.auth != null && (ticketId == request.auth.uid || resource.data.userId == request.auth.uid));
+      allow delete: if isAnyAdmin();
+    }
+
+    // Forgot Password Tickets
+    match /forgotTickets/{ticketId} {
+      allow create: if request.resource.data.keys().hasAll(['userIdentifier', 'userPhone', 'timestamp']) &&
+                       request.resource.data.userIdentifier is string &&
+                       request.resource.data.userIdentifier.size() > 0;
+      allow read, update, delete: if isAnyAdmin();
+    }
+
+    // Used UTRs (Anti-Replay Protection)
+    match /usedUtrs/{utrId} {
+      allow read, write: if isAnyAdmin();
+    }
+
+    // Secret API Keys & Hidden External PDF URLs (Strictly Admin & Server Only)
+    match /adminSecrets/{docId} {
+      allow read, write: if isAnyAdmin();
+    }
+  }
+}

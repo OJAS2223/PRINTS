@@ -3,9 +3,10 @@ const CACHE_NAME = 'ojas-upeprint-cache-v12';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/portal.html',
-  '/ovi.html',
-  '/tools.html',
+  '/pages/portal.html',
+  '/pages/admin.html',
+  '/pages/tools.html',
+  '/pages/verify.html',
   '/manifest.json',
   '/images/logo.png',
   '/templates/caste.html',
@@ -30,9 +31,17 @@ const ASSETS_TO_CACHE = [
   '/js/pdf-engine.js',
   '/js/config-templates.js',
   '/js/portal-forms.js',
+  '/js/portal-forms-services.js',
+  '/js/portal-forms-annexures.js',
   '/js/portal-wallet-chat.js',
+  '/js/portal-wallet-payments.js',
+  '/js/portal-chat-history.js',
   '/js/admin-logic.js',
-  '/js/tools-logic.js'
+  '/js/admin-users-chat.js',
+  '/js/admin-payments-history.js',
+  '/js/tools-logic.js',
+  '/js/tools-photo.js',
+  '/js/tools-pdf-editor.js'
 ];
 
 self.addEventListener('install', (event) => {

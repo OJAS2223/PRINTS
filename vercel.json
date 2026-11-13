@@ -1,20 +1,28 @@
-{
+ {
   "rewrites": [
     {
       "source": "/portal",
-      "destination": "/portal.html"
+      "destination": "/pages/portal.html"
     },
     {
       "source": "/ovi",
-      "destination": "/ovi.html"
+      "destination": "/pages/admin.html"
     },
     {
       "source": "/secret-admin",
-      "destination": "/ovi.html"
+      "destination": "/pages/admin.html"
     },
     {
       "source": "/tools",
-      "destination": "/tools.html"
+      "destination": "/pages/tools.html"
+    },
+    {
+      "source": "/verify/:id",
+      "destination": "/pages/verify.html?id=:id"
+    },
+    {
+      "source": "/verify",
+      "destination": "/pages/verify.html"
     }
   ]
 }
