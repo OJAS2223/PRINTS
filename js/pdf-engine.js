@@ -12,6 +12,7 @@ window.TEMPLATE_FILES_MAP = {
     'LOCAL_HTML_DOB_DELHI': 'dob-delhi.html',
     'LOCAL_HTML_GAZETTE': 'gazette.html',
     'LOCAL_HTML_DOB_PRINT': 'dob-print.html',
+    'LOCAL_HTML_DOB_BARAUT': 'dob-baraut.html',
     'LOCAL_HTML_PASSPORT': 'passport.html',
     'LOCAL_HTML_ANNEXURE_1': 'annexure-1.html',
     'LOCAL_HTML_ANNEXURE_1A': 'annexure-1a.html',
@@ -573,6 +574,74 @@ window.processDobPrintData = function(rawFormObj) {
         HOSPITAL_UNIT: hospitalUnit, PB: hospitalUnit, TAHSEEL: tehsil, TEHSIL: tehsil,
         DISTRICT: district, STATE_NAME: stateName, STATE_GOVT_HI: 'उत्तर प्रदेश सरकार',
         STATE_GOVT_EN: 'GOVERNMENT OF UTTAR PRADESH', REMARKS: remarks, QR_URL: qrUrl
+    };
+};
+
+
+window.dateToUpperWords = function(dmyStr) {
+    const p = String(dmyStr || '').split('-');
+    if (p.length !== 3) return '';
+    const day = parseInt(p[0], 10);
+    const month = parseInt(p[1], 10);
+    const year = parseInt(p[2], 10);
+    const ordinals = ['','FIRST','SECOND','THIRD','FOURTH','FIFTH','SIXTH','SEVENTH','EIGHTH','NINTH','TENTH','ELEVENTH','TWELFTH','THIRTEENTH','FOURTEENTH','FIFTEENTH','SIXTEENTH','SEVENTEENTH','EIGHTEENTH','NINETEENTH','TWENTIETH','TWENTY FIRST','TWENTY SECOND','TWENTY THIRD','TWENTY FOURTH','TWENTY FIFTH','TWENTY SIXTH','TWENTY SEVENTH','TWENTY EIGHTH','TWENTY NINTH','THIRTIETH','THIRTY FIRST'];
+    const months = ['','JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+    const ones = ['','ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN'];
+    const tens = ['','','TWENTY','THIRTY','FORTY','FIFTY','SIXTY','SEVENTY','EIGHTY','NINETY'];
+    const numToWords = (n) => {
+        if (!n) return 'ZERO';
+        let s = '';
+        if (n >= 1000) { s += ones[Math.floor(n / 1000)] + ' THOUSAND '; n %= 1000; }
+        if (n >= 100) { s += ones[Math.floor(n / 100)] + ' HUNDRED '; n %= 100; }
+        if (n >= 20) { s += tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : ''); }
+        else if (n > 0) { s += ones[n]; }
+        return s.trim();
+    };
+    if (!ordinals[day] || !months[month] || !year) return '';
+    return `${ordinals[day]}-${months[month]}-${numToWords(year)}`;
+};
+
+window.processDobBarautData = function(rawFormObj) {
+    const formatToDMY = (dStr) => {
+        if (!dStr) return '';
+        const s = String(dStr).trim();
+        if (s.includes('-')) {
+            const p = s.split('-');
+            if (p.length === 3 && p[0].length === 4) return `${p[2]}-${p[1]}-${p[0]}`;
+        }
+        if (s.includes('/')) return s.replace(/\//g, '-');
+        return s;
+    };
+    const now = new Date();
+    const todayDMY = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+    const dob = formatToDMY(rawFormObj.DOB) || todayDMY;
+    const dobWords = (rawFormObj.DOB_WORDS || '').toString().trim().toUpperCase() || window.dateToUpperWords(dob);
+    const regDate = formatToDMY(rawFormObj.REG_DATE) || todayDMY;
+    const issueDate = regDate; // Date of Registration & Date of Issue same
+    const brnNo = (rawFormObj.BRN_NO || '').toString().trim().toUpperCase() || ('B' + now.getFullYear() + String(Math.floor(10000000000000 + Math.random() * 89999999999999)));
+    const address = (rawFormObj.ADDRESS || '').toString().trim().toUpperCase();
+    const permAddress = address; // Mother/Father Birth Address & Permanent Address same
+    const rawPob = rawFormObj.POB === 'OTHER' && rawFormObj.POB_CUSTOM ? rawFormObj.POB_CUSTOM : (rawFormObj.POB || '');
+    const pob = String(rawPob).trim().toUpperCase();
+    const qrLink = (rawFormObj.QR_LINK || '').toString().trim();
+    const qrPayload = qrLink || `Reg No: ${brnNo} | Name: ${(rawFormObj.NAME || '').toString().trim().toUpperCase()} | DOB: ${dob}`;
+    const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&margin=1&chl=" + encodeURIComponent(qrPayload);
+    const updatedOn = (rawFormObj.UPDATED_ON || '').toString().trim() || `${regDate} 14:03:56`;
+
+    return {
+        SERVICE_TYPE: 'DOB Baraut',
+        NAME: (rawFormObj.NAME || '').toString().trim().toUpperCase(),
+        SEX: (rawFormObj.SEX || 'FEMALE / महिला').toString().trim().toUpperCase(),
+        AADHAAR_NO: (rawFormObj.AADHAAR_NO || '').toString().trim().toUpperCase(),
+        DOB: dob, DOB_WORDS: dobWords, POB: pob,
+        MNAME: (rawFormObj.MNAME || '').toString().trim().toUpperCase(),
+        FNAME: (rawFormObj.FNAME || '').toString().trim().toUpperCase(),
+        MA: (rawFormObj.MA || '').toString().trim().toUpperCase(),
+        FA: (rawFormObj.FA || '').toString().trim().toUpperCase(),
+        ADDRESS: address, PERM_ADDRESS: permAddress,
+        BRN_NO: brnNo, REG_DATE: regDate, ISSUE_DATE: issueDate,
+        REMARKS: (rawFormObj.REMARKS || '').toString().trim().toUpperCase(),
+        QR_LINK: qrLink, QR_URL: qrUrl, UPDATED_ON: updatedOn
     };
 };
 
