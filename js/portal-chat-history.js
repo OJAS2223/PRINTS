@@ -145,6 +145,142 @@ window.sendUserSupportMessage = async function(event) {
     }
 };
 
+// ================= PORTAL ADMIN STAMP HELPERS (SINGLE STAMP: paraut.png) =================
+const PORTAL_SINGLE_STAMP_FILE = "paraut.png";
+const PORTAL_CANDIDATE_STAMP_FILES = [PORTAL_SINGLE_STAMP_FILE];
+
+window.availableStampsList = window.availableStampsList || [];
+window.portalStampSelectionMap = window.portalStampSelectionMap || {};
+window.portalUsersMap = window.portalUsersMap || {};
+
+window.loadPortalSingleStamp = function(fileName) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            if (!img.naturalWidth || img.naturalWidth === 0) return resolve(null);
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.naturalWidth || 794;
+                canvas.height = img.naturalHeight || 1122;
+                ctx.drawImage(img, 0, 0);
+                const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imgData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    if (data[i] > 240 && data[i + 1] > 240 && data[i + 2] > 240) data[i + 3] = 0;
+                }
+                ctx.putImageData(imgData, 0, 0);
+                resolve({ name: fileName, dataUrl: canvas.toDataURL('image/png') });
+            } catch (e) {
+                resolve({ name: fileName, dataUrl: fileName });
+            }
+        };
+        img.onerror = () => {
+            if (!fileName.startsWith('/images/') && !fileName.startsWith('images/')) {
+                img.onerror = () => resolve(null);
+                img.src = 'images/' + fileName;
+            } else {
+                resolve(null);
+            }
+        };
+        img.src = fileName.startsWith('/') || fileName.startsWith('images/') ? fileName : '/images/' + fileName;
+    });
+};
+
+window.preloadPortalStamps = async function() {
+    if (window.availableStampsList.length > 0) return window.availableStampsList;
+    const results = await Promise.all(PORTAL_CANDIDATE_STAMP_FILES.map(f => window.loadPortalSingleStamp(f)));
+    window.availableStampsList = results.filter(item => item !== null);
+    return window.availableStampsList;
+};
+
+window.getPortalSingleStampObj = async function() {
+    if (window.availableStampsList.length === 0) await window.preloadPortalStamps();
+    const found = window.availableStampsList.find(s => s.name.toLowerCase() === PORTAL_SINGLE_STAMP_FILE);
+    if (found) return found;
+    const dataUrl = typeof window.getTransparentStampDataUrl === 'function'
+        ? await window.getTransparentStampDataUrl(PORTAL_SINGLE_STAMP_FILE)
+        : '/images/' + PORTAL_SINGLE_STAMP_FILE;
+    return { name: PORTAL_SINGLE_STAMP_FILE, dataUrl };
+};
+
+window.deductPortalAnnexureStampFee = async function(record) {
+    const { db, doc, getDoc, updateDoc } = window.fb;
+    if (!record || !String(record.fileId || '').startsWith('LOCAL_HTML_ANNEXURE_')) return { ok: true, chargedNow: false };
+    if (record.adminStampCharged) return { ok: true, chargedNow: false };
+    const fee = window.ANNEXURE_STAMP_FEE || 20;
+    const targetUid = record.userId;
+    if (!targetUid || (window.currentUserData && targetUid === window.currentUserData.uid)) {
+        record.adminStampCharged = true;
+        try { await updateDoc(doc(db, "history", record.id), { adminStampCharged: true }); } catch (e) {}
+        return { ok: true, chargedNow: false };
+    }
+    try {
+        const userRef = doc(db, "users", targetUid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) return { ok: true, chargedNow: false };
+        const uData = userSnap.data();
+        const currentCredits = Number(uData.credits) || 0;
+        if (currentCredits < fee) {
+            const proceed = confirm(`⚠️ यूज़र (${uData.email || 'User'}) के वॉलेट में केवल ${currentCredits} Credits हैं, जबकि स्टैम्प (Stamp) अटैच करने का शुल्क ${fee} Credits (₹${fee}) है।\n\nक्या आप फिर भी अटैच करना चाहते हैं?`);
+            if (!proceed) return { ok: false, chargedNow: false };
+        }
+        const newCredits = Math.max(0, currentCredits - fee);
+        await updateDoc(userRef, { credits: newCredits });
+        await updateDoc(doc(db, "history", record.id), { adminStampCharged: true, adminStampFee: fee, adminStampChargedAt: new Date() });
+        record.adminStampCharged = true;
+        record.adminStampFee = fee;
+        return { ok: true, chargedNow: true, fee, newCredits, userEmail: uData.email || 'User' };
+    } catch (err) {
+        return { ok: true, chargedNow: false };
+    }
+};
+
+window.togglePortalRowStampCheckbox = async function(origIndex, isChecked) {
+    if (!window.currentUserData?.isAdmin) return;
+    const { db, doc, updateDoc } = window.fb;
+    const record = window.historyData[origIndex];
+    if (!record) return;
+    if (isChecked) {
+        const feeRes = await window.deductPortalAnnexureStampFee(record);
+        if (!feeRes.ok) {
+            const chk = document.getElementById(`portalStampChk-${origIndex}`);
+            if (chk) chk.checked = false;
+            return;
+        }
+        const chosenObj = await window.getPortalSingleStampObj();
+        window.portalStampSelectionMap[origIndex] = { enabled: true, stampFile: PORTAL_SINGLE_STAMP_FILE, stampSrc: chosenObj.dataUrl };
+        record.withStamp = true;
+        record.stampFile = PORTAL_SINGLE_STAMP_FILE;
+        try { await updateDoc(doc(db, "history", record.id), { withStamp: true, stampFile: PORTAL_SINGLE_STAMP_FILE, stampedAt: new Date() }); } catch (e) {}
+        if (feeRes.chargedNow) {
+            alert(`✅ स्टैम्प लगा दिया गया है और यूज़र (${feeRes.userEmail}) के वॉलेट से ${feeRes.fee} Credits (₹${feeRes.fee}) काट लिए गए हैं!\nबचे हुए क्रेडिट्स: ${feeRes.newCredits} Cr`);
+        }
+    } else {
+        window.portalStampSelectionMap[origIndex] = { enabled: false, stampFile: '', stampSrc: '', stampCity: '' };
+        record.withStamp = false;
+        record.stampFile = '';
+        record.stampCity = '';
+        try { await updateDoc(doc(db, "history", record.id), { withStamp: false, stampFile: '', stampCity: '' }); } catch (e) {}
+    }
+    window.handleUserHistoryFilterChange();
+};
+
+window.changePortalRowStampCity = async function(origIndex, cityId) {
+    if (!window.currentUserData?.isAdmin || !cityId) return;
+    const { db, doc, updateDoc } = window.fb;
+    const record = window.historyData[origIndex];
+    if (!record) return;
+    if (window.availableStampsList.length === 0) await window.preloadPortalStamps();
+    const chosenObj = window.getPortalStampObjForCity(cityId);
+    window.portalStampSelectionMap[origIndex] = { enabled: true, stampFile: chosenObj.name, stampSrc: chosenObj.dataUrl, stampCity: cityId };
+    record.withStamp = true;
+    record.stampFile = chosenObj.name;
+    record.stampCity = cityId;
+    try { await updateDoc(doc(db, "history", record.id), { withStamp: true, stampFile: chosenObj.name, stampCity: cityId, stampedAt: new Date() }); } catch (e) {}
+    window.handleUserHistoryFilterChange();
+};
+
 window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
     document.getElementById('pdfViewerTitle').innerText = fileName;
     const iframe = document.getElementById('pdfIframe');
@@ -156,6 +292,7 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
     const modalStampCheckbox = document.getElementById('modalStampCheckbox');
     const shareBtn = document.getElementById('modalShareBtn');
 
+    const isAdmin = Boolean(window.currentUserData?.isAdmin);
     const isLocalDoc = String(fileId).startsWith('LOCAL_HTML_');
     const isAutoStampedCert = (fileId === 'LOCAL_HTML_CASTE' || fileId === 'LOCAL_HTML_DOMICILE');
     const isAnnexure = String(fileId).startsWith('LOCAL_HTML_ANNEXURE_');
@@ -169,7 +306,7 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
         const record = (window.historyData && window.historyData[historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[historyIndex]);
         if (record) {
             initialWithStamp = !!record.withStamp;
-            initialStampFile = record.stampFile || 'stamp.png';
+            initialStampFile = record.stampFile || 'paraut.png';
             initialCertFileId = (record.certificateFileId && record.isCertificateAttached !== false) ? record.certificateFileId : '';
         }
         if (initialWithStamp && !initialStampSrc && typeof window.getTransparentStampDataUrl === 'function') {
@@ -188,7 +325,7 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
         await window.preloadAllHtmlTemplates();
         if (shareBtn) shareBtn.style.display = 'inline-flex';
         if (modalStampLabel) {
-            if (isAnnexure) modalStampLabel.classList.remove('hidden');
+            if (isAdmin && isAnnexure) modalStampLabel.classList.remove('hidden');
             else modalStampLabel.classList.add('hidden');
         }
         if (modalStampCheckbox) modalStampCheckbox.checked = initialWithStamp;
@@ -248,17 +385,65 @@ window.closePdfViewer = function() {
 };
 
 window.loadUserHistory = async function() {
-    const { db, collection, getDocs, query, where } = window.fb;
+    const { db, collection, getDocs, query, where, orderBy, limit } = window.fb;
     const historyContainer = document.getElementById('historyTableBody');
     if (!historyContainer) return;
     historyContainer.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading records...</td></tr>`;
+    const isAdmin = Boolean(window.currentUserData?.isAdmin);
+
     try {
-        const q = query(collection(db, "history"), where("userId", "==", window.currentUserData.uid));
-        const querySnapshot = await getDocs(q);
-        window.historyData = [];
-        querySnapshot.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
-        window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-        window.renderHistory('ALL');
+        if (isAdmin) {
+            await window.preloadPortalStamps();
+            try {
+                const usersSnap = await getDocs(collection(db, "users"));
+                window.portalUsersMap = {};
+                const userDropdown = document.getElementById('userHistoryUserFilter');
+                const prevVal = userDropdown ? userDropdown.value : 'ALL';
+                if (userDropdown) {
+                    userDropdown.innerHTML = `<option value="ALL">All Users (सभी यूज़र)</option><option value="${window.currentUserData.uid}">👑 Admin (${window.currentUserData.email})</option>`;
+                }
+                usersSnap.forEach(uDoc => {
+                    const uData = uDoc.data();
+                    if (uData?.email) {
+                        window.portalUsersMap[uDoc.id] = uData.email;
+                        if (userDropdown && uDoc.id !== window.currentUserData.uid) {
+                            userDropdown.innerHTML += `<option value="${uDoc.id}">${uData.email}</option>`;
+                        }
+                    }
+                });
+                if (userDropdown) userDropdown.value = prevVal || 'ALL';
+            } catch (e) {}
+
+            let querySnapshot;
+            try {
+                const adminQ = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(250));
+                querySnapshot = await getDocs(adminQ);
+            } catch (e) {
+                querySnapshot = await getDocs(collection(db, "history"));
+            }
+            window.historyData = [];
+            querySnapshot.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
+            window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+
+            window.portalStampSelectionMap = {};
+            window.historyData.forEach((rec, idx) => {
+                if (rec.withStamp) {
+                    window.portalStampSelectionMap[idx] = {
+                        enabled: true,
+                        stampFile: rec.stampFile || 'paraut.png',
+                        stampCity: rec.stampCity || 'baraut'
+                    };
+                }
+            });
+        } else {
+            const q = query(collection(db, "history"), where("userId", "==", window.currentUserData.uid));
+            const querySnapshot = await getDocs(q);
+            window.historyData = [];
+            querySnapshot.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
+            window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+        }
+
+        window.handleUserHistoryFilterChange();
 
         const pendingDobPrints = window.historyData.filter(item => {
             if (item.fileId !== 'SERVER_API_DOB_PRINT') return false;
@@ -280,7 +465,8 @@ window.handleUserHistoryFilterChange = function() {
     const type = document.getElementById('userHistoryTypeFilter')?.value || 'ALL';
     const date = document.getElementById('userHistoryDateFilter')?.value || '';
     const search = (document.getElementById('userHistorySearchInput')?.value || '').trim().toLowerCase();
-    window.renderHistory(type, date, search);
+    const userFilter = document.getElementById('userHistoryUserFilter')?.value || 'ALL';
+    window.renderHistory(type, date, search, userFilter);
 };
 
 window.editAnnexureRecord = async function(docId) {
@@ -304,6 +490,7 @@ window.editAnnexureRecord = async function(docId) {
         'Domicile': 'domicile', 'Caste': 'caste', 'e-Voter ID': 'evoter',
         'DOB Delhi': 'dob_delhi', 'DOB Minor': 'dob_delhi', 'Minor': 'minor', 'DOB': 'minor',
         'Passport': 'passport', 'Passport Services': 'passport',
+        'Gazette Notification': 'gazette',
         ...(window.ANNEXURE_SERVICE_TO_TAB || {})
     };
     const tabName = adminEditTabMap[sType] || '';
@@ -321,12 +508,27 @@ window.editAnnexureRecord = async function(docId) {
     }, 150);
 };
 
-window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearch = '') {
+window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearch = '', filterUser = 'ALL') {
     const historyContainer = document.getElementById('historyTableBody');
     if (!historyContainer) return;
     historyContainer.innerHTML = '';
+    const isAdmin = Boolean(window.currentUserData?.isAdmin);
     const indexedData = window.historyData.map((item, idx) => ({ ...item, _origIndex: idx }));
-    let filteredData = filterType === 'ALL' ? indexedData : indexedData.filter(item => item.serviceType === filterType);
+    let filteredData = indexedData;
+
+    if (isAdmin && filterUser !== 'ALL') {
+        filteredData = filteredData.filter(item => String(item.userId) === String(filterUser));
+    }
+
+    if (filterType !== 'ALL') {
+        filteredData = filteredData.filter(item => {
+            const st = String(item.serviceType || '').trim();
+            if (filterType === 'Minor') return st === 'Minor' || st === 'DOB';
+            if (filterType === 'Passport') return st === 'Passport' || st === 'Passport Services';
+            if (filterType === 'DOB Print') return st === 'DOB Print' || st === 'DOB Original PDF';
+            return st === filterType;
+        });
+    }
 
     if (filterDate) {
         filteredData = filteredData.filter(item => {
@@ -341,12 +543,14 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
         filteredData = filteredData.filter(item => {
             const fName = (item.fileName || '').toLowerCase();
             const fData = item.formData || {};
-            const appName = (fData.applicantName || fData.parentName || fData.childName || fData.NAME || fData.newName || '').toLowerCase();
-            return fName.includes(filterSearch) || appName.includes(filterSearch);
+            const appName = (fData.applicantName || fData.parentName || fData.childName || fData.NAME || fData.newName || fData.NEW_NAME || '').toLowerCase();
+            const uEmail = isAdmin ? (window.portalUsersMap[item.userId] || '').toLowerCase() : '';
+            return fName.includes(filterSearch) || appName.includes(filterSearch) || uEmail.includes(filterSearch);
         });
     }
 
-    document.getElementById('userHistoryCount').innerText = `Total Files: ${filteredData.length}`;
+    const countEl = document.getElementById('userHistoryCount');
+    if (countEl) countEl.innerText = `Total Files: ${filteredData.length}`;
 
     if (filteredData.length === 0) {
         historyContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 text-xs"><i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i><br>No records found.</td></tr>`;
@@ -359,13 +563,22 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
         const dateStr = dateObj.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
         const timeStr = dateObj.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
 
+        const isServerDobPrint = (data.fileId === 'SERVER_API_DOB_PRINT');
+        const isLocalDoc = String(data.fileId || '').startsWith('LOCAL_HTML_');
+        const isAnnexure = String(data.fileId || '').startsWith('LOCAL_HTML_ANNEXURE_');
+
         let badgesHtml = '';
+        if (isAdmin) {
+            const ownerLabel = (data.userId === window.currentUserData.uid)
+                ? '<span class="bg-royal-100 text-royal-800 border border-royal-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">👑 Admin</span>'
+                : `<span class="bg-slate-100 text-slate-700 border border-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold ml-1.5"><i class="fa-solid fa-user text-[9px] mr-0.5"></i>${window.portalUsersMap[data.userId] || 'User'}</span>`;
+            badgesHtml += ownerLabel;
+        }
         if (data.certificateFileId && data.isCertificateAttached !== false) badgesHtml += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-certificate mr-0.5"></i>Cert</span>`;
         if (data.withStamp) badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-stamp mr-0.5"></i>Stamped</span>`;
         if (data.adminStampCharged) badgesHtml += `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Stamp</span>`;
         if (data.adminCertCharged) badgesHtml += `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Cert</span>`;
 
-        const isServerDobPrint = (data.fileId === 'SERVER_API_DOB_PRINT');
         let rawStatus = String(data.formData?.API_STATUS ?? 'pending').trim().toLowerCase();
         if (rawStatus === 'true' || rawStatus === '1' || rawStatus === 'ok' || rawStatus === '') rawStatus = 'pending';
         const hasPdf = Boolean(data.formData?.HAS_PDF || data.formData?.ENCRYPTED_PDF_TOKEN || data.formData?.PDF_URL);
@@ -380,6 +593,23 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
             else badgesHtml += `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5 animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>PENDING</span>`;
         }
 
+        let adminInlineControls = '';
+        if (isAdmin) {
+            if (isAnnexure) {
+                const stampState = window.portalStampSelectionMap[data._origIndex];
+                const isStampChecked = !!(stampState ? stampState.enabled : data.withStamp);
+                adminInlineControls += `
+                    <label class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-900 border-green-400' : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'} border px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm mr-1 cursor-pointer select-none">
+                        <input type="checkbox" id="portalStampChk-${data._origIndex}" ${isStampChecked ? 'checked' : ''} onchange="window.togglePortalRowStampCheckbox(${data._origIndex}, this.checked)" class="w-3.5 h-3.5 accent-green-600 rounded cursor-pointer">
+                        <span><i class="fa-solid fa-stamp ${isStampChecked ? 'text-green-700' : 'text-amber-600'}"></i> ${isStampChecked ? 'Stamped' : 'Stamp'}</span>
+                    </label>`;
+            }
+            const canAdminEditDoc = !isServerDobPrint && (isLocalDoc || (data.formData && Object.keys(data.formData).length > 0));
+            if (canAdminEditDoc) {
+                adminInlineControls += `<button onclick="window.editAnnexureRecord('${data.id}')" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm mr-1" title="डॉक्यूमेंट एडिट करें"><i class="fa-solid fa-pen-to-square"></i> Edit</button>`;
+            }
+        }
+
         const actionBtnsHtml = isServerDobPrint
             ? (isCompleted
                 ? `<div class="inline-flex items-center gap-1.5">
@@ -389,7 +619,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                 : `<div class="inline-flex items-center gap-1.5">
                        <button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>
                    </div>`)
-            : `<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button>`;
+            : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button></div>`;
 
         historyContainer.innerHTML += `
             <tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
