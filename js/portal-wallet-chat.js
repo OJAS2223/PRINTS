@@ -180,6 +180,7 @@ window.applyLivePortalControls = function() {
     const canCas = window.canCurrentUserSeeService('caste');
     const canEvoter = window.canCurrentUserSeeService('evoter');
     const canDobDelhi = window.canCurrentUserSeeService('dob_delhi');
+    const canDobBaraut = window.canCurrentUserSeeService('dob_baraut');
     const canPassport = window.canCurrentUserSeeService('passport');
     const canGazette = window.canCurrentUserSeeService('gazette');
     const canDobPrint = window.canCurrentUserSeeService('dob_print');
@@ -250,6 +251,7 @@ window.applyLivePortalControls = function() {
     const btnCas = document.getElementById('btn-caste');
     const btnEvoter = document.getElementById('btn-evoter');
     const btnDobDelhi = document.getElementById('btn-dob_delhi') || document.getElementById('btn-dob_minor');
+    const btnDobBaraut = document.getElementById('btn-dob_baraut');
     const btnPassport = document.getElementById('btn-passport');
     const btnGazette = document.getElementById('btn-gazette');
     const btnDobPrint = document.getElementById('btn-dob_print');
@@ -262,6 +264,7 @@ window.applyLivePortalControls = function() {
     if (btnCas) btnCas.style.setProperty('display', canCas ? 'flex' : 'none', 'important');
     if (btnEvoter) btnEvoter.style.setProperty('display', canEvoter ? 'flex' : 'none', 'important');
     if (btnDobDelhi) btnDobDelhi.style.setProperty('display', canDobDelhi ? 'flex' : 'none', 'important');
+    if (btnDobBaraut) btnDobBaraut.style.setProperty('display', canDobBaraut ? 'flex' : 'none', 'important');
     if (btnPassport) btnPassport.style.setProperty('display', canPassport ? 'flex' : 'none', 'important');
     if (btnGazette) btnGazette.style.setProperty('display', canGazette ? 'flex' : 'none', 'important');
     if (btnDobPrint) btnDobPrint.style.setProperty('display', canDobPrint ? 'flex' : 'none', 'important');
@@ -290,6 +293,7 @@ window.applyLivePortalControls = function() {
     if ((cur === 'domicile' && !canDom) || (cur === 'caste' && !canCas) ||
         ((cur === 'evoter' || cur === 'e-voter') && !canEvoter) ||
         ((cur === 'dob_delhi' || cur === 'dob_minor') && !canDobDelhi) ||
+        (cur === 'dob_baraut' && !canDobBaraut) ||
         (cur === 'passport' && !canPassport) || (cur === 'gazette' && !canGazette) ||
         (cur === 'dob_print' && !canDobPrint) || (cur === 'minor' && !canMinor) ||
         (cur.startsWith('annexure') && !canAnnexures)) {
@@ -654,6 +658,7 @@ window.switchService = async function(serviceName) {
     else if (serviceName === 'caste' && !window.canCurrentUserSeeService('caste')) serviceName = window.getFirstAllowedTab();
     else if ((serviceName === 'evoter' || serviceName === 'e-voter') && !window.canCurrentUserSeeService('evoter')) serviceName = window.getFirstAllowedTab();
     else if ((serviceName === 'dob_minor' || serviceName === 'dob_delhi') && !window.canCurrentUserSeeService('dob_delhi')) serviceName = window.getFirstAllowedTab();
+    else if (serviceName === 'dob_baraut' && !window.canCurrentUserSeeService('dob_baraut')) serviceName = window.getFirstAllowedTab();
     else if (serviceName === 'dob_print' && !window.canCurrentUserSeeService('dob_print')) serviceName = window.getFirstAllowedTab();
     else if (serviceName === 'passport' && !window.canCurrentUserSeeService('passport')) serviceName = window.getFirstAllowedTab();
     else if (serviceName === 'gazette' && !window.canCurrentUserSeeService('gazette')) serviceName = window.getFirstAllowedTab();
