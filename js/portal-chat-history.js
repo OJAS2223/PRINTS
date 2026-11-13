@@ -398,9 +398,9 @@ window.loadUserHistory = async function() {
                 const usersSnap = await getDocs(collection(db, "users"));
                 window.portalUsersMap = {};
                 const userDropdown = document.getElementById('userHistoryUserFilter');
-                const prevVal = userDropdown ? userDropdown.value : 'ALL';
+                const prevVal = (userDropdown && userDropdown.dataset.userSelected === '1') ? userDropdown.value : window.currentUserData.uid;
                 if (userDropdown) {
-                    userDropdown.innerHTML = `<option value="ALL">All Users (सभी यूज़र)</option><option value="${window.currentUserData.uid}">👑 Admin (${window.currentUserData.email})</option>`;
+                    userDropdown.innerHTML = `<option value="${window.currentUserData.uid}">👑 Admin (${window.currentUserData.email})</option><option value="ALL">All Users (सभी यूज़र)</option>`;
                 }
                 usersSnap.forEach(uDoc => {
                     const uData = uDoc.data();
@@ -411,7 +411,7 @@ window.loadUserHistory = async function() {
                         }
                     }
                 });
-                if (userDropdown) userDropdown.value = prevVal || 'ALL';
+                if (userDropdown) userDropdown.value = prevVal || window.currentUserData.uid;
             } catch (e) {}
 
             let querySnapshot;
