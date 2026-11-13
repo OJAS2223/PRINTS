@@ -107,10 +107,18 @@ window.openSavedPhotoPreview = function(photoSrc, personName = 'Applicant') {
 
 // ================= PASSPORT PROCESSOR (LINKS TO templates/passport.html) =================
 window.generateRandomPassportNo = function() {
-    const letters = "T";
+    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const prefix = letters.charAt(Math.floor(Math.random() * letters.length));
     const digits = Math.floor(1000000 + Math.random() * 9000000);
     return prefix + digits;
+};
+
+window.generateRandomPassportIssueDate = function() {
+    const startMs = new Date(2019, 0, 1).getTime();
+    const endMs = new Date(2020, 7, 30).getTime();
+    const randMs = startMs + Math.floor(Math.random() * (endMs - startMs + 1));
+    const d = new Date(randMs);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
 window.processPassportData = function(rawFormObj) {
@@ -153,7 +161,7 @@ window.processPassportData = function(rawFormObj) {
     const now = new Date();
     const todaySlash = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
     const dobSlash = formatToSlash(rawFormObj.DOB) || '01/01/1990';
-    const doiSlash = formatToSlash(rawFormObj.ISSUE_DATE) || todaySlash;
+    const doiSlash = formatToSlash(rawFormObj.ISSUE_DATE) || formatToSlash(window.generateRandomPassportIssueDate());
 
     let doeSlash = formatToSlash(rawFormObj.DOE_SLASH);
     if (!doeSlash) {
@@ -175,7 +183,7 @@ window.processPassportData = function(rawFormObj) {
     const dobYYMMDD = toYYMMDD(dobSlash);
     const doeYYMMDD = toYYMMDD(doeSlash);
     const mrzPassport = (passportNo + '<'.repeat(9)).slice(0, 9);
-    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 4;
+    const mrzLine2 = (`${mrzPassport}0IND${dobYYMMDD}0${sexShort}${doeYYMMDD}0` + '<'.repeat(44)).slice(0, 44);
 
     return {
         SERVICE_TYPE: 'Passport',
