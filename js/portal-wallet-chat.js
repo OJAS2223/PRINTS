@@ -813,6 +813,21 @@ window.switchService = async function(serviceName) {
         const gazetteOpt = window.canCurrentUserSeeService('gazette') ? `<option value="Gazette Notification">Gazette Notification (₹100)</option>` : '';
         const vipFilterOptions = `${evoterOpt}${dobDelhiOpt}${passportOpt}${minorOpt}${dobPrintOpt}${gazetteOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>`;
 
+        const isAdminUser = Boolean(window.currentUserData?.isAdmin);
+        const adminToolbarHtml = isAdminUser ? `
+        <div id="portalAdminHistoryToolbar" class="mb-4 p-3 rounded-2xl bg-amber-50/90 border border-amber-300 flex flex-wrap items-center justify-between gap-2.5 shadow-sm">
+            <div class="flex items-center gap-2">
+                <span class="bg-dark-900 text-royal-300 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide"><i class="fa-solid fa-crown text-amber-400 mr-1"></i>Admin Mode</span>
+                <span class="text-xs font-black text-amber-950">सभी यूज़र्स की फाइल्स (यहीं से Edit व Stamp करें)</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <select id="userHistoryUserFilter" onchange="window.handleUserHistoryFilterChange()" class="p-2 border border-amber-300 rounded-xl text-xs bg-white font-bold text-slate-800 outline-none min-w-[160px]">
+                    <option value="ALL">All Users (सभी यूज़र)</option>
+                </select>
+                <input type="date" id="userHistoryDateFilter" onchange="window.handleUserHistoryFilterChange()" class="p-1.5 border border-amber-300 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
+            </div>
+        </div>` : '';
+
         container.innerHTML = `<div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 pb-3 mb-4">
             <div><h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-folder-open text-royal-500 mr-1.5"></i> Document History</h3><p id="userHistoryCount" class="text-[11px] font-bold text-royal-600">Total Files: 0</p></div>
             <div class="flex flex-wrap items-center gap-2">
@@ -821,6 +836,7 @@ window.switchService = async function(serviceName) {
                 <button onclick="window.loadUserHistory()" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-200"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
         </div>
+        ${adminToolbarHtml}
         <div class="overflow-x-auto border border-slate-200 rounded-xl"><table class="w-full text-left border-collapse bg-white min-w-[500px]"><thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase"><tr><th class="p-3">File Name</th><th class="p-3">Type</th><th class="p-3">Date & Time</th><th class="p-3 text-right">Action</th></tr></thead><tbody id="historyTableBody" class="text-xs text-slate-700"></tbody></table></div>`;
 
         window.loadUserHistory();
