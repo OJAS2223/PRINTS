@@ -2,16 +2,22 @@ import crypto from 'crypto';
 import admin from 'firebase-admin';
 import Razorpay from 'razorpay';
 
-if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-  } catch (e) {
-    console.error('Firebase Admin init error:', e);
+function initFirebaseAdmin() {
+  if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT.trim());
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      }
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } catch (e) {
+      console.error('Firebase Admin init error:', e.message);
+    }
   }
 }
+initFirebaseAdmin();
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -28,13 +34,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ status: false, message: 'Method Not Allowed' });
   }
 
-  const keyId = (process.env.RAZORPAY_KEY_ID || 'rzp_live_TySEw1K6SUaNJW').trim();
+  const keyId = (process.env.RAZORPAY_KEY_ID || '').trim();
   const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
 
-  if (!keySecret) {
+  if (!keyId || !keySecret) {
     return res.status(500).json({
       status: false,
-      message: 'Server payment secret (RAZORPAY_KEY_SECRET) is not configured'
+      message: 'Server payment secret (RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET) is not configured'
     });
   }
 
@@ -106,7 +112,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Fetch Order details from Razorpay so we ALWAYS have userId, email & credits even if Firestore doc wasn't pre-created
+    // Fetch Order details from Razorpay so we always have authoritative userId, email & credits
     let rzpOrderNotes = {};
     let rzpOrderAmountRupees = 0;
     try {
@@ -117,19 +123,19 @@ export default async function handler(req, res) {
       console.warn('Could not fetch Razorpay order notes:', e.message);
     }
 
-    const fallbackUserId = String(bodyUserId || rzpOrderNotes.userId || '').trim();
-    const fallbackEmail = String(bodyEmail || rzpOrderNotes.email || '').trim();
-    const fallbackCredits = Math.floor(Math.max(0, Number(bodyCredits) || Number(rzpOrderNotes.creditsRequested) || rzpOrderAmountRupees || 0));
-    const fallbackAmountPaid = Math.floor(Math.max(0, Number(bodyAmount) || Number(rzpOrderNotes.totalPayable) || rzpOrderAmountRupees || 0));
+    const fallbackUserId = String(rzpOrderNotes.userId || bodyUserId || '').trim();
+    const fallbackEmail = String(rzpOrderNotes.email || bodyEmail || '').trim();
+    const fallbackCredits = Math.floor(Math.max(0, Number(rzpOrderNotes.creditsRequested) || rzpOrderAmountRupees || Number(bodyCredits) || 0));
+    const fallbackAmountPaid = Math.floor(Math.max(0, Number(rzpOrderNotes.totalPayable) || rzpOrderAmountRupees || Number(bodyAmount) || 0));
 
-    // If Firebase Admin SDK is not configured on Vercel, return verified details so frontend can credit immediately
+    // Firebase Admin SDK is required for secure server-side wallet crediting
     if (!admin.apps.length) {
       return res.status(200).json({
         status: true,
         verified: true,
         paid: true,
         dbUpdated: false,
-        message: 'Signature verified successfully.',
+        message: 'Payment verified with Razorpay, but FIREBASE_SERVICE_ACCOUNT is not configured on the server to auto-credit Firestore.',
         order_id: razorpay_order_id,
         orderId: razorpay_order_id,
         payment_id: verifiedPaymentId,
@@ -143,7 +149,6 @@ export default async function handler(req, res) {
     const paymentRef = db.collection('payments').doc(String(razorpay_order_id).trim());
     const usedPaymentRef = db.collection('usedUtrs').doc(String(verifiedPaymentId).trim());
 
-    // Atomic Firestore Transaction: Works even if paymentSnap did NOT exist previously!
     const txResult = await db.runTransaction(async (t) => {
       const paymentSnap = await t.get(paymentRef);
       const paymentData = paymentSnap.exists ? paymentSnap.data() : {};
@@ -281,7 +286,6 @@ export default async function handler(req, res) {
       updatedCredits: txResult.updatedCredits,
       amountPaid: txResult.amountPaid
     });
-
   } catch (error) {
     console.error('Verify Payment Error:', error);
     return res.status(500).json({

@@ -5,8 +5,6 @@ import http from 'http';
 // ============================================================================
 // FILE: api/dob-print.js
 // Server-Side Locked BRN Original PDF Gateway (₹140 / 140 Credits)
-// Works with OR without FIREBASE_SERVICE_ACCOUNT (Auto REST API Fallback)
-// Normalized Statuses: 'pending' (PENDING) -> 'successful' (SUCCESSFUL + PDF Download)
 // ============================================================================
 
 const FIREBASE_PROJECT_ID = process.env.FIREBASE_PROJECT_ID || 'upeprint';
@@ -14,7 +12,7 @@ const FIREBASE_WEB_API_KEY = process.env.FIREBASE_WEB_API_KEY || 'AIzaSyCjvAVdtO
 
 const DEFAULT_API_CONFIG = {
   baseUrl: process.env.DOB_PRINT_API_URL || 'https://rtyu.run.place/api/v1/index.php',
-  apiKey: process.env.DOB_PRINT_API_KEY || 'sk_2e7fc8baf4a1998c9382c1f961bdd64c',
+  apiKey: (process.env.DOB_PRINT_API_KEY || '').trim(),
   applyService: process.env.DOB_PRINT_APPLY_SERVICE || 'b-number-pdf-apply',
   statusService: process.env.DOB_PRINT_STATUS_SERVICE || 'b-number-pdf-status',
   creditCost: Number(process.env.DOB_PRINT_CREDIT_COST) || 140
@@ -23,7 +21,6 @@ const DEFAULT_API_CONFIG = {
 const SUPER_ADMIN_EMAILS = ['hkosiun1221@gmail.com', 'ovi@print.com'];
 const SUB_ADMIN_EMAILS = ['prince@gmail.com', 'prince@print.com'];
 
-// Server-only AES-256 key to keep external PDF URLs hidden from client inspection
 const SERVER_SECRET_SEED = process.env.DOB_PRINT_API_KEY || process.env.RAZORPAY_KEY_SECRET || 'ojas_dob_secret_2026_lock';
 const AES_KEY = crypto.createHash('sha256').update(SERVER_SECRET_SEED).digest();
 
@@ -64,9 +61,6 @@ function isAnyAdmin(email = '') {
   return isSuperAdmin(clean) || SUB_ADMIN_EMAILS.includes(clean);
 }
 
-// Strictly normalize status so boolean true / "true" NEVER appears as status:
-// - If PDF is ready -> 'successful'
-// - If still waiting -> 'pending'
 function normalizeOrderStatus(rawStatusVal, hasPdf = false) {
   if (hasPdf) return 'successful';
   if (rawStatusVal === null || rawStatusVal === undefined || typeof rawStatusVal === 'boolean') {
@@ -74,28 +68,14 @@ function normalizeOrderStatus(rawStatusVal, hasPdf = false) {
   }
   const s = String(rawStatusVal).trim().toLowerCase();
   if (
-    !s ||
-    s === 'true' ||
-    s === '1' ||
-    s === 'ok' ||
-    s === 'pending' ||
-    s === 'processing' ||
-    s === 'submitted' ||
-    s === 'in_progress' ||
-    s === 'queued' ||
-    s === 'waiting'
+    !s || s === 'true' || s === '1' || s === 'ok' || s === 'pending' ||
+    s === 'processing' || s === 'submitted' || s === 'in_progress' || s === 'queued' || s === 'waiting'
   ) {
     return 'pending';
   }
   if (
-    s === 'approved' ||
-    s === 'completed' ||
-    s === 'complete' ||
-    s === 'success' ||
-    s === 'successful' ||
-    s === 'generated' ||
-    s === 'done' ||
-    s === 'ready'
+    s === 'approved' || s === 'completed' || s === 'complete' || s === 'success' ||
+    s === 'successful' || s === 'generated' || s === 'done' || s === 'ready'
   ) {
     return 'successful';
   }
@@ -118,7 +98,6 @@ function resolvePdfUrlOrData(rawCandidate = '', baseUrl = DEFAULT_API_CONFIG.bas
   }
 }
 
-// Deep extractor that finds app_id, application_ref, status, and PDF URL from any API structure
 function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targetAppId = '', baseUrl = DEFAULT_API_CONFIG.baseUrl) {
   if (!parsed || typeof parsed !== 'object') {
     return { appId: '', appRef: '', status: 'pending', pdfUrl: '', hasPdf: false };
@@ -128,7 +107,6 @@ function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targ
   const cleanTargetRef = String(targetRef || '').trim().toUpperCase();
   const cleanTargetAppId = String(targetAppId || '').trim();
 
-  // Collect candidate record objects from parsed, parsed.data, parsed.records, parsed.orders, etc.
   const candidates = [];
   const pushCandidate = (item) => {
     if (!item || typeof item !== 'object') return;
@@ -146,7 +124,6 @@ function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targ
   };
   pushCandidate(parsed);
 
-  // Pick the best matching record if multiple records exist (e.g. array from status API)
   let primaryRec = candidates.find((c) => {
     if (c === parsed && candidates.length > 1) return false;
     const cBrn = String(c.number || c.b_number || c.brn || c.brn_no || '').trim().toUpperCase();
@@ -164,7 +141,6 @@ function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targ
 
   const searchObjs = [primaryRec, parsed];
 
-  // 1. Extract App ID
   let appId = '';
   for (const obj of searchObjs) {
     if (!obj || typeof obj !== 'object') continue;
@@ -175,27 +151,18 @@ function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targ
     }
   }
 
-  // 2. Extract Application Reference
   let appRef = '';
   for (const obj of searchObjs) {
     if (!obj || typeof obj !== 'object') continue;
     const refVal =
-      obj.application_ref ||
-      obj.app_ref ||
-      obj.ref_id ||
-      obj.reference_id ||
-      obj.reference ||
-      obj.ref_no ||
-      obj.order_ref ||
-      obj.txn_id ||
-      obj.token;
+      obj.application_ref || obj.app_ref || obj.ref_id || obj.reference_id ||
+      obj.reference || obj.ref_no || obj.order_ref || obj.txn_id || obj.token;
     if (refVal && String(refVal).trim() !== '') {
       appRef = String(refVal).trim();
       break;
     }
   }
 
-  // 3. Extract PDF URL or Base64 PDF across all known PDF keys
   const pdfKeys = [
     'pdf_url', 'pdfUrl', 'pdf_link', 'pdfLink', 'pdf_file', 'pdfFile', 'pdf_path', 'pdfPath',
     'pdf', 'file_url', 'fileUrl', 'file_link', 'file_path', 'file', 'download_url', 'downloadUrl',
@@ -217,11 +184,10 @@ function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targ
     if (rawPdfCandidate) break;
   }
 
-  // Fallback scan: check any string property that looks like a PDF URL or .pdf file path
   if (!rawPdfCandidate) {
     for (const obj of searchObjs) {
       if (!obj || typeof obj !== 'object') continue;
-      for (const [k, v] of Object.entries(obj)) {
+      for (const [, v] of Object.entries(obj)) {
         if (typeof v !== 'string') continue;
         const s = v.trim();
         if (
@@ -242,17 +208,12 @@ function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targ
   const pdfUrl = resolvePdfUrlOrData(rawPdfCandidate, baseUrl);
   const hasPdf = Boolean(pdfUrl);
 
-  // 4. Extract Status (ignoring boolean true on top-level/wrapper status)
   let rawStatusVal = undefined;
   for (const obj of searchObjs) {
     if (!obj || typeof obj !== 'object') continue;
     const candidateStat =
-      obj.application_status ??
-      obj.order_status ??
-      obj.pdf_status ??
-      obj.app_status ??
-      obj.current_status ??
-      obj.state ??
+      obj.application_status ?? obj.order_status ?? obj.pdf_status ??
+      obj.app_status ?? obj.current_status ?? obj.state ??
       (typeof obj.status === 'string' && obj.status.trim().toLowerCase() !== 'true' ? obj.status : undefined);
     if (candidateStat !== undefined && candidateStat !== null && String(candidateStat).trim() !== '') {
       rawStatusVal = candidateStat;
@@ -272,7 +233,6 @@ function extractOrderDetailsFromApi(parsed, targetBrn = '', targetRef = '', targ
   };
 }
 
-// Lazy & Safe Firebase Admin Initialization
 let cachedAdminApp = null;
 async function getFirebaseAdminDb() {
   if (cachedAdminApp) return cachedAdminApp.firestore();
@@ -325,9 +285,6 @@ async function verifyFirebaseUserToken(idToken) {
   };
 }
 
-// ============================================================================
-// FIRESTORE REST API HELPERS
-// ============================================================================
 function toFirestoreValue(val) {
   if (val === null || val === undefined) return { nullValue: null };
   if (val instanceof Date) return { timestampValue: val.toISOString() };
@@ -374,55 +331,6 @@ function fromFirestoreFields(fields = {}) {
   return result;
 }
 
-async function recordRefundAndCreditUser(adminDb, idToken, uid, userEmail, refundCredits, brnNumber, applicantName, docId, reasonText) {
-  if (!refundCredits || refundCredits <= 0) return 0;
-  let updatedCredits = 0;
-  const refundDocId = `refund_${docId || Date.now()}`;
-  const refundPaymentData = {
-    userId: uid,
-    email: userEmail || '',
-    amountPaid: refundCredits,
-    creditsRequested: refundCredits,
-    wantsVip: false,
-    vipDaysRequested: 0,
-    vipPlanFee: 0,
-    utrNumber: brnNumber || 'AUTO_REFUND',
-    status: 'Refunded',
-    type: 'REFUND',
-    serviceType: 'DOB Original PDF',
-    relatedDocId: docId || '',
-    note: reasonText || `Auto-Refund: DOB Original PDF Cancelled (${applicantName} - ${brnNumber})`,
-    timestamp: new Date()
-  };
-
-  if (adminDb) {
-    const userRef = adminDb.collection('users').doc(uid);
-    await adminDb.runTransaction(async (t) => {
-      const uSnap = await t.get(userRef);
-      if (uSnap.exists) {
-        const cur = Number(uSnap.data().credits) || 0;
-        updatedCredits = cur + refundCredits;
-        t.update(userRef, { credits: updatedCredits });
-      }
-      const payRef = adminDb.collection('payments').doc(refundDocId);
-      t.set(payRef, refundPaymentData, { merge: true });
-    });
-  } else {
-    try {
-      const uSnap = await restGetDoc('users', uid, idToken);
-      if (uSnap.exists && uSnap.data) {
-        const cur = Number(uSnap.data.credits) || 0;
-        updatedCredits = cur + refundCredits;
-        await restPatchDoc('users', uid, { credits: updatedCredits }, idToken);
-      }
-    } catch (e) {}
-    try {
-      await restPatchDoc('payments', refundDocId, refundPaymentData, idToken);
-    } catch (e) {}
-  }
-  return updatedCredits;
-}
-
 const FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
 
 async function restGetDoc(collectionName, docId, idToken = '') {
@@ -464,9 +372,65 @@ async function restPatchDoc(collectionName, docId, dataObj, idToken = '') {
   return fromFirestoreFields(json.fields || {});
 }
 
-// ============================================================================
-// EXTERNAL API HTTP CLIENT
-// ============================================================================
+async function recordRefundAndCreditUser(adminDb, idToken, uid, userEmail, refundCredits, brnNumber, applicantName, docId, reasonText) {
+  if (!refundCredits || refundCredits <= 0) return { refunded: false, updatedCredits: 0 };
+  let updatedCredits = 0;
+  const refundDocId = `refund_${docId || Date.now()}`;
+
+  if (adminDb) {
+    const refundPaymentData = {
+      userId: uid,
+      email: userEmail || '',
+      amountPaid: 0,
+      creditsRequested: refundCredits,
+      wantsVip: false,
+      vipDaysRequested: 0,
+      vipPlanFee: 0,
+      utrNumber: brnNumber || 'AUTO_REFUND',
+      status: 'Refunded',
+      type: 'SERVICE_REFUND',
+      serviceType: 'DOB Original PDF',
+      relatedDocId: docId || '',
+      note: reasonText || `Auto-Refund: DOB Original PDF Cancelled (${applicantName} - ${brnNumber})`,
+      timestamp: new Date()
+    };
+
+    const userRef = adminDb.collection('users').doc(uid);
+    await adminDb.runTransaction(async (t) => {
+      const uSnap = await t.get(userRef);
+      if (uSnap.exists) {
+        const cur = Number(uSnap.data().credits) || 0;
+        updatedCredits = cur + refundCredits;
+        t.update(userRef, { credits: updatedCredits });
+      }
+      const payRef = adminDb.collection('payments').doc(refundDocId);
+      t.set(payRef, refundPaymentData, { merge: true });
+    });
+    return { refunded: true, updatedCredits };
+  }
+
+  // REST fallback: Firestore rules block client-token credit increases, so log a Pending Refund Ticket
+  try {
+    await restPatchDoc('payments', refundDocId, {
+      userId: uid,
+      email: userEmail || '',
+      amountPaid: 0,
+      creditsRequested: refundCredits,
+      wantsVip: false,
+      vipDaysRequested: 0,
+      vipPlanFee: 0,
+      utrNumber: brnNumber || 'AUTO_REFUND',
+      status: 'Pending (Ticket Raised - 24-48h)',
+      type: 'SERVICE_REFUND',
+      serviceType: 'DOB Original PDF',
+      relatedDocId: docId || '',
+      note: reasonText || `Auto-Refund Ticket: DOB Original PDF Failed (${applicantName} - ${brnNumber})`,
+      timestamp: new Date()
+    }, idToken);
+  } catch (e) {}
+  return { refunded: false, ticketLogged: true, updatedCredits: 0 };
+}
+
 function fetchExternalUrl(targetUrl, timeoutMs = 30000) {
   return new Promise((resolve, reject) => {
     let parsedUrl;
@@ -568,11 +532,9 @@ async function getServerApiConfig(adminDb, idToken = '') {
   return DEFAULT_API_CONFIG;
 }
 
-// Multi-attempt status query to rtyu.run.place so even orders with missing app_id or local ref are found by BRN number
 async function queryUpstreamStatusAndPdf(apiCfg, appId = '', appRef = '', brnNumber = '', applicantName = '') {
   const attempts = [];
 
-  // Attempt 1: Full parameters (without sending &status=true which breaks upstream filtering)
   const url1 = new URL(apiCfg.baseUrl);
   url1.searchParams.set('api_key', apiCfg.apiKey);
   url1.searchParams.set('service', apiCfg.statusService);
@@ -582,7 +544,6 @@ async function queryUpstreamStatusAndPdf(apiCfg, appId = '', appRef = '', brnNum
   if (applicantName) url1.searchParams.set('name', String(applicantName));
   attempts.push(url1.toString());
 
-  // Attempt 2: Lookup by BRN number only
   if (brnNumber) {
     const url2 = new URL(apiCfg.baseUrl);
     url2.searchParams.set('api_key', apiCfg.apiKey);
@@ -591,7 +552,6 @@ async function queryUpstreamStatusAndPdf(apiCfg, appId = '', appRef = '', brnNum
     if (url2.toString() !== url1.toString()) attempts.push(url2.toString());
   }
 
-  // Attempt 3: Lookup by application_ref only (if present)
   if (appRef) {
     const url3 = new URL(apiCfg.baseUrl);
     url3.searchParams.set('api_key', apiCfg.apiKey);
@@ -600,7 +560,6 @@ async function queryUpstreamStatusAndPdf(apiCfg, appId = '', appRef = '', brnNum
     if (!attempts.includes(url3.toString())) attempts.push(url3.toString());
   }
 
-  // Attempt 4: Service list lookup (matches by BRN number in returned array)
   const url4 = new URL(apiCfg.baseUrl);
   url4.searchParams.set('api_key', apiCfg.apiKey);
   url4.searchParams.set('service', apiCfg.statusService);
@@ -615,7 +574,6 @@ async function queryUpstreamStatusAndPdf(apiCfg, appId = '', appRef = '', brnNum
       const apiRes = await fetchExternalUrl(targetUrl, 25000);
       lastHttpCode = apiRes.statusCode;
 
-      // Check if upstream directly returned a raw PDF binary stream (%PDF-)
       if (
         apiRes.buffer &&
         apiRes.buffer.length > 100 &&
@@ -642,17 +600,12 @@ async function queryUpstreamStatusAndPdf(apiCfg, appId = '', appRef = '', brnNum
       if (extracted.hasPdf || extracted.status === 'successful') {
         return { parsed, extracted, httpCode: lastHttpCode };
       }
-    } catch (e) {
-      // Continue to next fallback attempt
-    }
+    } catch (e) {}
   }
 
   return { parsed: lastParsed, extracted: lastExtracted, httpCode: lastHttpCode };
 }
 
-// ============================================================================
-// MAIN SERVERLESS HANDLER
-// ============================================================================
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -705,7 +658,6 @@ export default async function handler(req, res) {
         pdfUrl = decryptSecretText(histData.formData.ENCRYPTED_PDF_TOKEN);
       }
 
-      // Live on-demand fetch if pdfUrl was not yet saved in Firestore!
       if (!pdfUrl) {
         const apiCfg = await getServerApiConfig(adminDb, idToken);
         const appId = secretData.appId !== undefined ? secretData.appId : (histData.formData?.APP_ID || '');
@@ -750,7 +702,6 @@ export default async function handler(req, res) {
 
       const cleanFileName = String(histData.fileName || 'DOB_Original_Certificate.pdf').replace(/[^a-zA-Z0-9._-]/g, '_');
 
-      // Handle base64 data URI PDFs
       if (pdfUrl.startsWith('data:application/pdf;base64,')) {
         const b64Data = pdfUrl.split(',')[1] || '';
         const pdfBuffer = Buffer.from(b64Data, 'base64');
@@ -760,7 +711,6 @@ export default async function handler(req, res) {
       }
 
       let pdfRes = await fetchExternalUrl(pdfUrl, 30000);
-      // If upstream requires api_key appended to download URL
       if (
         pdfRes.buffer.length < 200 ||
         (pdfRes.buffer.slice(0, 5).toString('ascii') !== '%PDF-' && !pdfUrl.includes('api_key='))
@@ -777,24 +727,19 @@ export default async function handler(req, res) {
       }
 
       res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `${isDownload ? 'attachment' : 'inline'}; filename="${cleanFileName}"`
-      );
+      res.setHeader('Content-Disposition', `${isDownload ? 'attachment' : 'inline'}; filename="${cleanFileName}"`);
       return res.status(200).send(pdfRes.buffer);
     } catch (err) {
       return res.status(500).send('Error streaming PDF: ' + err.message);
     }
   }
 
-  // Ensure all POST responses are strictly JSON
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
 
   if (req.method !== 'POST') {
     return res.status(405).json({ status: false, message: 'Method Not Allowed' });
   }
 
-  // ================= 2. VERIFY FIREBASE AUTH TOKEN =================
   const authHeader = req.headers.authorization || '';
   const idToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
   if (!idToken) {
@@ -825,7 +770,11 @@ export default async function handler(req, res) {
   const { action = 'apply', name = '', number = '', docId = '' } = bodyObj;
   const apiCfg = await getServerApiConfig(adminDb, idToken);
 
-  // ================= 3. CHECK STATUS (service=b-number-pdf-status) =================
+  if (!apiCfg.apiKey) {
+    return res.status(500).json({ status: false, message: 'DOB Original PDF API Key is not configured on the server.' });
+  }
+
+  // ================= 3. CHECK STATUS =================
   if (action === 'check_status') {
     try {
       if (!docId) {
@@ -844,7 +793,7 @@ export default async function handler(req, res) {
         if (secretSnap.exists) secretData = secretSnap.data();
       } else {
         const histSnap = await restGetDoc('history', docId, idToken);
-        if (!histSnap.exists) return res.status(404).send({ status: false, message: 'Record not found' });
+        if (!histSnap.exists) return res.status(404).json({ status: false, message: 'Record not found' });
         histData = histSnap.data;
       }
 
@@ -884,9 +833,10 @@ export default async function handler(req, res) {
 
       let isRefundedNow = Boolean(histData.formData?.REFUNDED);
       const deductedCr = Number(histData.formData?.CREDITS_DEDUCTED) || 140;
+      let refundTicketLogged = false;
       if (finalStatus === 'failed' && !isRefundedNow && deductedCr > 0) {
         try {
-          await recordRefundAndCreditUser(
+          const refRes = await recordRefundAndCreditUser(
             adminDb,
             idToken,
             histData.userId || uid,
@@ -897,7 +847,8 @@ export default async function handler(req, res) {
             docId,
             `Auto-Refund: DOB Original PDF Cancelled/Rejected (${applicantName} - ${brnNumber})`
           );
-          isRefundedNow = true;
+          isRefundedNow = refRes.refunded;
+          refundTicketLogged = Boolean(refRes.ticketLogged);
         } catch (refErr) {
           console.warn('Auto-refund on failed status warning:', refErr.message);
         }
@@ -948,7 +899,11 @@ export default async function handler(req, res) {
         message: hasPdf || finalStatus === 'successful'
           ? '✅ SUCCESSFUL! आपकी ओरिजिनल जन्म प्रमाण-पत्र PDF तैयार हो गई है। अब आप Preview या Download PDF पर क्लिक कर सकते हैं।'
           : (finalStatus === 'failed'
-              ? `❌ यह आवेदन कैंसिल/रिजेक्ट हो गया है। आपके +${deductedCr} Credits वॉलेट में वापस रिफंड कर दिए गए हैं!`
+              ? (isRefundedNow
+                  ? `❌ यह आवेदन कैंसिल/रिजेक्ट हो गया है। आपके +${deductedCr} Credits वॉलेट में वापस रिफंड कर दिए गए हैं!`
+                  : (refundTicketLogged
+                      ? `❌ यह आवेदन कैंसिल/रिजेक्ट हो गया है। +${deductedCr} Credits रिफंड टिकट एडमिन को भेज दिया गया है।`
+                      : `❌ यह आवेदन कैंसिल/रिजेक्ट हो गया है। कृपया रिफंड के लिए एडमिन से संपर्क करें।`))
               : `⏳ वर्तमान स्टेटस: PENDING (प्रिंट सर्वर पर प्रक्रिया में है, कृपया थोड़ी देर बाद दोबारा चेक करें)`)
       });
     } catch (err) {
@@ -1064,25 +1019,34 @@ export default async function handler(req, res) {
       throw new Error(apiResult?.message || 'BRN आवेदन सबमिट नहीं हो सका।');
     }
   } catch (apiError) {
-    if (creditCost > 0 && adminDb) {
+    let refundedDirect = false;
+    let refundTicket = false;
+    if (creditCost > 0) {
       try {
-        const userRef = adminDb.collection('users').doc(uid);
-        await adminDb.runTransaction(async (t) => {
-          const uSnap = await t.get(userRef);
-          if (uSnap.exists) {
-            const cur = Number(uSnap.data().credits) || 0;
-            t.update(userRef, { credits: cur + creditCost });
-          }
-        });
+        const refRes = await recordRefundAndCreditUser(
+          adminDb,
+          idToken,
+          uid,
+          userEmail,
+          creditCost,
+          cleanNumber,
+          cleanName,
+          `apply_${Date.now()}`,
+          `Auto-Refund: DOB Original PDF Apply Failed (${cleanName} - ${cleanNumber})`
+        );
+        refundedDirect = refRes.refunded;
+        refundTicket = Boolean(refRes.ticketLogged);
       } catch (refundErr) {
         console.error('Refund error:', refundErr);
       }
     }
     return res.status(502).json({
       status: false,
-      message: adminDb && creditCost > 0
+      message: refundedDirect
         ? `${apiError.message} (आपके ${creditCost} क्रेडिट्स वापस रिफंड कर दिए गए हैं)।`
-        : apiError.message
+        : (refundTicket
+            ? `${apiError.message} (आपके ${creditCost} क्रेडिट्स रिफंड के लिए ऑटो-टिकट एडमिन को भेज दिया गया है)।`
+            : apiError.message)
     });
   }
 
@@ -1095,7 +1059,6 @@ export default async function handler(req, res) {
       extracted.status = 'successful';
     }
 
-    // If apply didn't include the PDF URL directly, do a fast status check right away in case the server generated it immediately!
     if (!extracted.hasPdf) {
       try {
         const immediateCheck = await queryUpstreamStatusAndPdf(

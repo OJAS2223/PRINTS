@@ -1,16 +1,22 @@
 import admin from 'firebase-admin';
 import Razorpay from 'razorpay';
 
-if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
-  try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
-  } catch (e) {
-    console.error('Firebase Admin init error:', e);
+function initFirebaseAdmin() {
+  if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT.trim());
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      }
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } catch (e) {
+      console.error('Firebase Admin init error:', e.message);
+    }
   }
 }
+initFirebaseAdmin();
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,7 +31,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ status: false, message: 'Method Not Allowed' });
   }
 
-  const keyId = (process.env.RAZORPAY_KEY_ID || 'rzp_live_TySEw1K6SUaNJW').trim();
+  const keyId = (process.env.RAZORPAY_KEY_ID || '').trim();
   const keySecret = (process.env.RAZORPAY_KEY_SECRET || '').trim();
 
   if (!keyId || !keySecret) {
@@ -124,7 +130,7 @@ export default async function handler(req, res) {
           timestamp: admin.firestore.FieldValue.serverTimestamp()
         });
       } catch (dbErr) {
-        console.warn('Firestore payment record save warning:', dbErr);
+        console.warn('Firestore payment record save warning:', dbErr.message);
       }
     }
 

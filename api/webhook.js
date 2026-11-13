@@ -1,11 +1,22 @@
+import crypto from 'crypto';
 import admin from 'firebase-admin';
 
-if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
-  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
+function initFirebaseAdmin() {
+  if (!admin.apps.length && process.env.FIREBASE_SERVICE_ACCOUNT) {
+    try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT.trim());
+      if (serviceAccount.private_key) {
+        serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+      }
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    } catch (e) {
+      console.error('Firebase Admin init error:', e.message);
+    }
+  }
 }
+initFirebaseAdmin();
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -17,7 +28,34 @@ export default async function handler(req, res) {
   try {
     const body = req.body || {};
 
-    // Support Razorpay Webhook payload structure as well as standard UPI Gateway payload
+    // Verify Razorpay Webhook Signature (Mandatory when webhook/key secret is configured)
+    const webhookSecret = (process.env.RAZORPAY_WEBHOOK_SECRET || process.env.RAZORPAY_KEY_SECRET || '').trim();
+    const receivedSig = req.headers['x-razorpay-signature'];
+
+    if (!webhookSecret) {
+      return res.status(500).json({ message: 'Webhook secret not configured on server' });
+    }
+    if (!receivedSig) {
+      return res.status(401).json({ message: 'Missing x-razorpay-signature header' });
+    }
+
+    const rawBodyStr = typeof req.rawBody === 'string'
+      ? req.rawBody
+      : (Buffer.isBuffer(req.rawBody) ? req.rawBody.toString('utf8') : JSON.stringify(body));
+
+    const expectedSig = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(rawBodyStr)
+      .digest('hex');
+
+    const expectedBuf = Buffer.from(expectedSig, 'utf8');
+    const receivedBuf = Buffer.from(String(receivedSig), 'utf8');
+    const isSigValid = expectedBuf.length === receivedBuf.length && crypto.timingSafeEqual(expectedBuf, receivedBuf);
+
+    if (!isSigValid) {
+      return res.status(401).json({ message: 'Invalid webhook signature' });
+    }
+
     const rzpPaymentEntity = body?.payload?.payment?.entity;
     const eventData = rzpPaymentEntity || body.data || body.result || body;
 
@@ -50,8 +88,8 @@ export default async function handler(req, res) {
     ).toUpperCase();
 
     let paidAmount = Number(eventData.amount || body.amount || 0);
-    // Razorpay sends amount in paise
-    if (rzpPaymentEntity && paidAmount >= 10000) {
+    // Razorpay ALWAYS sends amount in paise (even when < ₹100 / < 10000 paise)
+    if (rzpPaymentEntity && paidAmount > 0) {
       paidAmount = Math.round(paidAmount / 100);
     }
 
@@ -149,19 +187,20 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: txResult.reason });
     }
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN || "8586078140:AAG-ydpakzFDAwHFtJC8AUanxZAODpGZDOk";
-    const chatId = process.env.TELEGRAM_CHAT_ID || "8942287807";
-    const vipLine = txResult.wantsVip ? `\n👑 *VIP Activated:* +${txResult.vipDays} Days` : '';
-    const tgMessage = `✅ *Auto-Payment Verified (ojasprints.in)!*\n👤 *User:* ${txResult.email}\n💰 *Amount Paid:* ₹${txResult.amountPaid}\n💎 *Credits Added:* +${txResult.creditsToAdd} Cr${vipLine}\n🧾 *UTR / Ref:* \`${utr}\`\n🆔 *Order ID:* \`${orderId}\`\n\n⚡ *Status:* Auto-Approved via Secure Webhook`;
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (botToken && chatId) {
+      const vipLine = txResult.wantsVip ? `\n👑 *VIP Activated:* +${txResult.vipDays} Days` : '';
+      const tgMessage = `✅ *Auto-Payment Verified (ojasprints.in)!*\n👤 *User:* ${txResult.email}\n💰 *Amount Paid:* ₹${txResult.amountPaid}\n💎 *Credits Added:* +${txResult.creditsToAdd} Cr${vipLine}\n🧾 *UTR / Ref:* \`${utr}\`\n🆔 *Order ID:* \`${orderId}\`\n\n⚡ *Status:* Auto-Approved via Secure Webhook`;
 
-    await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: tgMessage, parse_mode: 'Markdown' })
-    }).catch(() => {});
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: tgMessage, parse_mode: 'Markdown' })
+      }).catch(() => {});
+    }
 
     return res.status(200).json({ message: 'Credits & VIP updated automatically!' });
-
   } catch (error) {
     console.error('Webhook Error:', error);
     return res.status(500).json({ message: 'Internal Server Error', error: error.message });
