@@ -1,7 +1,7 @@
 <div class="affidavit-paper passport-paper-sheet" style="position: relative !important; width: 794px !important; height: 1122px !important; padding: 0 !important; margin: 0 !important; background-color: #ffffff !important; color: #111111 !important; box-sizing: border-box !important; overflow: hidden !important;">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&family=Noto+Sans+Devanagari:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@500;600;700&family=Roboto+Mono:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         .passport-paper-sheet, .passport-paper-sheet * {
             box-sizing: border-box !important;
@@ -9,20 +9,20 @@
             print-color-adjust: exact !important;
         }
         .passport-data-font {
-            font-family: 'Courier Prime', 'Share Tech Mono', 'Consolas', 'Courier New', monospace !important;
-            font-weight: 700 !important;
-            color: #141414 !important;
-            letter-spacing: 0.5px !important;
+            font-family: 'Roboto Mono', 'Share Tech Mono', 'Consolas', monospace !important;
+            font-weight: 600 !important;
+            color: #1c2126 !important;
+            letter-spacing: 0.45px !important;
             text-transform: uppercase !important;
             line-height: 1 !important;
             white-space: nowrap !important;
         }
         .passport-mrz-font {
-            font-family: 'Share Tech Mono', 'Courier Prime', 'OCR-B', 'Consolas', monospace !important;
-            font-weight: 700 !important;
-            font-size: 13.8px !important;
-            color: #111111 !important;
-            letter-spacing: 0.85px !important;
+            font-family: 'Share Tech Mono', 'Roboto Mono', 'OCR-B', 'Consolas', monospace !important;
+            font-weight: 500 !important;
+            font-size: 13.6px !important;
+            color: #1a1f24 !important;
+            letter-spacing: 2.15px !important;
             line-height: 1.45 !important;
             white-space: nowrap !important;
             text-transform: uppercase !important;
@@ -56,7 +56,7 @@
             <div style="position: absolute; top: 118px; bottom: 0; left: 250px; border-left: 1px solid #94a3b8;"></div>
         </div>
         <div style="width: 100% !important; height: 372px !important; background: linear-gradient(180deg, #e7e9ec 0%, #d8ece8 48%, #e4ebe8 78%, #eeece6 100%) !important; position: relative !important; padding: 14px 24px !important;">
-            <div style="text-align: center; font-family: 'Courier Prime', monospace; font-size: 15px; font-weight: 700; color: #576574; letter-spacing: 1px; margin-bottom: 4px;">
+            <div style="text-align: center; font-family: 'Roboto Mono', monospace; font-size: 15px; font-weight: 700; color: #576574; letter-spacing: 1px; margin-bottom: 4px;">
                 भारत गणराज्य &nbsp; REPUBLIC OF INDIA
             </div>
             <div style="border-top: 1px solid #7f8fa6; border-bottom: 1px solid #7f8fa6; height: 28px; display: flex; font-size: 7.5px; color: #576574; padding-top: 2px; margin-left: 152px;">
@@ -91,46 +91,46 @@
         <div style="position: absolute !important; inset: 0 !important; pointer-events: none !important; z-index: 2 !important; box-shadow: inset 0 0 10px 4px #d8e3e7 !important; background: radial-gradient(closest-side, rgba(216,227,231,0) 68%, rgba(216,227,231,0.5) 88%, rgba(216,227,231,0.92) 100%) !important;"></div>
     </div>
 
-    <!-- 4. PASSPORT BIO DATA OVERLAYS (Pixel-aligned to SALIMM.jpg @ 794x1122) -->
-    <div class="passport-data-font" style="position: absolute !important; top: 530px !important; left: 532px !important; z-index: 6 !important; font-size: 15px !important; letter-spacing: 0.9px !important;">
+    <!-- 4. PASSPORT BIO DATA OVERLAYS (Matched to real Indian Passport font & alignment) -->
+    <div class="passport-data-font" style="position: absolute !important; top: 529px !important; left: 532px !important; z-index: 6 !important; font-size: 15.2px !important; font-weight: 600 !important; letter-spacing: 0.95px !important;">
         {{PASSPORT_NO}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 556px !important; left: 328px !important; z-index: 6 !important; font-size: 12px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 556px !important; left: 328px !important; z-index: 6 !important; font-size: 11.4px !important;">
         {{SURNAME}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 586px !important; left: 328px !important; z-index: 6 !important; font-size: 12.2px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 586px !important; left: 328px !important; z-index: 6 !important; font-size: 11.6px !important;">
         {{GIVEN_NAME}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 618px !important; left: 482px !important; z-index: 6 !important; font-size: 12px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 618px !important; left: 482px !important; z-index: 6 !important; font-size: 11.4px !important;">
         {{SEX_SHORT}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 618px !important; left: 538px !important; z-index: 6 !important; font-size: 12.2px !important; letter-spacing: 0.7px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 618px !important; left: 538px !important; z-index: 6 !important; font-size: 11.6px !important; letter-spacing: 0.6px !important;">
         {{DOB_SLASH}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 649px !important; left: 328px !important; z-index: 6 !important; font-size: 12px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 649px !important; left: 328px !important; z-index: 6 !important; font-size: 11.4px !important;">
         {{POB}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 688px !important; left: 374px !important; z-index: 6 !important; font-size: 12px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 688px !important; left: 374px !important; z-index: 6 !important; font-size: 11.4px !important;">
         {{POI}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 718px !important; left: 374px !important; z-index: 6 !important; font-size: 12.2px !important; letter-spacing: 0.7px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 718px !important; left: 374px !important; z-index: 6 !important; font-size: 11.6px !important; letter-spacing: 0.6px !important;">
         {{DOI_SLASH}}
     </div>
 
-    <div class="passport-data-font" style="position: absolute !important; top: 718px !important; left: 535px !important; z-index: 6 !important; font-size: 12.2px !important; letter-spacing: 0.7px !important;">
+    <div class="passport-data-font" style="position: absolute !important; top: 718px !important; left: 535px !important; z-index: 6 !important; font-size: 11.6px !important; letter-spacing: 0.6px !important;">
         {{DOE_SLASH}}
     </div>
 
-    <!-- 5. BOTTOM 2-LINE ICAO MRZ ZONE -->
-    <div style="position: absolute !important; top: 754px !important; left: 179px !important; width: 458px !important; z-index: 6 !important; overflow: hidden !important;">
+    <!-- 5. BOTTOM 2-LINE ICAO MRZ ZONE (Full-width spaced to match real passport) -->
+    <div style="position: absolute !important; top: 753px !important; left: 179px !important; width: 458px !important; z-index: 6 !important; overflow: hidden !important;">
         <div class="passport-mrz-font">{{MRZ_LINE_1}}</div>
-        <div class="passport-mrz-font" style="margin-top: 5px !important;">{{MRZ_LINE_2}}</div>
+        <div class="passport-mrz-font" style="margin-top: 7px !important;">{{MRZ_LINE_2}}</div>
     </div>
 </div>
