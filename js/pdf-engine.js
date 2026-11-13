@@ -175,7 +175,7 @@ window.processPassportData = function(rawFormObj) {
     const dobYYMMDD = toYYMMDD(dobSlash);
     const doeYYMMDD = toYYMMDD(doeSlash);
     const mrzPassport = (passportNo + '<'.repeat(9)).slice(0, 9);
-    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 2;
+    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 4;
 
     return {
         SERVICE_TYPE: 'Passport',
