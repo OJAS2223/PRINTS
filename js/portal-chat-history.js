@@ -574,10 +574,11 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                 : `<span class="bg-slate-100 text-slate-700 border border-slate-300 px-2 py-0.5 rounded-full text-[10px] font-bold ml-1.5"><i class="fa-solid fa-user text-[9px] mr-0.5"></i>${window.portalUsersMap[data.userId] || 'User'}</span>`;
             badgesHtml += ownerLabel;
         }
-        if (data.certificateFileId && data.isCertificateAttached !== false) badgesHtml += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-certificate mr-0.5"></i>Cert</span>`;
-        if (data.withStamp) badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-stamp mr-0.5"></i>Stamped</span>`;
-        if (data.adminStampCharged) badgesHtml += `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Stamp</span>`;
-        if (data.adminCertCharged) badgesHtml += `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Cert</span>`;
+        const isCasteOrDomicile = (data.fileId === 'LOCAL_HTML_CASTE' || data.fileId === 'LOCAL_HTML_DOMICILE');
+        if (!isCasteOrDomicile) {
+            if (data.certificateFileId && data.isCertificateAttached !== false) badgesHtml += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-certificate mr-0.5"></i>Cert</span>`;
+            if (data.withStamp) badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-stamp mr-0.5"></i>Stamped</span>`;
+        }
 
         let rawStatus = String(data.formData?.API_STATUS ?? 'pending').trim().toLowerCase();
         if (rawStatus === 'true' || rawStatus === '1' || rawStatus === 'ok' || rawStatus === '') rawStatus = 'pending';
