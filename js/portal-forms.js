@@ -149,6 +149,7 @@ window.submitForm = async function(event, serviceType) {
     if (serviceType === 'e-Voter ID' && !window.canCurrentUserSeeService('evoter')) return alert('यह सर्विस वर्तमान में बंद है।');
     if ((serviceType === 'DOB Delhi' || serviceType === 'DOB Minor') && !window.canCurrentUserSeeService('dob_delhi')) return alert('यह सर्विस वर्तमान में बंद है।');
     if ((serviceType === 'Passport' || serviceType === 'Passport Services') && !window.canCurrentUserSeeService('passport')) return alert('यह सर्विस वर्तमान में बंद है।');
+    if (serviceType === 'DOB Baraut' && !window.currentUserData?.isAdmin) return alert('⛔ यह सर्विस अभी केवल एडमिन के लिए उपलब्ध है।');
     if ((serviceType === 'Minor' || serviceType === 'DOB') && !window.canCurrentUserSeeService('minor')) return alert('यह सर्विस वर्तमान में बंद है।');
     if ((serviceType === 'Gazette Notification' || serviceType === 'Gazette') && !window.canCurrentUserSeeService('gazette')) return alert('यह सर्विस वर्तमान में बंद है।');
     if (serviceType === 'DOB Print' && !window.canCurrentUserSeeService('dob_print')) return alert('यह सर्विस वर्तमान में बंद है।');
