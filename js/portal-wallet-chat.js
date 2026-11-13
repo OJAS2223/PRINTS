@@ -2,11 +2,8 @@
 window.initTheme = function() {
     const saved = localStorage.getItem('ojas_theme');
     const isDark = saved === 'dark' || (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    if (isDark) {
-        document.documentElement.classList.add('dark');
-    } else {
-        document.documentElement.classList.remove('dark');
-    }
+    if (isDark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
     updateThemeToggleIcons(isDark);
 };
 window.toggleTheme = function() {
@@ -16,30 +13,28 @@ window.toggleTheme = function() {
 };
 function updateThemeToggleIcons(isDark) {
     document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
-        btn.innerHTML = isDark 
-            ? '<i class="fa-solid fa-sun text-amber-400 text-sm md:text-base"></i>' 
+        btn.innerHTML = isDark
+            ? '<i class="fa-solid fa-sun text-amber-400 text-sm md:text-base"></i>'
             : '<i class="fa-solid fa-moon text-royal-300 text-sm md:text-base"></i>';
         btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
     });
 }
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', window.initTheme);
-} else {
-    window.initTheme();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', window.initTheme);
+else window.initTheme();
 
 // ============================================================================
-// FILE: js/portal-wallet-chat.js (COMPLETE UPDATED VERSION)
-// (Auth, 100% Auto-Credit Razorpay Wallet, Passbook Ledger, Live Chat & History)
+// FILE: js/portal-wallet-chat.js (Portal Entry: Auth, Dashboard, Visibility & Tab Router)
 // ============================================================================
 
-import "./config-templates.js?v=6.0";
-import "./portal-forms.js?v=6.0";
+import "./config-templates.js?v=9.1";
+import "./portal-forms.js?v=9.1";
+import "./portal-wallet-payments.js?v=9.1";
+import "./portal-chat-history.js?v=9.1";
 
 const {
     auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged,
     updatePassword, EmailAuthProvider, reauthenticateWithCredential,
-    doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, onSnapshot
+    doc, getDoc, updateDoc, onSnapshot
 } = window.fb;
 
 window.currentUserData = null;
@@ -74,7 +69,6 @@ window.currentWantsVip = false;
 window.currentVipDays = 0;
 window.currentVipPlanFee = 0;
 
-// === PER-USER & GLOBAL VISIBILITY CHECKER ===
 window.canCurrentUserSeeService = function(srv) {
     const cfg = window.portalConfigState || {};
     const u = window.currentUserData;
@@ -107,7 +101,7 @@ window.getFirstAllowedTab = function() {
     return 'history';
 };
 
-async function notifyAdminSecurely(payload) {
+window.notifyAdminSecurely = async function(payload) {
     try {
         await fetch('/api/notify-admin', {
             method: 'POST',
@@ -115,153 +109,6 @@ async function notifyAdminSecurely(payload) {
             body: JSON.stringify(payload)
         });
     } catch (e) {}
-}
-
-window.openForgotPasswordModal = function() {
-    const modal = document.getElementById('forgotPasswordModal');
-    const idInp = document.getElementById('forgotUserIdInput');
-    const phoneInp = document.getElementById('forgotUserPhoneInput');
-    const noteInp = document.getElementById('forgotUserNoteInput');
-    const resBox = document.getElementById('forgotResultBox');
-    if (!modal) return;
-    resBox.style.display = 'none';
-    idInp.value = document.getElementById('loginUsername')?.value.trim() || '';
-    phoneInp.value = '';
-    noteInp.value = '';
-    modal.style.display = 'flex';
-};
-
-window.closeForgotPasswordModal = function() {
-    const modal = document.getElementById('forgotPasswordModal');
-    if (modal) modal.style.display = 'none';
-};
-
-window.submitForgotPasswordTicket = async function(event) {
-    event.preventDefault();
-    const userIdText = document.getElementById('forgotUserIdInput').value.trim();
-    const userPhoneText = document.getElementById('forgotUserPhoneInput').value.trim();
-    const userNoteText = document.getElementById('forgotUserNoteInput').value.trim();
-    const btn = document.getElementById('btnSubmitForgotTicket');
-    const resBox = document.getElementById('forgotResultBox');
-    if (!userIdText || !userPhoneText) return alert("कृपया अपनी User ID और मोबाइल/WhatsApp नंबर ज़रूर भरें!");
-    const origHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Raising Ticket...';
-    const finalMessage = userNoteText || "मैं अपना पासवर्ड भूल गया हूँ, कृपया नया पासवर्ड जारी करें।";
-    try {
-        await addDoc(collection(db, "supportTickets"), {
-            type: "FORGOT_PASSWORD",
-            userIdentifier: userIdText,
-            userPhone: userPhoneText,
-            message: `🔑 Forgot Password Request: ${finalMessage} (WhatsApp: ${userPhoneText})`,
-            messages: [{ sender: 'user', text: `🔑 [FORGOT PASSWORD TICKET]\nUser ID: ${userIdText}\nWhatsApp: ${userPhoneText}\nNote: ${finalMessage}`, time: Date.now() }],
-            status: "Open",
-            unreadByAdmin: true,
-            unreadByUser: false,
-            timestamp: new Date(),
-            updatedAtMs: Date.now()
-        });
-        try {
-            await addDoc(collection(db, "forgotTickets"), {
-                userIdentifier: userIdText,
-                userPhone: userPhoneText,
-                note: finalMessage,
-                status: "Pending",
-                timestamp: new Date()
-            });
-        } catch (e) {}
-        notifyAdminSecurely({ type: "FORGOT_PASSWORD", userId: userIdText, phone: userPhoneText, message: finalMessage });
-        resBox.className = "p-3.5 rounded-2xl bg-green-50 border border-green-300 text-green-900 text-xs font-bold text-center space-y-1";
-        resBox.innerHTML = `<div><i class="fa-solid fa-circle-check text-green-600 text-base mr-1"></i> आपका टिकट सफलतापूर्वक रेज़ हो गया है!</div><p class="text-[11px] text-green-700">एडमिन को सूचना भेज दी गई है। जल्द ही आपके नंबर (${userPhoneText}) पर नया पासवर्ड भेज दिया जाएगा।</p>`;
-        resBox.style.display = 'block';
-        event.target.reset();
-    } catch (err) {
-        alert("टिकट भेजने में समस्या आई: " + err.message);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = origHtml;
-    }
-};
-
-function startUserSupportChatListener(uid) {
-    if (window.userChatUnsubscribe) window.userChatUnsubscribe();
-    window.userChatUnsubscribe = onSnapshot(doc(db, "supportTickets", uid), async (snap) => {
-        if (snap.exists()) {
-            window.currentUserChatData = snap.data();
-        } else {
-            window.currentUserChatData = { messages: [], unreadByUser: false };
-        }
-        const isUnread = window.currentUserChatData.unreadByUser === true;
-        const headerBadge = document.getElementById('headerSupportUnreadBadge');
-        const gearBadge = document.getElementById('gearSupportUnreadBadge');
-        if (window.currentActiveTab === 'support_chat') {
-            if (isUnread) {
-                try { await updateDoc(doc(db, "supportTickets", uid), { unreadByUser: false }); } catch (e) {}
-            }
-            if (headerBadge) headerBadge.style.display = 'none';
-            if (gearBadge) gearBadge.style.display = 'none';
-            window.renderUserLiveChatMessages();
-        } else {
-            if (headerBadge) { headerBadge.innerText = '1'; headerBadge.style.display = isUnread ? 'inline-flex' : 'none'; }
-            if (gearBadge) { gearBadge.innerText = 'New'; gearBadge.style.display = isUnread ? 'inline-block' : 'none'; }
-        }
-    });
-}
-
-window.renderUserLiveChatMessages = function() {
-    const box = document.getElementById('userLiveChatMessagesBox');
-    if (!box) return;
-    let msgs = Array.isArray(window.currentUserChatData?.messages) ? [...window.currentUserChatData.messages] : [];
-    if (msgs.length === 0 && window.currentUserChatData?.message) msgs.push({ sender: 'user', text: window.currentUserChatData.message, time: Date.now() });
-    if (msgs.length === 0) {
-        box.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400"><div class="w-12 h-12 rounded-full bg-royal-50 text-royal-500 flex items-center justify-center text-xl mb-2 border border-royal-200"><i class="fa-solid fa-comments"></i></div><p class="text-xs font-black text-slate-600">Ojas Live Support Chat</p><p class="text-[11px] text-slate-400 mt-0.5">कोई भी समस्या या सवाल नीचे लिखकर भेजें। एडमिन का रिप्लाई यहीं इसी चैट में लाइव दिखेगा।</p></div>`;
-        return;
-    }
-    box.innerHTML = msgs.map(m => {
-        const isMe = m.sender === 'user';
-        const tStr = m.time ? new Date(m.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : '';
-        const safeText = String(m.text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        if (isMe) {
-            return `<div class="flex justify-end"><div class="max-w-[80%] bg-dark-900 text-white px-3.5 py-2.5 rounded-2xl rounded-br-none shadow-sm"><p class="text-xs font-semibold whitespace-pre-line leading-relaxed">${safeText}</p><span class="block text-[9px] text-royal-300 text-right mt-1 opacity-80">${tStr} • You</span></div></div>`;
-        } else {
-            return `<div class="flex justify-start"><div class="max-w-[80%] bg-amber-50 border border-amber-300 text-slate-900 px-3.5 py-2.5 rounded-2xl rounded-bl-none shadow-sm"><span class="text-[10px] font-black text-amber-800 uppercase block mb-0.5"><i class="fa-solid fa-crown text-amber-500 mr-1"></i>Admin Support</span><p class="text-xs font-bold whitespace-pre-line leading-relaxed">${safeText}</p><span class="block text-[9px] text-slate-400 text-right mt-1">${tStr}</span></div></div>`;
-        }
-    }).join('');
-    box.scrollTop = box.scrollHeight;
-};
-
-window.sendUserSupportMessage = async function(event) {
-    event.preventDefault();
-    if (!window.currentUserData) return;
-    const inp = document.getElementById('userSupportChatInput');
-    const btn = document.getElementById('btnSendUserChat');
-    const text = inp.value.trim();
-    if (!text) return;
-    inp.value = '';
-    btn.disabled = true;
-    const uid = window.currentUserData.uid;
-    try {
-        const existingMsgs = Array.isArray(window.currentUserChatData?.messages) ? [...window.currentUserChatData.messages] : [];
-        existingMsgs.push({ sender: 'user', text: text, time: Date.now() });
-        await setDoc(doc(db, "supportTickets", uid), {
-            type: 'USER_SUPPORT_CHAT',
-            userId: uid,
-            userIdentifier: window.currentUserData.email,
-            username: window.currentUserData.username,
-            message: text,
-            status: 'Open',
-            unreadByAdmin: true,
-            unreadByUser: false,
-            timestamp: new Date(),
-            updatedAtMs: Date.now(),
-            messages: existingMsgs
-        }, { merge: true });
-    } catch (err) {
-        alert("मैसेज भेजने में समस्या आई: " + err.message);
-    } finally {
-        btn.disabled = false;
-        inp.focus();
-    }
 };
 
 function startUserProfileListener(uid) {
@@ -310,28 +157,17 @@ function startPortalSettingsListener() {
         if (snap.exists()) {
             const data = snap.data();
             window.portalConfigState = {
-                showDomicile: data.showDomicile !== false,
-                showCaste: data.showCaste !== false,
-                showEvoter: data.showEvoter !== false,
-                showMinor: data.showMinor !== false,
-                showDobMinor: data.showDobMinor !== false,
-                showDobDelhi: data.showDobDelhi !== false,
-                showPassport: data.showPassport !== false,
-                showGazette: data.showGazette !== false,
-                showDobPrint: data.showDobPrint !== false,
-                showAnnexures: data.showAnnexures !== false,
-                bannerEnabled: !!data.bannerEnabled,
-                bannerBadge: data.bannerBadge || "UPDATE",
-                bannerTitle: data.bannerTitle || "",
-                bannerMessage: data.bannerMessage || "",
-                bannerBtnText: data.bannerBtnText || "",
-                bannerBtnLink: data.bannerBtnLink || "",
-                banner2Enabled: !!data.banner2Enabled,
-                banner2Badge: data.banner2Badge || "NOTICE",
-                banner2Title: data.banner2Title || "",
-                banner2Message: data.banner2Message || "",
-                banner2BtnText: data.banner2BtnText || "",
-                banner2BtnLink: data.banner2BtnLink || ""
+                showDomicile: data.showDomicile !== false, showCaste: data.showCaste !== false,
+                showEvoter: data.showEvoter !== false, showMinor: data.showMinor !== false,
+                showDobMinor: data.showDobMinor !== false, showDobDelhi: data.showDobDelhi !== false,
+                showPassport: data.showPassport !== false, showGazette: data.showGazette !== false,
+                showDobPrint: data.showDobPrint !== false, showAnnexures: data.showAnnexures !== false,
+                bannerEnabled: !!data.bannerEnabled, bannerBadge: data.bannerBadge || "UPDATE",
+                bannerTitle: data.bannerTitle || "", bannerMessage: data.bannerMessage || "",
+                bannerBtnText: data.bannerBtnText || "", bannerBtnLink: data.bannerBtnLink || "",
+                banner2Enabled: !!data.banner2Enabled, banner2Badge: data.banner2Badge || "NOTICE",
+                banner2Title: data.banner2Title || "", banner2Message: data.banner2Message || "",
+                banner2BtnText: data.banner2BtnText || "", banner2BtnLink: data.banner2BtnLink || ""
             };
         }
         window.applyLivePortalControls();
@@ -340,7 +176,6 @@ function startPortalSettingsListener() {
 
 window.applyLivePortalControls = function() {
     const cfg = window.portalConfigState || {};
-
     const canDom = window.canCurrentUserSeeService('domicile');
     const canCas = window.canCurrentUserSeeService('caste');
     const canEvoter = window.canCurrentUserSeeService('evoter');
@@ -359,32 +194,20 @@ window.applyLivePortalControls = function() {
             const displayName = typeof window.extractUserDisplayName === 'function'
                 ? window.extractUserDisplayName(u.email, u.username)
                 : (u.username || u.email.split('@')[0]);
-
             const pBtnHtml = (u.personalBannerBtnText && u.personalBannerBtnLink)
                 ? `<a href="${u.personalBannerBtnLink}" target="_blank" class="bg-amber-400 hover:bg-amber-300 text-dark-950 font-black px-3.5 py-1.5 rounded-xl text-[11px] transition shrink-0 shadow-sm flex items-center gap-1">${u.personalBannerBtnText} <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i></a>`
                 : '';
-
             bannersHtml += `
                 <div class="p-3.5 md:p-4 rounded-2xl bg-gradient-to-r from-dark-950 via-slate-900 to-amber-950 text-white border-2 border-amber-400 shadow-xl mb-2.5 relative overflow-hidden">
-                    <div class="absolute -right-3 -bottom-3 text-7xl text-amber-500/10 pointer-events-none select-none">
-                        <i class="fa-solid fa-envelope-open-text"></i>
-                    </div>
                     <div class="relative z-10 space-y-1.5">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div class="flex items-center gap-2">
-                                <span class="bg-amber-400 text-dark-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
-                                    <i class="fa-solid fa-user-tag mr-1"></i>${u.personalBannerBadge || 'PERSONAL NOTICE'}
-                                </span>
-                                <h4 class="text-xs md:text-sm font-black text-amber-300 flex items-center gap-1.5">
-                                    <span>डियर ${displayName}</span>
-                                    ${u.personalBannerTitle ? `<span class="text-slate-200 font-semibold">• ${u.personalBannerTitle}</span>` : ''}
-                                </h4>
+                                <span class="bg-amber-400 text-dark-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0"><i class="fa-solid fa-user-tag mr-1"></i>${u.personalBannerBadge || 'PERSONAL NOTICE'}</span>
+                                <h4 class="text-xs md:text-sm font-black text-amber-300 flex items-center gap-1.5"><span>डियर ${displayName}</span>${u.personalBannerTitle ? `<span class="text-slate-200 font-semibold">• ${u.personalBannerTitle}</span>` : ''}</h4>
                             </div>
                             ${pBtnHtml}
                         </div>
-                        <p class="text-xs md:text-sm font-bold text-slate-100 whitespace-pre-line leading-relaxed pl-0.5">
-                            ${u.personalBannerMessage}
-                        </p>
+                        <p class="text-xs md:text-sm font-bold text-slate-100 whitespace-pre-line leading-relaxed pl-0.5">${u.personalBannerMessage}</p>
                     </div>
                 </div>`;
         }
@@ -396,11 +219,8 @@ window.applyLivePortalControls = function() {
                 <div class="p-3.5 rounded-2xl bg-gradient-to-r from-dark-950 via-slate-900 to-indigo-950 text-white border border-royal-400/60 shadow-md mb-2">
                     <div class="flex flex-wrap items-center justify-between gap-2.5">
                         <div class="flex items-start sm:items-center gap-2.5">
-                            <span class="bg-royal-500 text-dark-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shrink-0 mt-0.5 sm:mt-0"><i class="fa-solid fa-bullhorn mr-1"></i>${cfg.bannerBadge || 'UPDATE'}</span>
-                            <div>
-                                ${cfg.bannerTitle ? `<h4 class="text-xs md:text-sm font-black text-royal-300">${cfg.bannerTitle}</h4>` : ''}
-                                ${cfg.bannerMessage ? `<p class="text-[11px] font-semibold text-slate-200 mt-0.5">${cfg.bannerMessage}</p>` : ''}
-                            </div>
+                            <span class="bg-royal-500 text-dark-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shrink-0"><i class="fa-solid fa-bullhorn mr-1"></i>${cfg.bannerBadge || 'UPDATE'}</span>
+                            <div>${cfg.bannerTitle ? `<h4 class="text-xs md:text-sm font-black text-royal-300">${cfg.bannerTitle}</h4>` : ''}${cfg.bannerMessage ? `<p class="text-[11px] font-semibold text-slate-200 mt-0.5">${cfg.bannerMessage}</p>` : ''}</div>
                         </div>
                         ${btnHtml}
                     </div>
@@ -414,23 +234,15 @@ window.applyLivePortalControls = function() {
                 <div class="p-3.5 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-emerald-950 text-white border border-emerald-400/60 shadow-md">
                     <div class="flex flex-wrap items-center justify-between gap-2.5">
                         <div class="flex items-start sm:items-center gap-2.5">
-                            <span class="bg-emerald-400 text-dark-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shrink-0 mt-0.5 sm:mt-0"><i class="fa-solid fa-bell mr-1"></i>${cfg.banner2Badge || 'NOTICE'}</span>
-                            <div>
-                                ${cfg.banner2Title ? `<h4 class="text-xs md:text-sm font-black text-emerald-300">${cfg.banner2Title}</h4>` : ''}
-                                ${cfg.banner2Message ? `<p class="text-[11px] font-semibold text-slate-200 mt-0.5">${cfg.banner2Message}</p>` : ''}
-                            </div>
+                            <span class="bg-emerald-400 text-dark-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase shrink-0"><i class="fa-solid fa-bell mr-1"></i>${cfg.banner2Badge || 'NOTICE'}</span>
+                            <div>${cfg.banner2Title ? `<h4 class="text-xs md:text-sm font-black text-emerald-300">${cfg.banner2Title}</h4>` : ''}${cfg.banner2Message ? `<p class="text-[11px] font-semibold text-slate-200 mt-0.5">${cfg.banner2Message}</p>` : ''}</div>
                         </div>
                         ${btn2Html}
                     </div>
                 </div>`;
         }
-        if (bannersHtml) {
-            bannerBox.style.display = 'block';
-            bannerBox.innerHTML = bannersHtml;
-        } else {
-            bannerBox.style.display = 'none';
-            bannerBox.innerHTML = '';
-        }
+        bannerBox.style.display = bannersHtml ? 'block' : 'none';
+        bannerBox.innerHTML = bannersHtml;
     }
 
     const stdGrid = document.getElementById('standardServicesGrid');
@@ -460,17 +272,10 @@ window.applyLivePortalControls = function() {
     if (btnEvoterMain) btnEvoterMain.style.setProperty('display', canEvoter ? 'flex' : 'none', 'important');
     if (stdGrid) {
         const visibleStdCount = (canDom ? 1 : 0) + (canCas ? 1 : 0) + (canEvoter ? 1 : 0);
-        if (visibleStdCount === 0) {
-            stdGrid.style.setProperty('display', 'none', 'important');
-        } else if (visibleStdCount === 3) {
+        if (visibleStdCount === 0) stdGrid.style.setProperty('display', 'none', 'important');
+        else {
             stdGrid.style.setProperty('display', 'grid', 'important');
-            stdGrid.className = "grid grid-cols-3 gap-1.5 sm:gap-2.5 mb-2.5";
-        } else if (visibleStdCount === 2) {
-            stdGrid.style.setProperty('display', 'grid', 'important');
-            stdGrid.className = "grid grid-cols-2 gap-2.5 mb-3";
-        } else {
-            stdGrid.style.setProperty('display', 'grid', 'important');
-            stdGrid.className = "grid grid-cols-1 gap-2.5 mb-3";
+            stdGrid.className = visibleStdCount === 3 ? "grid grid-cols-3 gap-1.5 sm:gap-2.5 mb-2.5" : (visibleStdCount === 2 ? "grid grid-cols-2 gap-2.5 mb-3" : "grid grid-cols-1 gap-2.5 mb-3");
         }
     }
 
@@ -485,10 +290,8 @@ window.applyLivePortalControls = function() {
     if ((cur === 'domicile' && !canDom) || (cur === 'caste' && !canCas) ||
         ((cur === 'evoter' || cur === 'e-voter') && !canEvoter) ||
         ((cur === 'dob_delhi' || cur === 'dob_minor') && !canDobDelhi) ||
-        (cur === 'passport' && !canPassport) ||
-        (cur === 'gazette' && !canGazette) ||
-        (cur === 'dob_print' && !canDobPrint) ||
-        (cur === 'minor' && !canMinor) ||
+        (cur === 'passport' && !canPassport) || (cur === 'gazette' && !canGazette) ||
+        (cur === 'dob_print' && !canDobPrint) || (cur === 'minor' && !canMinor) ||
         (cur.startsWith('annexure') && !canAnnexures)) {
         window.switchService(window.getFirstAllowedTab());
     }
@@ -527,8 +330,8 @@ onAuthStateChanged(auth, async (user) => {
             const emailLower = user.email.trim().toLowerCase();
             if (!window.isAllowedPortalEmail(emailLower)) {
                 await signOut(auth);
-                alert("अमान्य आईडी! पोर्टल पर केवल @print.com डोमेन वाली आईडी ही मान्य है।");
                 if (loadingScreen) loadingScreen.style.display = 'none';
+                alert("अमान्य आईडी! पोर्टल पर केवल @print.com डोमेन वाली आईडी ही मान्य है।");
                 return;
             }
             try {
@@ -536,28 +339,17 @@ onAuthStateChanged(auth, async (user) => {
                 if (cfgSnap.exists()) {
                     const d = cfgSnap.data();
                     window.portalConfigState = {
-                        showDomicile: d.showDomicile !== false,
-                        showCaste: d.showCaste !== false,
-                        showEvoter: d.showEvoter !== false,
-                        showMinor: d.showMinor !== false,
-                        showDobMinor: d.showDobMinor !== false,
-                        showDobDelhi: d.showDobDelhi !== false,
-                        showPassport: d.showPassport !== false,
-                        showGazette: d.showGazette !== false,
-                        showDobPrint: d.showDobPrint !== false,
-                        showAnnexures: d.showAnnexures !== false,
-                        bannerEnabled: !!d.bannerEnabled,
-                        bannerBadge: d.bannerBadge || "UPDATE",
-                        bannerTitle: d.bannerTitle || "",
-                        bannerMessage: d.bannerMessage || "",
-                        bannerBtnText: d.bannerBtnText || "",
-                        bannerBtnLink: d.bannerBtnLink || "",
-                        banner2Enabled: !!d.banner2Enabled,
-                        banner2Badge: d.banner2Badge || "NOTICE",
-                        banner2Title: d.banner2Title || "",
-                        banner2Message: d.banner2Message || "",
-                        banner2BtnText: d.banner2BtnText || "",
-                        banner2BtnLink: d.banner2BtnLink || ""
+                        showDomicile: d.showDomicile !== false, showCaste: d.showCaste !== false,
+                        showEvoter: d.showEvoter !== false, showMinor: d.showMinor !== false,
+                        showDobMinor: d.showDobMinor !== false, showDobDelhi: d.showDobDelhi !== false,
+                        showPassport: d.showPassport !== false, showGazette: d.showGazette !== false,
+                        showDobPrint: d.showDobPrint !== false, showAnnexures: d.showAnnexures !== false,
+                        bannerEnabled: !!d.bannerEnabled, bannerBadge: d.bannerBadge || "UPDATE",
+                        bannerTitle: d.bannerTitle || "", bannerMessage: d.bannerMessage || "",
+                        bannerBtnText: d.bannerBtnText || "", bannerBtnLink: d.bannerBtnLink || "",
+                        banner2Enabled: !!d.banner2Enabled, banner2Badge: d.banner2Badge || "NOTICE",
+                        banner2Title: d.banner2Title || "", banner2Message: d.banner2Message || "",
+                        banner2BtnText: d.banner2BtnText || "", banner2BtnLink: d.banner2BtnLink || ""
                     };
                 }
             } catch (e) {}
@@ -603,37 +395,19 @@ onAuthStateChanged(auth, async (user) => {
             }
 
             window.currentUserData = {
-                uid: user.uid,
-                email: user.email,
-                credits: userCredits,
-                isVip: isVip || hasFreeAccess,
-                vipExpiry: hasFreeAccess ? 0 : vipExpiry,
-                allowEvoter: allowEvoter,
-                allowMinor: allowMinor,
-                allowDomicile: allowDomicile,
-                allowCaste: allowCaste,
-                allowDobMinor: allowDobMinor,
-                allowDobDelhi: allowDobDelhi,
-                allowPassport: allowPassport,
-                allowGazette: allowGazette,
-                allowDobPrint: allowDobPrint,
-                allowAnnexures: allowAnnexures,
-                personalBannerEnabled: personalBannerEnabled,
-                personalBannerBadge: personalBannerBadge,
-                personalBannerTitle: personalBannerTitle,
-                personalBannerMessage: personalBannerMessage,
-                personalBannerBtnText: personalBannerBtnText,
-                personalBannerBtnLink: personalBannerBtnLink,
-                isAdmin: isAdmin,
-                isFreeVip: isFreeVip,
-                hasFreeAccess: hasFreeAccess,
-                username: user.email.split('@')[0]
+                uid: user.uid, email: user.email, credits: userCredits,
+                isVip: isVip || hasFreeAccess, vipExpiry: hasFreeAccess ? 0 : vipExpiry,
+                allowEvoter, allowMinor, allowDomicile, allowCaste, allowDobMinor, allowDobDelhi,
+                allowPassport, allowGazette, allowDobPrint, allowAnnexures,
+                personalBannerEnabled, personalBannerBadge, personalBannerTitle,
+                personalBannerMessage, personalBannerBtnText, personalBannerBtnLink,
+                isAdmin, isFreeVip, hasFreeAccess, username: user.email.split('@')[0]
             };
 
             setupDashboard(window.currentUserData);
             startPortalSettingsListener();
             startUserProfileListener(user.uid);
-            startUserSupportChatListener(user.uid);
+            window.startUserSupportChatListener(user.uid);
             startVipCountdownLoop();
             if (loadingScreen) loadingScreen.style.display = 'none';
 
@@ -641,9 +415,7 @@ onAuthStateChanged(auth, async (user) => {
             const editAnnexureParam = urlParams.get('editAnnexure');
             if (editAnnexureParam && window.currentUserData && window.currentUserData.isAdmin) {
                 setTimeout(async () => {
-                    if (window.historyData && window.historyData.length === 0) {
-                        await window.loadUserHistory();
-                    }
+                    if (window.historyData && window.historyData.length === 0) await window.loadUserHistory();
                     window.editAnnexureRecord(editAnnexureParam);
                 }, 800);
             }
@@ -815,12 +587,10 @@ window.togglePassVisibility = function(inputId, btnEl) {
     if (inp.type === 'password') {
         inp.type = 'text';
         icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-        icon.classList.add('text-royal-600');
+        icon.classList.add('fa-eye-slash', 'text-royal-600');
     } else {
         inp.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.remove('text-royal-600');
+        icon.classList.remove('fa-eye-slash', 'text-royal-600');
         icon.classList.add('fa-eye');
     }
 };
@@ -857,10 +627,7 @@ window.changeUserPassword = async function(event) {
         const credential = EmailAuthProvider.credential(user.email, currPass);
         await reauthenticateWithCredential(user, credential);
         await updatePassword(user, newPass);
-        await updateDoc(doc(db, "users", user.uid), {
-            userPass: newPass,
-            passUpdatedAt: new Date()
-        });
+        await updateDoc(doc(db, "users", user.uid), { userPass: newPass, passUpdatedAt: new Date() });
 
         msgBox.className = "text-xs font-bold p-3.5 rounded-xl border text-center bg-green-50 text-green-700 border-green-200 mt-4";
         msgBox.innerHTML = "<i class='fa-solid fa-check-circle mr-1 text-base'></i> पासवर्ड सफलतापूर्वक बदल दिया गया है!";
@@ -868,11 +635,9 @@ window.changeUserPassword = async function(event) {
         event.target.reset();
     } catch (error) {
         msgBox.className = "text-xs font-bold p-3.5 rounded-xl border text-center bg-red-50 text-red-600 border-red-200 mt-4";
-        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
-            msgBox.innerHTML = "<i class='fa-solid fa-circle-exclamation mr-1'></i> आपका पुराना पासवर्ड गलत है!";
-        } else {
-            msgBox.innerHTML = "<i class='fa-solid fa-circle-exclamation mr-1'></i> " + error.message;
-        }
+        msgBox.innerHTML = (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password')
+            ? "<i class='fa-solid fa-circle-exclamation mr-1'></i> आपका पुराना पासवर्ड गलत है!"
+            : "<i class='fa-solid fa-circle-exclamation mr-1'></i> " + error.message;
         msgBox.style.display = 'block';
     } finally {
         btn.innerHTML = origHtml;
@@ -880,1079 +645,6 @@ window.changeUserPassword = async function(event) {
     }
 };
 
-// ================= 100% RAZORPAY STANDARD CHECKOUT & GUARANTEED AUTO-CREDIT =================
-window.calculateCredits = function() {
-    const rawCreditAmt = Math.floor(Math.max(0, parseFloat(document.getElementById('rupeeAmount')?.value) || 0));
-    window.currentRechargeCredits = rawCreditAmt;
-    window.currentWantsVip = false;
-    window.currentVipDays = 0;
-    window.currentVipPlanFee = 0;
-    window.currentTotalPayable = rawCreditAmt;
-
-    const calcCreditsEl = document.getElementById('calculatedCredits');
-    if (calcCreditsEl) calcCreditsEl.innerText = `${rawCreditAmt} Cr`;
-    const totalPayableDisplay = document.getElementById('totalPayableDisplay');
-    if (totalPayableDisplay) totalPayableDisplay.innerText = `₹${window.currentTotalPayable}`;
-};
-
-// Guaranteed Firestore Auto-Credit Helper (Prevents duplicate credit & updates User Wallet + Passbook)
-window.creditWalletAfterVerifiedPayment = async function(verifyData) {
-    if (window.isCreditingInProgress) return;
-    window.isCreditingInProgress = true;
-
-    try {
-        const uid = window.currentUserData.uid;
-        const email = window.currentUserData.email;
-        const orderId = verifyData.orderId || window.currentActiveOrderId;
-        const paymentId = verifyData.paymentId || 'RAZORPAY_VERIFIED';
-        const creditsToAdd = Number(verifyData.creditsAdded) || Number(window.currentRechargeCredits) || 0;
-        const amountPaid = Number(verifyData.amountPaid) || Number(window.currentTotalPayable) || creditsToAdd;
-
-        if (creditsToAdd <= 0) {
-            throw new Error('Invalid credits amount.');
-        }
-
-        const payDocRef = doc(db, "payments", orderId);
-        const paySnap = await getDoc(payDocRef);
-
-        // Check if already credited to avoid double-addition
-        if (paySnap.exists()) {
-            const pData = paySnap.data();
-            if (pData.status === 'Auto-Approved' || pData.status === 'Approved') {
-                const uSnap = await getDoc(doc(db, "users", uid));
-                if (uSnap.exists()) {
-                    window.currentUserData.credits = Number(uSnap.data().credits) || 0;
-                    const crEl = document.getElementById('displayCredits');
-                    if (crEl) crEl.innerText = window.currentUserData.credits;
-                }
-                window.showPaymentSuccessScreen(amountPaid, creditsToAdd, paymentId);
-                return;
-            }
-        }
-
-        // 1. Fetch current user credits from Firestore & add new credits
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
-        const currentCredits = userSnap.exists() ? (Number(userSnap.data().credits) || 0) : (Number(window.currentUserData.credits) || 0);
-        const newCredits = currentCredits + creditsToAdd;
-
-        await updateDoc(userRef, {
-            credits: newCredits,
-            lastRechargedAt: new Date()
-        });
-
-        // 2. Save Auto-Approved payment record in Firestore Passbook
-        await setDoc(payDocRef, {
-            userId: uid,
-            email: email,
-            orderId: orderId,
-            razorpayOrderId: orderId,
-            razorpayPaymentId: paymentId,
-            utrNumber: paymentId,
-            amountPaid: amountPaid,
-            creditsRequested: creditsToAdd,
-            creditsAdded: creditsToAdd,
-            wantsVip: false,
-            vipDaysRequested: 0,
-            vipPlanFee: 0,
-            status: 'Auto-Approved',
-            note: `Razorpay Instant Auto-Recharge (${paymentId})`,
-            timestamp: paySnap.exists() && paySnap.data().timestamp ? paySnap.data().timestamp : new Date(),
-            verifiedAt: new Date()
-        }, { merge: true });
-
-        // 3. Update UI immediately
-        window.currentUserData.credits = newCredits;
-        const crEl = document.getElementById('displayCredits');
-        if (crEl) crEl.innerText = newCredits;
-
-        notifyAdminSecurely({
-            type: "PAYMENT_AUTO_APPROVED",
-            user: email,
-            amount: amountPaid,
-            credits: creditsToAdd,
-            utr: paymentId,
-            orderId: orderId
-        });
-
-        window.showPaymentSuccessScreen(amountPaid, creditsToAdd, paymentId);
-    } finally {
-        window.isCreditingInProgress = false;
-    }
-};
-
-window.showPaymentSuccessScreen = function(amountPaid, creditsAdded, paymentId) {
-    if (window.activePaymentUnsubscribe) window.activePaymentUnsubscribe();
-    window.currentActiveOrderId = null;
-    const walletUI = document.getElementById('walletMainUI');
-    if (walletUI) {
-        walletUI.innerHTML = `
-            <div class="p-6 bg-green-50 rounded-2xl border-2 border-green-400 text-center space-y-2">
-                <i class="fa-solid fa-circle-check text-5xl text-green-600 mb-2 animate-bounce"></i>
-                <h2 class="text-xl font-black text-green-900">पेमेंट सफल! (Auto-Verified)</h2>
-                <p class="text-xs font-bold text-green-700">आपका ₹${amountPaid} का पेमेंट तुरंत वेरीफाई हो गया है और आपके वॉलेट में <strong>+${creditsAdded} Credits</strong> जोड़ दिए गए हैं!</p>
-                <p class="text-[11px] font-mono text-slate-500">Payment ID: ${paymentId}</p>
-                <div class="pt-3">
-                    <button onclick="window.switchService('payments_history')" class="bg-green-600 hover:bg-green-700 text-white font-black py-2.5 px-6 rounded-xl text-xs shadow">वॉलेट पासबुक देखें</button>
-                </div>
-            </div>`;
-    }
-};
-
-window.checkActiveRazorpayOrderStatus = async function(silent = false) {
-    const orderId = window.currentActiveOrderId || window.currentRzpOrderData?.order_id;
-    if (!orderId) return;
-
-    const statusBanner = document.getElementById('rzpPaymentStatusBanner');
-    if (!silent && statusBanner) {
-        statusBanner.className = "p-3.5 rounded-xl bg-blue-50 border border-blue-300 text-blue-900 text-xs font-bold text-center mt-3";
-        statusBanner.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> Razorpay से पेमेंट स्टेटस चेक किया जा रहा है...`;
-        statusBanner.style.display = 'block';
-    }
-
-    try {
-        const res = await fetch('/api/verify-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'check_order_status',
-                razorpay_order_id: orderId,
-                creditsRequested: window.currentRechargeCredits,
-                totalPayable: window.currentTotalPayable
-            })
-        });
-        const data = await res.json();
-        if (res.ok && data.status && data.verified) {
-            await window.creditWalletAfterVerifiedPayment(data);
-        } else if (!silent && statusBanner) {
-            statusBanner.className = "p-3.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-bold text-center mt-3 space-y-2";
-            statusBanner.innerHTML = `
-                <div><i class="fa-solid fa-circle-info text-amber-600 mr-1"></i> अभी पेमेंट कन्फर्म नहीं हुआ है। यदि आपने QR पर पेमेंट कर दिया है तो नीचे बटन दबाएं:</div>
-                <button type="button" onclick="window.checkActiveRazorpayOrderStatus(false)" class="bg-amber-500 hover:bg-amber-600 text-dark-950 font-black px-4 py-1.5 rounded-lg text-xs shadow-sm">
-                    <i class="fa-solid fa-rotate mr-1"></i> Check &amp; Auto-Credit Now
-                </button>`;
-            statusBanner.style.display = 'block';
-        }
-    } catch (e) {
-        if (!silent) console.error('Order status check error:', e);
-    }
-};
-
-window.generateQR = async function() {
-    if (window.currentUserData?.hasFreeAccess) return;
-    window.calculateCredits();
-
-    if (window.currentRechargeCredits < 1) {
-        return alert('कृपया कम से कम ₹1 या उससे अधिक की रिचार्ज राशि दर्ज करें!');
-    }
-    if (window.currentTotalPayable < 1) {
-        return alert('न्यूनतम पेमेंट राशि ₹1 (100 Paise) होनी चाहिए!');
-    }
-
-    const btn = document.getElementById('btnGenerateQR');
-    const origBtnHtml = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Opening Razorpay...';
-    }
-
-    window.currentActiveOrderId = null;
-    window.currentRzpOrderData = null;
-
-    try {
-        let authHeader = {};
-        if (auth.currentUser) {
-            const idToken = await auth.currentUser.getIdToken();
-            authHeader = { 'Authorization': `Bearer ${idToken}` };
-        }
-
-        const res = await fetch('/api/create-order', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                ...authHeader
-            },
-            body: JSON.stringify({
-                userId: window.currentUserData.uid,
-                email: window.currentUserData.email,
-                username: window.currentUserData.username,
-                amount: Math.round(window.currentTotalPayable * 100),
-                currency: 'INR',
-                receipt: `OJAS_${Date.now()}`,
-                totalPayable: window.currentTotalPayable,
-                creditsRequested: window.currentRechargeCredits,
-                wantsVip: false,
-                vipDaysRequested: 0,
-                vipPlanFee: 0
-            })
-        });
-
-        const rawText = await res.text();
-        let orderData;
-        try {
-            orderData = JSON.parse(rawText);
-        } catch (parseErr) {
-            throw new Error(`सर्वर से अमान्य रिस्पॉन्स मिला (Status ${res.status})`);
-        }
-
-        if (!res.ok || !orderData.status || !orderData.order_id) {
-            throw new Error(orderData.message || 'Razorpay ऑर्डर बनाने में समस्या आई।');
-        }
-
-        window.currentRzpOrderData = orderData;
-        window.currentActiveOrderId = orderData.order_id;
-
-        // Save Pending Order in Firestore immediately so Passbook & Admin have full record
-        try {
-            await setDoc(doc(db, "payments", orderData.order_id), {
-                userId: window.currentUserData.uid,
-                email: window.currentUserData.email,
-                orderId: orderData.order_id,
-                razorpayOrderId: orderData.order_id,
-                amountPaid: window.currentTotalPayable,
-                creditsRequested: window.currentRechargeCredits,
-                wantsVip: false,
-                vipDaysRequested: 0,
-                vipPlanFee: 0,
-                utrNumber: orderData.order_id,
-                status: 'Pending',
-                timestamp: new Date()
-            });
-        } catch (dbErr) {
-            console.warn('Initial pending order save warning:', dbErr);
-        }
-
-        window.openRazorpayModalNow();
-    } catch (err) {
-        alert('Payment Initiation Error: ' + err.message);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = origBtnHtml;
-        }
-    }
-};
-
-window.togglePaymentTicketBox = function() {
-    const box = document.getElementById('paymentIssueTicketBox');
-    if (!box) return;
-    box.style.display = box.style.display === 'none' ? 'block' : 'none';
-};
-
-window.submitPaymentIssueTicket = async function() {
-    const rawUtr = document.getElementById('ticketUtrInput')?.value.trim() || '';
-    const utr = rawUtr.replace(/[^a-zA-Z0-9_-]/g, '').toUpperCase();
-    const issueNote = document.getElementById('ticketIssueNoteInput')?.value.trim() || 'पेमेंट फेल / पेंडिंग हो गया है, कृपया वेरीफाई करके क्रेडिट्स अप्रूव करें।';
-    const resMsg = document.getElementById('paymentTicketResultMsg');
-    const btn = document.getElementById('btnRaisePaymentTicket');
-    if (!utr || utr.length < 6) return alert("कृपया अपना 12-अंकों का सही UTR / Reference नंबर या Razorpay Payment ID दर्ज करें!");
-    const origHtml = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> टिकट सबमिट हो रहा है...';
-
-    const ticketMsgText = `💳 [PAYMENT FAILED / PENDING TICKET - 24 TO 48 HOURS]\nAmount: ₹${window.currentTotalPayable}\nCredits: +${window.currentRechargeCredits} Cr\nUTR / Ref No: ${utr}\nOrder ID: ${window.currentActiveOrderId || 'N/A'}\nNote: ${issueNote}`;
-    try {
-        if (window.currentActiveOrderId) {
-            try {
-                await updateDoc(doc(db, "payments", window.currentActiveOrderId), {
-                    utrNumber: utr,
-                    status: "Pending (Ticket Raised - 24-48h)",
-                    note: issueNote,
-                    ticketRaisedAt: new Date()
-                });
-            } catch (e) {}
-        } else {
-            const newPayDoc = await addDoc(collection(db, "payments"), {
-                userId: window.currentUserData.uid,
-                email: window.currentUserData.email,
-                amountPaid: window.currentTotalPayable || 100,
-                creditsRequested: window.currentRechargeCredits || 100,
-                wantsVip: false,
-                vipDaysRequested: 0,
-                vipPlanFee: 0,
-                utrNumber: utr,
-                note: issueNote,
-                status: "Pending (Ticket Raised - 24-48h)",
-                timestamp: new Date()
-            });
-            window.currentActiveOrderId = newPayDoc.id;
-        }
-        const uid = window.currentUserData.uid;
-        const chatRef = doc(db, "supportTickets", uid);
-        const existingMsgs = Array.isArray(window.currentUserChatData?.messages) ? [...window.currentUserChatData.messages] : [];
-        existingMsgs.push({ sender: 'user', text: ticketMsgText, time: Date.now() });
-        await setDoc(chatRef, {
-            type: 'PAYMENT_ISSUE_TICKET',
-            userId: uid,
-            userIdentifier: window.currentUserData.email,
-            username: window.currentUserData.username,
-            message: `💳 Payment Ticket (24-48h): ₹${window.currentTotalPayable} (UTR: ${utr})`,
-            status: 'Open',
-            unreadByAdmin: true,
-            unreadByUser: false,
-            timestamp: new Date(),
-            updatedAtMs: Date.now(),
-            messages: existingMsgs
-        }, { merge: true });
-
-        notifyAdminSecurely({
-            type: "PAYMENT_UTR_TICKET",
-            user: window.currentUserData.email,
-            amount: window.currentTotalPayable,
-            utr: utr,
-            orderId: window.currentActiveOrderId || 'N/A',
-            note: issueNote
-        });
-
-        resMsg.className = "p-4 rounded-xl bg-green-50 border-2 border-green-400 text-green-900 text-xs font-bold text-center space-y-1.5 mt-3";
-        resMsg.innerHTML = `
-            <div class="text-sm font-black text-green-800"><i class="fa-solid fa-circle-check text-green-600 mr-1"></i> आपका पेमेंट टिकट सफलतापूर्वक जनरेट हो गया है!</div>
-            <p class="text-[11px] text-green-800 leading-relaxed">
-                UTR / Ref No: <strong>${utr}</strong> दर्ज कर लिया गया है और एडमिन को अलर्ट भेज दिया गया है।<br>
-                ⏳ <strong>24 से 48 घंटे</strong> के भीतर वेरीफाई करके आपके वॉलेट में क्रेडिट्स अप्रूव कर दिए जाएंगे।
-            </p>`;
-        resMsg.style.display = 'block';
-        document.getElementById('ticketUtrInput').value = '';
-        if (document.getElementById('ticketIssueNoteInput')) document.getElementById('ticketIssueNoteInput').value = '';
-    } catch (err) {
-        alert("टिकट रेज़ करने में समस्या आई: " + err.message);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = origHtml;
-    }
-};
-
-window.openRazorpayModalNow = function() {
-    const orderData = window.currentRzpOrderData;
-    if (!orderData || !orderData.order_id) {
-        return alert('कृपया पहले Pay Now via Razorpay बटन पर क्लिक करें।');
-    }
-    if (typeof window.Razorpay === 'undefined') {
-        return alert('Razorpay SDK लोड नहीं हो सका। कृपया अपना इंटरनेट कनेक्शन चेक करें और पेज रिफ्रेश करें।');
-    }
-
-    const options = {
-        key: orderData.key_id,
-        amount: orderData.amount,
-        currency: orderData.currency || 'INR',
-        name: 'Ojas Print Service',
-        description: `Wallet Recharge (+${window.currentRechargeCredits} Credits)`,
-        image: '/images/logo.png',
-        order_id: orderData.order_id,
-        prefill: {
-            name: window.currentUserData?.username || '',
-            email: window.currentUserData?.email || ''
-        },
-        theme: {
-            color: '#4f46e5'
-        },
-        modal: {
-            ondismiss: async function () {
-                // Automatically check if QR payment was completed before modal was dismissed
-                await window.checkActiveRazorpayOrderStatus(false);
-            }
-        },
-        handler: async function (response) {
-            const statusBanner = document.getElementById('rzpPaymentStatusBanner');
-            if (statusBanner) {
-                statusBanner.className = "p-3.5 rounded-xl bg-blue-50 border border-blue-300 text-blue-900 text-xs font-bold text-center mt-3";
-                statusBanner.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-1"></i> पेमेंट वेरीफाई हो रहा है और क्रेडिट्स जोड़े जा रहे हैं... कृपया प्रतीक्षा करें।`;
-                statusBanner.style.display = 'block';
-            }
-
-            try {
-                const verifyRes = await fetch('/api/verify-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'verify_signature',
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_signature: response.razorpay_signature,
-                        creditsRequested: window.currentRechargeCredits,
-                        totalPayable: window.currentTotalPayable
-                    })
-                });
-                const verifyData = await verifyRes.json();
-                if (!verifyRes.ok || !verifyData.status) {
-                    throw new Error(verifyData.message || 'Signature verification failed');
-                }
-
-                // Immediately add credits to user's Firestore account & Passbook
-                await window.creditWalletAfterVerifiedPayment({
-                    orderId: response.razorpay_order_id,
-                    paymentId: response.razorpay_payment_id,
-                    creditsAdded: verifyData.creditsAdded || window.currentRechargeCredits,
-                    amountPaid: verifyData.amountPaid || window.currentTotalPayable
-                });
-            } catch (err) {
-                alert('पेमेंट वेरिफिकेशन में समस्या आई: ' + err.message + '\nयदि आपके पैसे कट गए हैं, तो कृपया नीचे Check & Auto-Credit या Payment Ticket बटन दबाएं।');
-                const tBox = document.getElementById('paymentIssueTicketBox');
-                if (tBox) tBox.style.display = 'block';
-            }
-        }
-    };
-
-    const rzp = new window.Razorpay(options);
-    rzp.on('payment.failed', function (response) {
-        const errDesc = response?.error?.description || 'Payment failed.';
-        const statusBanner = document.getElementById('rzpPaymentStatusBanner');
-        if (statusBanner) {
-            statusBanner.className = "p-3.5 rounded-xl bg-red-50 border border-red-300 text-red-900 text-xs font-bold text-center mt-3";
-            statusBanner.innerHTML = `<i class="fa-solid fa-circle-xmark text-red-600 mr-1"></i> पेमेंट फेल: ${errDesc}`;
-            statusBanner.style.display = 'block';
-        }
-    });
-    rzp.open();
-};
-
-// ================= PDF VIEWER & DOCUMENT HISTORY =================
-window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
-    document.getElementById('pdfViewerTitle').innerText = fileName;
-    const iframe = document.getElementById('pdfIframe');
-    const htmlPreviewContainer = document.getElementById('htmlDocPreviewContainer');
-    const spinner = document.getElementById('pdfLoadingSpinner');
-    const downloadBtn = document.getElementById('modalDownloadBtn');
-    const printBtn = document.getElementById('modalPrintBtn');
-    const modalStampLabel = document.getElementById('modalStampToggleLabel');
-    const modalStampCheckbox = document.getElementById('modalStampCheckbox');
-    const shareBtn = document.getElementById('modalShareBtn');
-
-    const isLocalDoc = String(fileId).startsWith('LOCAL_HTML_');
-    const isAutoStampedCert = (fileId === 'LOCAL_HTML_CASTE' || fileId === 'LOCAL_HTML_DOMICILE');
-    const isAnnexure = String(fileId).startsWith('LOCAL_HTML_ANNEXURE_');
-    let initialWithStamp = false, initialStampSrc = '', initialStampFile = '', initialCertFileId = '';
-
-    if (isAutoStampedCert) {
-        initialWithStamp = true;
-        initialStampFile = 'm.png';
-        initialStampSrc = await window.preloadAutoMStamp();
-    } else if (historyIndex >= 0) {
-        const record = (window.historyData && window.historyData[historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[historyIndex]);
-        if (record) {
-            initialWithStamp = !!record.withStamp;
-            initialStampFile = record.stampFile || 'stamp.png';
-            initialCertFileId = (record.certificateFileId && record.isCertificateAttached !== false) ? record.certificateFileId : '';
-        }
-        if (initialWithStamp && !initialStampSrc && typeof window.getTransparentStampDataUrl === 'function') {
-            initialStampSrc = await window.getTransparentStampDataUrl(initialStampFile);
-        }
-    }
-
-    window.currentModalContext = { fileId: fileId, fileName: fileName, historyIndex: historyIndex, withStamp: initialWithStamp, stampFile: initialStampFile, stampSrc: initialStampSrc, certificateFileId: initialCertFileId };
-
-    const previewParent = iframe.parentElement;
-    previewParent.classList.add('flex', 'flex-col');
-    if (shareBtn) shareBtn.style.display = 'none';
-
-    if (isLocalDoc && historyIndex >= 0) {
-        await window.preloadAllHtmlTemplates();
-        if (shareBtn) shareBtn.style.display = 'flex';
-        if (modalStampLabel) {
-            if (isAnnexure) modalStampLabel.classList.remove('hidden');
-            else modalStampLabel.classList.add('hidden');
-        }
-        if (modalStampCheckbox) modalStampCheckbox.checked = initialWithStamp;
-
-        const record = (window.historyData && window.historyData[historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[historyIndex]);
-        const fData = record?.formData || {};
-        if (record?.id && !fData.DOC_ID) fData.DOC_ID = record.id;
-        spinner.style.display = 'none';
-
-        if (initialCertFileId) {
-            iframe.style.display = 'block';
-            iframe.style.flex = '1';
-            iframe.style.minHeight = '350px';
-            iframe.style.borderBottom = '4px solid #cbd5e1';
-            iframe.src = `https://drive.google.com/file/d/${initialCertFileId}/preview`;
-
-            htmlPreviewContainer.style.display = 'flex';
-            htmlPreviewContainer.style.flex = '1';
-            htmlPreviewContainer.style.minHeight = '350px';
-            htmlPreviewContainer.innerHTML = window.buildLocalAffidavitHtml(fileId, fData, true, initialWithStamp, initialStampSrc);
-        } else {
-            iframe.style.display = 'none';
-            htmlPreviewContainer.style.display = 'flex';
-            htmlPreviewContainer.style.flex = '1';
-            htmlPreviewContainer.innerHTML = window.buildLocalAffidavitHtml(fileId, fData, true, initialWithStamp, initialStampSrc);
-        }
-
-        if (downloadBtn) { downloadBtn.onclick = async function() { await window.downloadHtmlDocAsPdf(fileId, fData, fileName, window.currentModalContext.withStamp, window.currentModalContext.stampSrc, window.currentModalContext.certificateFileId); }; }
-        if (printBtn) { printBtn.onclick = function() { window.directPrintDocument(fileId, fData, fileName, window.currentModalContext.withStamp, window.currentModalContext.stampSrc, window.currentModalContext.certificateFileId); }; }
-        if (shareBtn) { shareBtn.onclick = async function() { await window.shareHtmlDocAsPdf(fileId, fData, fileName, window.currentModalContext.withStamp, window.currentModalContext.stampSrc, window.currentModalContext.certificateFileId); }; }
-    } else {
-        if (modalStampLabel) modalStampLabel.classList.add('hidden');
-        if (shareBtn) shareBtn.style.display = 'none';
-        htmlPreviewContainer.style.display = 'none';
-        htmlPreviewContainer.innerHTML = '';
-        iframe.style.display = 'block';
-        iframe.style.flex = '1';
-        spinner.style.display = 'flex';
-        iframe.src = `https://drive.google.com/file/d/${fileId}/preview`;
-
-        if (downloadBtn) { downloadBtn.onclick = function() { window.open(`https://drive.google.com/uc?export=download&id=${fileId}`, '_blank'); }; }
-        if (printBtn) { printBtn.onclick = function() { window.open(`https://drive.google.com/file/d/${fileId}/view`, '_blank'); }; }
-    }
-    const modal = document.getElementById('pdfViewerModal');
-    if (modal) { modal.style.display = 'flex'; modal.classList.remove('hidden'); }
-    document.body.style.overflow = 'hidden';
-};
-
-window.closePdfViewer = function() {
-    const modal = document.getElementById('pdfViewerModal');
-    if (modal) { modal.style.display = 'none'; modal.classList.add('hidden'); }
-    const iframe = document.getElementById('pdfIframe');
-    if (iframe) iframe.src = '';
-    const htmlContainer = document.getElementById('htmlDocPreviewContainer');
-    if (htmlContainer) htmlContainer.innerHTML = '';
-    document.body.style.overflow = 'auto';
-};
-
-window.loadUserHistory = async function() {
-    const historyContainer = document.getElementById('historyTableBody');
-    if (!historyContainer) return;
-    historyContainer.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading records...</td></tr>`;
-    try {
-        const q = query(collection(db, "history"), where("userId", "==", window.currentUserData.uid));
-        const querySnapshot = await getDocs(q);
-        window.historyData = [];
-        querySnapshot.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
-        window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
-        window.renderHistory('ALL');
-
-        const pendingDobPrints = window.historyData.filter(item => {
-            if (item.fileId !== 'SERVER_API_DOB_PRINT') return false;
-            const st = String(item.formData?.API_STATUS || 'pending').toLowerCase();
-            const hasPdf = Boolean(item.formData?.HAS_PDF || item.formData?.ENCRYPTED_PDF_TOKEN || item.formData?.PDF_URL);
-            return !hasPdf && st !== 'successful' && st !== 'approved' && st !== 'failed' && st !== 'rejected';
-        });
-        if (pendingDobPrints.length > 0) {
-            pendingDobPrints.slice(0, 5).forEach((item, idx) => {
-                setTimeout(() => {
-                    window.checkDobPrintOrderStatus(item.id, null, true);
-                }, (idx + 1) * 900);
-            });
-        }
-    } catch (err) {
-        historyContainer.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 text-xs">Failed to load history.</td></tr>`;
-    }
-};
-
-window.handleUserHistoryFilterChange = function() {
-    const type = document.getElementById('userHistoryTypeFilter')?.value || 'ALL';
-    const date = document.getElementById('userHistoryDateFilter')?.value || '';
-    const search = (document.getElementById('userHistorySearchInput')?.value || '').trim().toLowerCase();
-    window.renderHistory(type, date, search);
-};
-
-window.editAnnexureRecord = async function(docId) {
-    if (!docId) return;
-    if (!window.currentUserData || !window.currentUserData.isAdmin) {
-        alert('केवल एडमिन के पास ही डॉक्यूमेंट एडिट करने की अनुमति है!');
-        return;
-    }
-    let record = (window.historyData && window.historyData.find(d => d.id === docId)) ||
-                 (window.adminAllHistoryData && window.adminAllHistoryData.find(d => d.id === docId));
-    if (!record) {
-        try {
-            const snap = await getDoc(doc(db, "history", docId));
-            if (snap.exists()) record = { id: snap.id, ...snap.data() };
-        } catch (e) {}
-    }
-    if (!record) {
-        alert('डॉक्यूमेंट रिकॉर्ड नहीं मिला!');
-        return;
-    }
-    const sType = record.serviceType;
-    const adminEditTabMap = {
-        'Domicile': 'domicile',
-        'Caste': 'caste',
-        'e-Voter ID': 'evoter',
-        'DOB Delhi': 'dob_delhi',
-        'DOB Minor': 'dob_delhi',
-        'Minor': 'minor',
-        'DOB': 'minor',
-        'Passport': 'passport',
-        'Passport Services': 'passport',
-        ...(window.ANNEXURE_SERVICE_TO_TAB || {})
-    };
-    const tabName = adminEditTabMap[sType] || '';
-    if (!tabName) {
-        alert('इस डॉक्यूमेंट का फॉर्म एडिट के लिए उपलब्ध नहीं है!');
-        return;
-    }
-
-    window.currentEditingAnnexure = {
-        docId: docId,
-        serviceType: sType,
-        fileId: record.fileId,
-        fileName: record.fileName,
-        formData: record.formData || {}
-    };
-
-    await window.switchService(tabName);
-    setTimeout(() => {
-        if (typeof window.populateAnnexureFormForEdit === 'function') {
-            window.populateAnnexureFormForEdit(record.formData || {});
-        }
-    }, 150);
-};
-
-window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearch = '') {
-    const historyContainer = document.getElementById('historyTableBody');
-    if (!historyContainer) return;
-    historyContainer.innerHTML = '';
-    const indexedData = window.historyData.map((item, idx) => ({ ...item, _origIndex: idx }));
-    let filteredData = filterType === 'ALL' ? indexedData : indexedData.filter(item => item.serviceType === filterType);
-
-    if (filterDate) {
-        filteredData = filteredData.filter(item => {
-            const sec = item.timestamp?.seconds || (item.timestamp ? Math.floor(new Date(item.timestamp).getTime() / 1000) : 0);
-            if (!sec) return false;
-            const d = new Date(sec * 1000);
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` === filterDate;
-        });
-    }
-
-    if (filterSearch) {
-        filteredData = filteredData.filter(item => {
-            const fName = (item.fileName || '').toLowerCase();
-            const fData = item.formData || {};
-            const appName = (fData.applicantName || fData.parentName || fData.childName || fData.NAME || fData.newName || '').toLowerCase();
-            return fName.includes(filterSearch) || appName.includes(filterSearch);
-        });
-    }
-
-    document.getElementById('userHistoryCount').innerText = `Total Files: ${filteredData.length}`;
-
-    if (filteredData.length === 0) {
-        historyContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 text-xs"><i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i><br>No records found.</td></tr>`;
-        return;
-    }
-
-    filteredData.forEach((data) => {
-        const sec = data.timestamp?.seconds || Math.floor(Date.now() / 1000);
-        const dateObj = new Date(sec * 1000);
-        const dateStr = dateObj.toLocaleDateString('en-IN', {day:'2-digit', month:'short', year:'numeric'});
-        const timeStr = dateObj.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-
-        let badgesHtml = '';
-        if (data.certificateFileId && data.isCertificateAttached !== false) { badgesHtml += `<span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-certificate mr-0.5"></i>Cert</span>`; }
-        if (data.withStamp) { badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-stamp mr-0.5"></i>Stamped</span>`; }
-        if (data.adminStampCharged) { badgesHtml += `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Stamp</span>`; }
-        if (data.adminCertCharged) { badgesHtml += `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">+20 Cr Cert</span>`; }
-
-        const isServerDobPrint = (data.fileId === 'SERVER_API_DOB_PRINT');
-        let rawStatus = String(data.formData?.API_STATUS ?? 'pending').trim().toLowerCase();
-        if (rawStatus === 'true' || rawStatus === '1' || rawStatus === 'ok' || rawStatus === '') {
-            rawStatus = 'pending';
-        }
-        const hasPdf = Boolean(data.formData?.HAS_PDF || data.formData?.ENCRYPTED_PDF_TOKEN || data.formData?.PDF_URL);
-        const isCompleted = hasPdf || rawStatus === 'successful' || rawStatus === 'approved' || rawStatus === 'completed';
-        const isFailed = rawStatus === 'failed' || rawStatus === 'rejected';
-        const safeFileName = String(data.fileName || 'Document.pdf').replace(/'/g, "\\'");
-
-        if (isServerDobPrint) {
-            badgesHtml += `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">Ref: ${data.formData?.APPLICATION_REF || 'N/A'}</span>`;
-            if (isCompleted) {
-                badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-check-circle mr-0.5"></i>SUCCESSFUL</span>`;
-            } else if (isFailed) {
-                badgesHtml += `<span class="bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-circle-xmark mr-0.5"></i>${rawStatus.toUpperCase()} (REFUNDED)</span>`;
-            } else {
-                badgesHtml += `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5 animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>PENDING</span>`;
-            }
-        }
-
-        const actionBtnsHtml = isServerDobPrint
-            ? (isCompleted
-                ? `<div class="inline-flex items-center gap-1.5">
-                       <button onclick="window.openServerDobPrintPdf('${data.id}', '${safeFileName}')" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button>
-                       <button onclick="window.downloadServerDobPrintPdf('${data.id}')" class="inline-flex items-center gap-1 bg-green-600 text-white hover:bg-green-700 px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-download"></i> Download PDF</button>
-                   </div>`
-                : `<div class="inline-flex items-center gap-1.5">
-                       <button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>
-                   </div>`)
-            : `<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button>`;
-
-        historyContainer.innerHTML += `
-            <tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${data.fileName}${badgesHtml}</td>
-                <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType}</span></td>
-                <td class="p-3 text-slate-500 text-[11px] font-medium">${dateStr} <br> ${timeStr}</td>
-                <td class="p-3 text-right whitespace-nowrap">
-                    ${actionBtnsHtml}
-                </td>
-            </tr>
-        `;
-    });
-};
-
-// ================= COMPLETE WALLET PASSBOOK & LEDGER =================
-window.setPassbookFilter = function(filterKey) {
-    window.currentPassbookFilter = filterKey;
-    const pills = ['ALL', 'RECHARGE', 'DEDUCTION', 'REFUND', 'GIFT'];
-    pills.forEach(p => {
-        const btn = document.getElementById(`pbPill-${p}`);
-        if (!btn) return;
-        if (p === filterKey) {
-            btn.className = "px-3 py-2 rounded-xl text-xs font-black bg-dark-900 text-royal-300 shadow-sm border border-royal-500/40 transition flex items-center justify-center gap-1.5";
-        } else {
-            btn.className = "px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5";
-        }
-    });
-    window.renderUserPassbookLedger();
-};
-
-window.loadUserPayments = async function() {
-    const tableBody = document.getElementById('userPaymentsTableBody');
-    if (!tableBody) return;
-    tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>आपकी पूरी वॉलेट पासबुक लोड हो रही है...</td></tr>`;
-
-    try {
-        const uid = window.currentUserData.uid;
-        const [paySnap, histSnap] = await Promise.all([
-            getDocs(query(collection(db, "payments"), where("userId", "==", uid))),
-            getDocs(query(collection(db, "history"), where("userId", "==", uid)))
-        ]);
-
-        window.userPaymentsData = [];
-        window.historyData = [];
-        const entries = [];
-        const now = Date.now();
-        const MS_72_HOURS = 72 * 60 * 60 * 1000;
-
-        let totalRechargedCr = 0;
-        let totalDeductedCr = 0;
-        let totalRefundedCr = 0;
-        let totalGiftCr = 0;
-        let totalPendingAmt = 0;
-        let pendingCount = 0;
-
-        const getTimeMs = (ts) => {
-            if (!ts) return 0;
-            if (typeof ts.seconds === 'number') return ts.seconds * 1000;
-            if (typeof ts.toMillis === 'function') return ts.toMillis();
-            const parsed = new Date(ts).getTime();
-            return isNaN(parsed) ? 0 : parsed;
-        };
-
-        paySnap.forEach((docSnap) => {
-            const item = { id: docSnap.id, ...docSnap.data() };
-            const itemTime = getTimeMs(item.timestamp);
-
-            if (item.status === 'Pending' && itemTime > 0 && (now - itemTime > MS_72_HOURS)) {
-                item.status = 'Cancelled (Expired 72h)';
-                try { updateDoc(doc(db, "payments", item.id), { status: 'Cancelled (Expired 72h)', expiredAt: new Date() }); } catch (e) {}
-            }
-            window.userPaymentsData.push(item);
-
-            const st = String(item.status || 'Pending');
-            const isRefund = st === 'Refunded' || item.type === 'SERVICE_REFUND' || String(item.utrNumber || '').startsWith('REFUND');
-            const isGift = st === 'Gift / Bonus' || item.utrNumber === 'ADMIN_GIFT';
-            const isAdminDeduct = st === 'Admin Deduction' || item.utrNumber === 'ADMIN_DEDUCT';
-            const isApprovedRecharge = (st === 'Approved' || st === 'Auto-Approved') && !isRefund && !isGift;
-            const isPendingRecharge = st === 'Pending' || st.includes('Ticket');
-
-            const creditsVal = Math.abs(Number(item.creditsRequested !== undefined ? item.creditsRequested : (item.creditsAdded || item.amountPaid || 0)));
-            const amtPaid = Number(item.amountPaid) || 0;
-
-            if (isRefund) {
-                totalRefundedCr += creditsVal;
-                entries.push({
-                    id: `pay_${item.id}`,
-                    timeMs: itemTime || now,
-                    category: 'REFUND',
-                    title: '🔄 Credit Refund (क्रेडिट रिफंड)',
-                    subtitle: item.note || 'कैंसिल / फेल सर्विस का ऑटो-रिफंड',
-                    serviceTag: 'REFUND',
-                    creditDelta: +creditsVal,
-                    amountRupees: 0,
-                    refText: item.utrNumber || 'AUTO_REFUND',
-                    statusText: 'Refunded',
-                    statusStyle: 'green'
-                });
-            } else if (isGift) {
-                totalGiftCr += creditsVal;
-                entries.push({
-                    id: `pay_${item.id}`,
-                    timeMs: itemTime || now,
-                    category: 'GIFT',
-                    title: '🎁 Admin Gift / Bonus Credits',
-                    subtitle: item.note || 'एडमिन द्वारा फ्री बोनस क्रेडिट्स दिए गए',
-                    serviceTag: 'GIFT',
-                    creditDelta: +creditsVal,
-                    amountRupees: 0,
-                    refText: 'ADMIN_GIFT',
-                    statusText: 'Credited',
-                    statusStyle: 'purple'
-                });
-            } else if (isAdminDeduct) {
-                totalDeductedCr += creditsVal;
-                entries.push({
-                    id: `pay_${item.id}`,
-                    timeMs: itemTime || now,
-                    category: 'DEDUCTION',
-                    title: '⚙️ Admin Wallet Adjustment',
-                    subtitle: item.note || 'एडमिन द्वारा क्रेडिट्स समायोजित किए गए',
-                    serviceTag: 'ADJUSTMENT',
-                    creditDelta: -creditsVal,
-                    amountRupees: 0,
-                    refText: 'ADMIN_DEDUCT',
-                    statusText: 'Deducted',
-                    statusStyle: 'red'
-                });
-            } else {
-                if (isApprovedRecharge) {
-                    totalRechargedCr += creditsVal;
-                } else if (isPendingRecharge) {
-                    totalPendingAmt += amtPaid;
-                    pendingCount++;
-                }
-
-                let statusStyle = 'amber';
-                if (isApprovedRecharge) statusStyle = 'green';
-                else if (st.includes('Ticket')) statusStyle = 'indigo';
-                else if (st.includes('Rejected') || st.includes('Cancelled')) statusStyle = 'slate';
-
-                entries.push({
-                    id: `pay_${item.id}`,
-                    timeMs: itemTime || now,
-                    category: 'RECHARGE',
-                    title: '💳 Wallet Credit Recharge (वॉलेट रिचार्ज)',
-                    subtitle: item.note ? `Note: ${item.note}` : `Razorpay Online Payment (₹${amtPaid})`,
-                    serviceTag: 'RECHARGE',
-                    creditDelta: isApprovedRecharge ? +creditsVal : 0,
-                    pendingCredits: !isApprovedRecharge ? creditsVal : 0,
-                    amountRupees: amtPaid,
-                    refText: item.razorpayPaymentId || item.utrNumber || item.orderId || 'RAZORPAY',
-                    statusText: st,
-                    statusStyle: statusStyle,
-                    rawOrderId: item.razorpayOrderId || item.orderId || ''
-                });
-            }
-        });
-
-        histSnap.forEach((docSnap) => {
-            const docItem = { id: docSnap.id, ...docSnap.data() };
-            window.historyData.push(docItem);
-
-            const docTime = getTimeMs(docItem.timestamp);
-            const sType = docItem.serviceType || 'Document';
-            const fData = docItem.formData || {};
-
-            let baseCost = fData.CREDITS_DEDUCTED !== undefined
-                ? Number(fData.CREDITS_DEDUCTED)
-                : (docItem.creditsDeducted !== undefined
-                    ? Number(docItem.creditsDeducted)
-                    : (typeof window.getServiceCreditCost === 'function' ? window.getServiceCreditCost(sType) : 10));
-
-            if (window.currentUserData?.hasFreeAccess && fData.CREDITS_DEDUCTED === undefined) {
-                baseCost = 0;
-            }
-
-            const applicantName = fData.NAME || fData.applicantName || fData.childName || fData.NEW_NAME || fData.parentName || docItem.fileName || 'Customer';
-            const refNo = fData.APPLICATION_REF || fData.BRN_NO || fData.REG_NO || fData.EPIC_NO || fData.GAZETTE_NO || fData.RN || docItem.id.slice(0, 8).toUpperCase();
-            const displayService = sType === 'DOB Print' ? 'DOB Original PDF' : (sType === 'Minor' ? 'DOB Certificate' : sType);
-
-            if (baseCost > 0) {
-                totalDeductedCr += baseCost;
-                entries.push({
-                    id: `hist_${docItem.id}`,
-                    timeMs: docTime || now,
-                    category: 'DEDUCTION',
-                    title: `📄 ${displayService} Generated`,
-                    subtitle: `नाम: ${applicantName} (${docItem.fileName || ''})`,
-                    serviceTag: displayService.toUpperCase(),
-                    creditDelta: -baseCost,
-                    amountRupees: baseCost,
-                    refText: refNo,
-                    statusText: 'Card Deducted',
-                    statusStyle: 'red'
-                });
-            }
-
-            if (docItem.adminStampCharged) {
-                const stampFee = Number(docItem.adminStampFee) || 20;
-                const stampTime = getTimeMs(docItem.adminStampChargedAt) || (docTime + 1000);
-                totalDeductedCr += stampFee;
-                entries.push({
-                    id: `stamp_${docItem.id}`,
-                    timeMs: stampTime,
-                    category: 'DEDUCTION',
-                    title: `🔏 Stamp Attached on ${displayService}`,
-                    subtitle: `नाम: ${applicantName} (${(docItem.stampCity || 'Stamp').toUpperCase()})`,
-                    serviceTag: 'STAMP (+20 Cr)',
-                    creditDelta: -stampFee,
-                    amountRupees: stampFee,
-                    refText: refNo,
-                    statusText: 'Stamp Fee',
-                    statusStyle: 'red'
-                });
-            }
-
-            if (docItem.adminCertCharged) {
-                const certFee = Number(docItem.adminCertFee) || 20;
-                const certTime = getTimeMs(docItem.adminCertChargedAt) || (docTime + 2000);
-                totalDeductedCr += certFee;
-                entries.push({
-                    id: `cert_${docItem.id}`,
-                    timeMs: certTime,
-                    category: 'DEDUCTION',
-                    title: `📜 Certificate Attached on ${displayService}`,
-                    subtitle: `नाम: ${applicantName}`,
-                    serviceTag: 'CERT (+20 Cr)',
-                    creditDelta: -certFee,
-                    amountRupees: certFee,
-                    refText: refNo,
-                    statusText: 'Cert Fee',
-                    statusStyle: 'red'
-                });
-            }
-        });
-
-        entries.sort((a, b) => b.timeMs - a.timeMs);
-        window.userPassbookEntries = entries;
-
-        const elBal = document.getElementById('sumCurrentBalance');
-        if (elBal) elBal.innerText = `${window.currentUserData.credits || 0} Cr`;
-        const elRech = document.getElementById('sumApprovedAmt');
-        if (elRech) elRech.innerText = `+${totalRechargedCr} Cr`;
-        const elDed = document.getElementById('sumTotalDeducted');
-        if (elDed) elDed.innerText = `-${totalDeductedCr} Cr`;
-        const elRefGift = document.getElementById('sumTotalRefundGift');
-        if (elRefGift) elRefGift.innerText = `+${totalRefundedCr + totalGiftCr} Cr`;
-        const elPend = document.getElementById('sumPendingAmt');
-        if (elPend) elPend.innerText = `₹${totalPendingAmt} (${pendingCount})`;
-
-        window.renderUserPassbookLedger();
-    } catch (err) {
-        console.error('Passbook load error:', err);
-        tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500 text-xs">Failed to load wallet passbook: ${err.message}</td></tr>`;
-    }
-};
-
-window.verifyPendingOrderFromPassbook = async function(orderId, creditsVal, amountVal, btnEl) {
-    if (!orderId) return;
-    const origHtml = btnEl ? btnEl.innerHTML : '';
-    if (btnEl) {
-        btnEl.disabled = true;
-        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
-    }
-    try {
-        const res = await fetch('/api/verify-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                action: 'check_order_status',
-                razorpay_order_id: orderId,
-                creditsRequested: creditsVal,
-                totalPayable: amountVal
-            })
-        });
-        const data = await res.json();
-        if (res.ok && data.status && data.verified) {
-            await window.creditWalletAfterVerifiedPayment(data);
-            alert(`✅ पेमेंट वेरीफाई हो गया! आपके वॉलेट में +${data.creditsAdded} Credits जोड़ दिए गए हैं।`);
-            window.loadUserPayments();
-        } else {
-            alert('अभी इस ऑर्डर का पेमेंट Razorpay पर पूरा नहीं दिखा रहा है।');
-        }
-    } catch (err) {
-        alert('Error: ' + err.message);
-    } finally {
-        if (btnEl) {
-            btnEl.disabled = false;
-            btnEl.innerHTML = origHtml;
-        }
-    }
-};
-
-window.renderUserPassbookLedger = function() {
-    const tableBody = document.getElementById('userPaymentsTableBody');
-    if (!tableBody) return;
-
-    const filter = window.currentPassbookFilter || 'ALL';
-    const searchVal = (document.getElementById('passbookSearchInput')?.value || '').trim().toLowerCase();
-
-    let list = (window.userPassbookEntries || []).filter(item => {
-        if (filter !== 'ALL' && item.category !== filter) return false;
-        if (searchVal) {
-            const hay = `${item.title} ${item.subtitle} ${item.serviceTag} ${item.refText} ${item.statusText}`.toLowerCase();
-            return hay.includes(searchVal);
-        }
-        return true;
-    });
-
-    const countEl = document.getElementById('passbookCountLabel');
-    if (countEl) countEl.innerText = `Showing ${list.length} Transactions`;
-
-    if (list.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400 text-xs"><i class="fa-solid fa-receipt text-3xl mb-2 text-slate-300"></i><br>इस फ़िल्टर में कोई ट्रांजैक्शन नहीं मिला।</td></tr>`;
-        return;
-    }
-
-    tableBody.innerHTML = list.map(item => {
-        const d = new Date(item.timeMs);
-        const dateStr = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-        const timeStr = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-
-        let tagBadge = '';
-        if (item.category === 'RECHARGE') {
-            tagBadge = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fa-solid fa-bolt mr-1"></i>Recharge</span>`;
-        } else if (item.category === 'DEDUCTION') {
-            tagBadge = `<span class="bg-rose-100 text-rose-800 border border-rose-300 px-2 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fa-solid fa-file-invoice mr-1"></i>${item.serviceTag}</span>`;
-        } else if (item.category === 'REFUND') {
-            tagBadge = `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fa-solid fa-rotate-left mr-1"></i>Refund</span>`;
-        } else if (item.category === 'GIFT') {
-            tagBadge = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded-full text-[10px] font-black uppercase"><i class="fa-solid fa-gift mr-1"></i>Admin Gift</span>`;
-        }
-
-        let creditCellHtml = '';
-        if (item.creditDelta > 0) {
-            creditCellHtml = `<span class="text-sm font-black text-emerald-600">+${item.creditDelta} Cr</span>`;
-        } else if (item.creditDelta < 0) {
-            creditCellHtml = `<span class="text-sm font-black text-rose-600">${item.creditDelta} Cr</span>`;
-        } else {
-            creditCellHtml = `<span class="text-xs font-bold text-slate-400">(${item.pendingCredits || 0} Cr)</span>`;
-        }
-
-        let statusBadge = '';
-        if (item.statusStyle === 'green') {
-            statusBadge = `<span class="bg-green-100 text-green-800 border border-green-300 px-2.5 py-0.5 rounded-full text-[10px] font-black"><i class="fa-solid fa-check-circle mr-1"></i>${item.statusText}</span>`;
-        } else if (item.statusStyle === 'red') {
-            statusBadge = `<span class="bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full text-[10px] font-black"><i class="fa-solid fa-circle-minus mr-1"></i>${item.statusText}</span>`;
-        } else if (item.statusStyle === 'purple') {
-            statusBadge = `<span class="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-full text-[10px] font-black"><i class="fa-solid fa-gift mr-1"></i>${item.statusText}</span>`;
-        } else if (item.statusStyle === 'indigo') {
-            statusBadge = `<span class="bg-indigo-100 text-indigo-800 border border-indigo-300 px-2.5 py-0.5 rounded-full text-[10px] font-black animate-pulse"><i class="fa-solid fa-ticket mr-1"></i>Ticket Raised</span>`;
-        } else if (item.statusStyle === 'amber') {
-            const verifyBtn = item.rawOrderId && String(item.rawOrderId).startsWith('order_')
-                ? `<button onclick="window.verifyPendingOrderFromPassbook('${item.rawOrderId}', ${item.pendingCredits || 0}, ${item.amountRupees || 0}, this)" class="ml-1.5 bg-amber-500 hover:bg-amber-600 text-dark-950 px-2 py-0.5 rounded-md text-[10px] font-black transition shadow-sm"><i class="fa-solid fa-rotate mr-0.5"></i>Auto-Verify</button>`
-                : '';
-            statusBadge = `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-full text-[10px] font-black"><i class="fa-solid fa-clock mr-1"></i>${item.statusText}</span>${verifyBtn}`;
-        } else {
-            statusBadge = `<span class="bg-slate-100 text-slate-500 border border-slate-300 px-2.5 py-0.5 rounded-full text-[10px] font-bold">${item.statusText}</span>`;
-        }
-
-        return `
-            <tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
-                <td class="p-3 text-slate-500 font-medium whitespace-nowrap">
-                    ${dateStr}<br><span class="text-[10px] text-slate-400">${timeStr}</span>
-                </td>
-                <td class="p-3 whitespace-nowrap">${tagBadge}</td>
-                <td class="p-3">
-                    <div class="font-black text-slate-800 text-xs">${item.title}</div>
-                    <div class="text-[11px] font-semibold text-slate-500 truncate max-w-[280px]" title="${item.subtitle}">${item.subtitle}</div>
-                </td>
-                <td class="p-3 whitespace-nowrap">${creditCellHtml}</td>
-                <td class="p-3 font-mono font-bold text-slate-600 text-[11px] whitespace-nowrap">${item.refText}</td>
-                <td class="p-3 text-right whitespace-nowrap">${statusBadge}</td>
-            </tr>
-        `;
-    }).join('');
-};
-
-// ================= SWITCH SERVICE TABS =================
 window.switchService = async function(serviceName) {
     if (!serviceName) serviceName = window.getFirstAllowedTab();
 
@@ -1998,31 +690,11 @@ window.switchService = async function(serviceName) {
     if (serviceName === 'password') {
         container.innerHTML = `
         <div class="max-w-md mx-auto space-y-4 pt-2">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-key text-royal-500 mr-1.5"></i> Change Portal Password</h3>
-            </div>
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4"><h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-key text-royal-500 mr-1.5"></i> Change Portal Password</h3></div>
             <form onsubmit="window.changeUserPassword(event)" class="bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Current Password (पुराना पासवर्ड)</label>
-                    <div class="relative">
-                        <input type="password" id="currentPassInput" required class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white">
-                        <button type="button" onclick="window.togglePassVisibility('currentPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">New Password (नया पासवर्ड)</label>
-                    <div class="relative">
-                        <input type="password" id="newPassInput" required minlength="6" placeholder="कम से कम 6 अक्षर का होना चाहिए" class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white">
-                        <button type="button" onclick="window.togglePassVisibility('newPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Confirm New Password (कन्फर्म करें)</label>
-                    <div class="relative">
-                        <input type="password" id="confirmPassInput" required minlength="6" placeholder="नया पासवर्ड दोबारा लिखें" class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white">
-                        <button type="button" onclick="window.togglePassVisibility('confirmPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button>
-                    </div>
-                </div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Current Password</label><div class="relative"><input type="password" id="currentPassInput" required class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('currentPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">New Password</label><div class="relative"><input type="password" id="newPassInput" required minlength="6" placeholder="कम से कम 6 अक्षर" class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('newPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Confirm New Password</label><div class="relative"><input type="password" id="confirmPassInput" required minlength="6" placeholder="दोबारा लिखें" class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('confirmPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
                 <div id="passChangeMsg" style="display:none;"></div>
                 <button type="submit" id="btnChangePass" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-glow transition">Update Password</button>
             </form>
@@ -2034,10 +706,7 @@ window.switchService = async function(serviceName) {
         container.innerHTML = `
         <div id="walletMainUI" class="max-w-xl mx-auto space-y-4">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
-                <div>
-                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-shield-halved text-royal-500 mr-1.5"></i> Instant Razorpay Wallet Recharge</h3>
-                    <p class="text-[11px] font-bold text-slate-500">Razorpay QR / UPI / Card से पेमेंट करें • 100% ऑटोमैटिक वेरिफिकेशन</p>
-                </div>
+                <div><h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-shield-halved text-royal-500 mr-1.5"></i> Instant Razorpay Wallet Recharge</h3><p class="text-[11px] font-bold text-slate-500">Razorpay QR / UPI / Card से पेमेंट करें • 100% ऑटोमैटिक वेरिफिकेशन</p></div>
                 <span class="bg-royal-100 text-royal-900 border border-royal-300 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase">₹1 = 1 Credit</span>
             </div>
             <div id="paymentStep1" class="space-y-4">
@@ -2062,46 +731,19 @@ window.switchService = async function(serviceName) {
                     <div class="flex justify-between font-bold text-slate-700"><span>• केवल स्टैम्प (+₹20) | सर्टिफिकेट (+₹20):</span><span class="font-black text-royal-700">₹30 (Stamp) / ₹50 (Complete)</span></div>
                 </div>
                 <div class="bg-dark-950 p-5 rounded-2xl text-white space-y-3 border border-royal-500/40 shadow-lg">
-                    <div class="flex justify-between items-center pb-3 border-b border-slate-800">
-                        <span class="text-xs font-bold text-slate-400">Credits You Get:</span>
-                        <span id="calculatedCredits" class="text-lg font-black text-emerald-400">100 Cr</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-sm font-black uppercase text-royal-300">Total Payable:</span>
-                        <span id="totalPayableDisplay" class="text-2xl font-black text-white">₹100</span>
-                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-800"><span class="text-xs font-bold text-slate-400">Credits You Get:</span><span id="calculatedCredits" class="text-lg font-black text-emerald-400">100 Cr</span></div>
+                    <div class="flex justify-between items-center"><span class="text-sm font-black uppercase text-royal-300">Total Payable:</span><span id="totalPayableDisplay" class="text-2xl font-black text-white">₹100</span></div>
                     <button id="btnGenerateQR" onclick="window.generateQR()" class="w-full bg-gradient-to-r from-indigo-600 via-royal-500 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-black py-4 rounded-xl shadow-glow transition flex items-center justify-center gap-2 text-sm">
-                        <i class="fa-solid fa-qrcode text-base"></i>
-                        <span>Pay Now via Razorpay (QR / UPI / Card • Auto-Verify)</span>
+                        <i class="fa-solid fa-qrcode text-base"></i><span>Pay Now via Razorpay (QR / UPI / Card • Auto-Verify)</span>
                     </button>
-                    <p class="text-[11px] text-slate-400 text-center font-semibold">
-                        <i class="fa-solid fa-bolt text-amber-400 mr-1"></i>Razorpay का ऑफिशियल QR कोड और UPI पॉपअप खुलेगा — पेमेंट होते ही क्रेडिट तुरंत जुड़ जाएंगे।
-                    </p>
                 </div>
-
                 <div id="rzpPaymentStatusBanner" style="display:none;"></div>
-
-                <div class="w-full pt-2 text-center">
-                    <button type="button" onclick="window.togglePaymentTicketBox()" class="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-xs font-black text-amber-900 transition flex items-center justify-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-ticket text-amber-600"></i> पेमेंट कट गया पर क्रेडिट नहीं मिला? Ticket जनरेट करें
-                    </button>
-                </div>
+                <div class="w-full pt-2 text-center"><button type="button" onclick="window.togglePaymentTicketBox()" class="w-full py-2.5 px-4 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-xs font-black text-amber-900 transition flex items-center justify-center gap-1.5 shadow-sm"><i class="fa-solid fa-ticket text-amber-600"></i> पेमेंट कट गया पर क्रेडिट नहीं मिला? Ticket जनरेट करें</button></div>
                 <div id="paymentIssueTicketBox" style="display:none;" class="bg-indigo-50 dark:bg-slate-800 p-4 rounded-2xl border-2 border-indigo-300 dark:border-slate-700 w-full space-y-2.5">
-                    <div class="flex items-center justify-between border-b border-indigo-200 pb-2">
-                        <span class="text-xs font-black text-indigo-950 uppercase"><i class="fa-solid fa-headset mr-1 text-indigo-600"></i> Raise Payment Ticket</span>
-                        <span class="bg-amber-200 text-amber-950 text-[9px] font-black px-2 py-0.5 rounded-full">24–48 Hours Resolution</span>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-indigo-900 dark:text-indigo-300 uppercase mb-1">12-Digit UTR / Razorpay Payment ID <span class="text-red-500">*</span></label>
-                        <input type="text" id="ticketUtrInput" placeholder="e.g. pay_Pxyz123456 या 412345678901" class="w-full p-2.5 border border-indigo-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-indigo-900 dark:text-indigo-300 uppercase mb-1">समस्या का विवरण (Optional Note)</label>
-                        <input type="text" id="ticketIssueNoteInput" placeholder="e.g. Razorpay से ₹100 कट गए हैं, कृपया अप्रूव करें" class="w-full p-2.5 border border-indigo-300 dark:border-slate-600 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 outline-none">
-                    </div>
-                    <button type="button" id="btnRaisePaymentTicket" onclick="window.submitPaymentIssueTicket()" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3 rounded-xl text-xs shadow-glow transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-paper-plane"></i> Submit Ticket (24–48h Approval)
-                    </button>
+                    <div class="flex items-center justify-between border-b border-indigo-200 pb-2"><span class="text-xs font-black text-indigo-950 uppercase"><i class="fa-solid fa-headset mr-1 text-indigo-600"></i> Raise Payment Ticket</span><span class="bg-amber-200 text-amber-950 text-[9px] font-black px-2 py-0.5 rounded-full">24–48 Hours Resolution</span></div>
+                    <div><label class="block text-[10px] font-black text-indigo-900 dark:text-indigo-300 uppercase mb-1">12-Digit UTR / Razorpay Payment ID <span class="text-red-500">*</span></label><input type="text" id="ticketUtrInput" placeholder="e.g. pay_Pxyz123456 या 412345678901" class="w-full p-2.5 border border-indigo-300 dark:border-slate-600 rounded-xl text-xs font-bold bg-white dark:bg-slate-900 outline-none"></div>
+                    <div><label class="block text-[10px] font-black text-indigo-900 dark:text-indigo-300 uppercase mb-1">समस्या का विवरण (Optional Note)</label><input type="text" id="ticketIssueNoteInput" placeholder="e.g. Razorpay से ₹100 कट गए हैं, कृपया अप्रूव करें" class="w-full p-2.5 border border-indigo-300 dark:border-slate-600 rounded-xl text-xs font-semibold bg-white dark:bg-slate-900 outline-none"></div>
+                    <button type="button" id="btnRaisePaymentTicket" onclick="window.submitPaymentIssueTicket()" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3 rounded-xl text-xs shadow-glow transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-paper-plane"></i> Submit Ticket (24–48h Approval)</button>
                     <div id="paymentTicketResultMsg" style="display:none;"></div>
                 </div>
             </div>
@@ -2129,82 +771,30 @@ window.switchService = async function(serviceName) {
         container.innerHTML = `
         <div class="space-y-4">
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3">
-                <div>
-                    <h3 class="text-base md:text-lg font-black text-dark-900 flex items-center gap-2">
-                        <i class="fa-solid fa-book-open-reader text-royal-500"></i> Wallet Passbook &amp; Credit History (वॉलेट पासबुक)
-                    </h3>
-                    <p class="text-[11px] font-bold text-slate-500">आपके सभी रिचार्ज, हर कार्ड बनने पर कटे क्रेडिट्स, रिफंड और एडमिन गिफ्ट का पूरा हिसाब</p>
-                </div>
-                <button onclick="window.loadUserPayments()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-rotate-right"></i> Refresh Passbook
-                </button>
+                <div><h3 class="text-base md:text-lg font-black text-dark-900 flex items-center gap-2"><i class="fa-solid fa-book-open-reader text-royal-500"></i> Wallet Passbook &amp; Credit History (वॉलेट पासबुक)</h3><p class="text-[11px] font-bold text-slate-500">आपके सभी रिचार्ज, हर कार्ड बनने पर कटे क्रेडिट्स, रिफंड और एडमिन गिफ्ट का पूरा हिसाब</p></div>
+                <button onclick="window.loadUserPayments()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3.5 py-2 rounded-xl text-xs font-black transition flex items-center gap-1.5"><i class="fa-solid fa-rotate-right"></i> Refresh Passbook</button>
             </div>
-
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                <div class="p-3 rounded-2xl bg-dark-950 text-white border border-royal-500/40 shadow-sm">
-                    <p class="text-[10px] font-bold text-royal-300 uppercase">वर्तमान बैलेंस (Wallet)</p>
-                    <p id="sumCurrentBalance" class="text-lg md:text-xl font-black text-white mt-0.5">${window.currentUserData?.credits || 0} Cr</p>
-                </div>
-                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200">
-                    <p class="text-[10px] font-black text-emerald-800 uppercase">कुल रिचार्ज (Recharged)</p>
-                    <p id="sumApprovedAmt" class="text-lg md:text-xl font-black text-emerald-700 mt-0.5">+0 Cr</p>
-                </div>
-                <div class="p-3 rounded-2xl bg-rose-50 border border-rose-200">
-                    <p class="text-[10px] font-black text-rose-800 uppercase">कार्ड खर्च (Card Deduct)</p>
-                    <p id="sumTotalDeducted" class="text-lg md:text-xl font-black text-rose-600 mt-0.5">-0 Cr</p>
-                </div>
-                <div class="p-3 rounded-2xl bg-purple-50 border border-purple-200">
-                    <p class="text-[10px] font-black text-purple-800 uppercase">रिफंड + गिफ्ट (Refund/Gift)</p>
-                    <p id="sumTotalRefundGift" class="text-lg md:text-xl font-black text-purple-700 mt-0.5">+0 Cr</p>
-                </div>
-                <div class="col-span-2 sm:col-span-1 p-3 rounded-2xl bg-amber-50 border border-amber-200">
-                    <p class="text-[10px] font-black text-amber-800 uppercase">पेंडिंग रिचार्ज (Pending)</p>
-                    <p id="sumPendingAmt" class="text-lg md:text-xl font-black text-amber-700 mt-0.5">₹0 (0)</p>
-                </div>
+                <div class="p-3 rounded-2xl bg-dark-950 text-white border border-royal-500/40 shadow-sm"><p class="text-[10px] font-bold text-royal-300 uppercase">वर्तमान बैलेंस (Wallet)</p><p id="sumCurrentBalance" class="text-lg md:text-xl font-black text-white mt-0.5">${window.currentUserData?.credits || 0} Cr</p></div>
+                <div class="p-3 rounded-2xl bg-emerald-50 border border-emerald-200"><p class="text-[10px] font-black text-emerald-800 uppercase">कुल रिचार्ज (Recharged)</p><p id="sumApprovedAmt" class="text-lg md:text-xl font-black text-emerald-700 mt-0.5">+0 Cr</p></div>
+                <div class="p-3 rounded-2xl bg-rose-50 border border-rose-200"><p class="text-[10px] font-black text-rose-800 uppercase">कार्ड खर्च (Card Deduct)</p><p id="sumTotalDeducted" class="text-lg md:text-xl font-black text-rose-600 mt-0.5">-0 Cr</p></div>
+                <div class="p-3 rounded-2xl bg-purple-50 border border-purple-200"><p class="text-[10px] font-black text-purple-800 uppercase">रिफंड + गिफ्ट (Refund/Gift)</p><p id="sumTotalRefundGift" class="text-lg md:text-xl font-black text-purple-700 mt-0.5">+0 Cr</p></div>
+                <div class="col-span-2 sm:col-span-1 p-3 rounded-2xl bg-amber-50 border border-amber-200"><p class="text-[10px] font-black text-amber-800 uppercase">पेंडिंग रिचार्ज (Pending)</p><p id="sumPendingAmt" class="text-lg md:text-xl font-black text-amber-700 mt-0.5">₹0 (0)</p></div>
             </div>
-
             <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200 space-y-2.5">
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
-                    <button id="pbPill-ALL" onclick="window.setPassbookFilter('ALL')" class="px-3 py-2 rounded-xl text-xs font-black bg-dark-900 text-royal-300 shadow-sm border border-royal-500/40 transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-list-ul"></i> <span>All (सभी)</span>
-                    </button>
-                    <button id="pbPill-RECHARGE" onclick="window.setPassbookFilter('RECHARGE')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-wallet text-emerald-600"></i> <span>Recharges (रिचार्ज)</span>
-                    </button>
-                    <button id="pbPill-DEDUCTION" onclick="window.setPassbookFilter('DEDUCTION')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-file-invoice text-rose-600"></i> <span>Card Deductions (कार्ड खर्च)</span>
-                    </button>
-                    <button id="pbPill-REFUND" onclick="window.setPassbookFilter('REFUND')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-rotate-left text-teal-600"></i> <span>Refunds (रिफंड)</span>
-                    </button>
-                    <button id="pbPill-GIFT" onclick="window.setPassbookFilter('GIFT')" class="col-span-2 sm:col-span-1 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5">
-                        <i class="fa-solid fa-gift text-purple-600"></i> <span>Admin Gifts (गिफ्ट)</span>
-                    </button>
+                    <button id="pbPill-ALL" onclick="window.setPassbookFilter('ALL')" class="px-3 py-2 rounded-xl text-xs font-black bg-dark-900 text-royal-300 shadow-sm border border-royal-500/40 transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-list-ul"></i> <span>All (सभी)</span></button>
+                    <button id="pbPill-RECHARGE" onclick="window.setPassbookFilter('RECHARGE')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-wallet text-emerald-600"></i> <span>Recharges</span></button>
+                    <button id="pbPill-DEDUCTION" onclick="window.setPassbookFilter('DEDUCTION')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-file-invoice text-rose-600"></i> <span>Card Deductions</span></button>
+                    <button id="pbPill-REFUND" onclick="window.setPassbookFilter('REFUND')" class="px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-rotate-left text-teal-600"></i> <span>Refunds</span></button>
+                    <button id="pbPill-GIFT" onclick="window.setPassbookFilter('GIFT')" class="col-span-2 sm:col-span-1 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200 transition flex items-center justify-center gap-1.5"><i class="fa-solid fa-gift text-purple-600"></i> <span>Admin Gifts</span></button>
                 </div>
                 <div class="flex flex-wrap items-center justify-between gap-2">
-                    <div class="relative flex-1 min-w-[200px]">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                        <input type="text" id="passbookSearchInput" oninput="window.renderUserPassbookLedger()" placeholder="नाम, कार्ड का प्रकार (DOB, Domicile, Gazette), BRN या UTR से खोजें..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-white outline-none focus:border-royal-400">
-                    </div>
+                    <div class="relative flex-1 min-w-[200px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i><input type="text" id="passbookSearchInput" oninput="window.renderUserPassbookLedger()" placeholder="नाम, कार्ड का प्रकार, BRN या UTR से खोजें..." class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-xl text-xs font-bold bg-white outline-none focus:border-royal-400"></div>
                     <span id="passbookCountLabel" class="text-[11px] font-black text-royal-600 px-2">Showing 0 Transactions</span>
                 </div>
             </div>
-
-            <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm">
-                <table class="w-full text-left border-collapse bg-white min-w-[660px]">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                        <tr>
-                            <th class="p-3">तारीख व समय</th>
-                            <th class="p-3">कैटेगरी (Type)</th>
-                            <th class="p-3">विवरण (किस कार्ड / रिचार्ज पर)</th>
-                            <th class="p-3">क्रेडिट्स (+/- Cr)</th>
-                            <th class="p-3">रेफरेंस / UTR / ID</th>
-                            <th class="p-3 text-right">स्टेटस</th>
-                        </tr>
-                    </thead>
-                    <tbody id="userPaymentsTableBody" class="text-xs text-slate-700 divide-y divide-slate-100"></tbody>
-                </table>
-            </div>
+            <div class="overflow-x-auto border border-slate-200 rounded-2xl shadow-sm"><table class="w-full text-left border-collapse bg-white min-w-[660px]"><thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-wider"><tr><th class="p-3">तारीख व समय</th><th class="p-3">कैटेगरी</th><th class="p-3">विवरण</th><th class="p-3">क्रेडिट्स</th><th class="p-3">रेफरेंस</th><th class="p-3 text-right">स्टेटस</th></tr></thead><tbody id="userPaymentsTableBody" class="text-xs text-slate-700 divide-y divide-slate-100"></tbody></table></div>
         </div>`;
         window.currentPassbookFilter = 'ALL';
         window.loadUserPayments();
@@ -2224,15 +814,9 @@ window.switchService = async function(serviceName) {
         const vipFilterOptions = `${evoterOpt}${dobDelhiOpt}${passportOpt}${minorOpt}${dobPrintOpt}${gazetteOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>`;
 
         container.innerHTML = `<div class="flex flex-wrap justify-between items-center gap-3 border-b border-slate-100 pb-3 mb-4">
-            <div>
-                <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-folder-open text-royal-500 mr-1.5"></i> Document History</h3>
-                <p id="userHistoryCount" class="text-[11px] font-bold text-royal-600">Total Files: 0</p>
-            </div>
+            <div><h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-folder-open text-royal-500 mr-1.5"></i> Document History</h3><p id="userHistoryCount" class="text-[11px] font-bold text-royal-600">Total Files: 0</p></div>
             <div class="flex flex-wrap items-center gap-2">
-                <div class="relative min-w-[170px]">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                    <input type="text" id="userHistorySearchInput" oninput="window.handleUserHistoryFilterChange()" placeholder="नाम या फ़ाइल से खोजें..." class="w-full pl-8 pr-2.5 py-1.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold outline-none focus:bg-white focus:border-royal-400">
-                </div>
+                <div class="relative min-w-[170px]"><i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i><input type="text" id="userHistorySearchInput" oninput="window.handleUserHistoryFilterChange()" placeholder="नाम या फ़ाइल से खोजें..." class="w-full pl-8 pr-2.5 py-1.5 border border-slate-200 rounded-xl text-xs bg-slate-50 font-bold outline-none focus:bg-white focus:border-royal-400"></div>
                 <select id="userHistoryTypeFilter" onchange="window.handleUserHistoryFilterChange()" class="p-2 border border-slate-200 rounded-xl text-xs bg-slate-50 font-semibold outline-none"><option value="ALL">All Documents</option>${domOpt}${casOpt}${vipFilterOptions}</select>
                 <button onclick="window.loadUserHistory()" class="bg-slate-100 text-slate-600 px-3 py-2 rounded-xl text-xs font-bold hover:bg-slate-200"><i class="fa-solid fa-rotate-right"></i></button>
             </div>
@@ -2241,80 +825,4 @@ window.switchService = async function(serviceName) {
 
         window.loadUserHistory();
     }
-};
-
-// ================= DOB ORIGINAL PDF STATUS CHECK & STREAM PROXY =================
-window.checkDobPrintOrderStatus = async function(docId, btnEl, silent = false) {
-    if (!docId || !window.fb.auth.currentUser) return;
-    const origHtml = btnEl ? btnEl.innerHTML : '';
-    if (btnEl) {
-        btnEl.disabled = true;
-        btnEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
-    }
-    try {
-        const idToken = await window.fb.auth.currentUser.getIdToken(true);
-        const res = await fetch('/api/dob-print', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`
-            },
-            body: JSON.stringify({ action: 'check_status', docId })
-        });
-        const data = await res.json();
-        const isReady = Boolean(data.hasPdf || data.apiStatus === 'successful' || data.apiStatus === 'approved');
-
-        if (!silent) {
-            alert(data.message || (isReady ? '✅ SUCCESSFUL! PDF डाउनलोड के लिए तैयार है।' : '⏳ Status: PENDING'));
-        }
-        if (isReady || data.refunded || !silent) {
-            await window.loadUserHistory();
-        }
-    } catch (err) {
-        if (!silent) alert('Error checking status: ' + err.message);
-    } finally {
-        if (btnEl) {
-            btnEl.disabled = false;
-            btnEl.innerHTML = origHtml;
-        }
-    }
-};
-
-window.openServerDobPrintPdf = async function(docId, fileName) {
-    if (!window.fb.auth.currentUser) return;
-    const idToken = await window.fb.auth.currentUser.getIdToken();
-    const proxyViewUrl = `/api/dob-print?action=proxy_pdf&docId=${encodeURIComponent(docId)}&token=${encodeURIComponent(idToken)}`;
-    const proxyDownloadUrl = `${proxyViewUrl}&download=1`;
-
-    document.getElementById('pdfViewerTitle').innerText = fileName || 'DOB Original PDF';
-    const iframe = document.getElementById('pdfIframe');
-    const htmlPreviewContainer = document.getElementById('htmlDocPreviewContainer');
-    const spinner = document.getElementById('pdfLoadingSpinner');
-    const printBtn = document.getElementById('modalPrintBtn');
-
-    htmlPreviewContainer.style.display = 'none';
-    htmlPreviewContainer.innerHTML = '';
-    iframe.style.display = 'block';
-    spinner.style.display = 'flex';
-    iframe.src = proxyViewUrl;
-
-    if (printBtn) {
-        printBtn.onclick = function() {
-            window.open(proxyDownloadUrl, '_blank');
-        };
-    }
-
-    const modal = document.getElementById('pdfViewerModal');
-    if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.remove('hidden');
-    }
-    document.body.style.overflow = 'hidden';
-};
-
-window.downloadServerDobPrintPdf = async function(docId) {
-    if (!window.fb.auth.currentUser) return;
-    const idToken = await window.fb.auth.currentUser.getIdToken();
-    const proxyDownloadUrl = `/api/dob-print?action=proxy_pdf&docId=${encodeURIComponent(docId)}&token=${encodeURIComponent(idToken)}&download=1`;
-    window.open(proxyDownloadUrl, '_blank');
 };

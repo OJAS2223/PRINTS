@@ -1,6 +1,6 @@
 // ============================================================================
 // FILE: js/config.js
-// (Firebase upeprint Config, Pricing Rates, District/Tehsil/SDM Data & Form Helpers)
+// (Firebase upeprint Config, Pricing Rates, Admin Roles & Form Helpers)
 // ============================================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -35,7 +35,9 @@ window.fb = {
     doc, getDoc, setDoc, updateDoc, collection, addDoc, getDocs, query, where, onSnapshot, deleteDoc, orderBy, limit, startAfter
 };
 
-window.alert = function(message) {
+window._customAlertOnClose = null;
+window.alert = function(message, onClose = null) {
+    window._customAlertOnClose = typeof onClose === 'function' ? onClose : null;
     let alertModal = document.getElementById('customAlertModal');
     if (!alertModal) {
         alertModal = document.createElement('div');
@@ -54,12 +56,17 @@ window.alert = function(message) {
             </div>
         `;
         document.body.appendChild(alertModal);
-        
+
         window.closeCustomAlert = function() {
             alertModal.classList.remove('opacity-100', 'pointer-events-auto');
             alertModal.classList.add('opacity-0', 'pointer-events-none');
             alertModal.querySelector('div').classList.remove('scale-100');
             alertModal.querySelector('div').classList.add('scale-95');
+            if (typeof window._customAlertOnClose === 'function') {
+                const cb = window._customAlertOnClose;
+                window._customAlertOnClose = null;
+                cb();
+            }
         };
     }
     document.getElementById('customAlertMessage').innerText = message;
@@ -69,16 +76,16 @@ window.alert = function(message) {
     alertModal.querySelector('div').classList.add('scale-100');
 };
 
-// DOB Delhi QR Code Verification Domain (Aap baad mein is URL ko apne hisaab se badal sakte hain)
+// DOB Delhi QR Code Verification Domain
 window.DOB_DELHI_VERIFY_BASE_URL = "https://www.mcdgov.online";
 window.ADMIN_EMAIL = "hkosiun1221@gmail.com";
+window.SUPER_ADMIN_EMAILS = ["hkosiun1221@gmail.com", "ovi@print.com"];
 window.SUB_ADMIN_EMAILS = ["prince@gmail.com", "prince@print.com"];
-window.ADMIN_SECRET_PIN = "1221";
-window.FREE_VIP_EMAILS = []; // No VIP system; all users are normal users
+window.FREE_VIP_EMAILS = [];
 
 window.isSuperAdminEmail = function(email) {
     if (!email) return false;
-    return String(email).trim().toLowerCase() === window.ADMIN_EMAIL.toLowerCase();
+    return window.SUPER_ADMIN_EMAILS.includes(String(email).trim().toLowerCase());
 };
 
 window.isSubAdminEmail = function(email) {
@@ -91,16 +98,6 @@ window.isAnyAdminEmail = function(email) {
 };
 window.MS_PER_DAY = 24 * 60 * 60 * 1000;
 
-// ================= UPDATED SERVICE CREDIT RATES =================
-// • Domicile, Caste, e-Voter ID: 10 Credits (₹10)
-// • DOB Delhi, DOB (Minor): 50 Credits (₹50)
-// • DOB Original PDF: 140 Credits (₹140)
-// • Passport: 30 Credits (₹30)
-// • DOB (Minor Birth Certificate): 50 Credits (₹50)
-// • Annexures (1 to F):
-//     - Generate Annexure = 10 Credits (₹10)
-//     - Admin Stamp Attach = +20 Credits (₹20) -> (Annexure 10 + Stamp 20 = ₹30)
-//     - Admin Certificate Attach = +20 Credits (₹20) -> (Annexure 10 + Stamp 20 + Cert 20 = ₹50 Complete)
 window.ANNEXURE_STAMP_FEE = 20;
 window.ANNEXURE_CERT_FEE = 20;
 
@@ -153,15 +150,13 @@ window.isAllowedPortalEmail = function(email) {
     return cleanEmail.endsWith("@print.com");
 };
 
-// ================= API URLS (Minor/DOB & Certificate on Google Apps Script) =================
 window.API_URLS = {
     "DOB_DELHI": "DELHI",
     "certificate": "https://script.google.com/macros/s/AKfycbxWe_nx9QyfR3oHgJSG7Os_u2FOF22HdPDGUO7nekdwMYIfbNL16LNpIvY2M-QSHTyl/exec",
-    "passport": "PASSPORT",
+    "passport": "LOCAL_HTML_PASSPORT",
     "minor": "https://script.google.com/macros/s/AKfycbwepvaw92YcuQUQCzYi5DXoL4m2OS00_5vShecUJRY_fsnCREpnTFeLgsGGtka0R1Ot/exec"
 };
 
-// ================= APPS SCRIPT SDM & LOCATION LOGIC =================
 window.SDM_LOCATIONS_LIST = [
     { keys: ['BUDHANA', 'बुढ़ाना'], t: 'बुढ़ाना', d: 'मुजफ्फरनगर', o: 'MONIKA SINGH' },
     { keys: ['KHATOLI', 'खतौली'], t: 'खतौली', d: 'मुजफ्फरनगर', o: 'RAHUL SHARMA' },

@@ -1,9 +1,9 @@
 // ============================================================================
 // FILE: js/pdf-engine.js
-// (Template Loader, Auto m.png Stamp, Caste/Domicile/e-Voter Processor & 3x HD PDF Generator)
+// (Template Loader, Auto m.png Stamp, Passport/Caste/Domicile/e-Voter/Gazette/DOB Processors & 3x HD PDF)
 // ============================================================================
 
-import "./config.js?v=9.0";
+import "./config.js?v=9.1";
 
 window.TEMPLATE_FILES_MAP = {
     'LOCAL_HTML_CASTE': 'caste.html',
@@ -12,6 +12,7 @@ window.TEMPLATE_FILES_MAP = {
     'LOCAL_HTML_DOB_DELHI': 'dob-delhi.html',
     'LOCAL_HTML_GAZETTE': 'gazette.html',
     'LOCAL_HTML_DOB_PRINT': 'dob-print.html',
+    'LOCAL_HTML_PASSPORT': 'passport.html',
     'LOCAL_HTML_ANNEXURE_1': 'annexure-1.html',
     'LOCAL_HTML_ANNEXURE_1A': 'annexure-1a.html',
     'LOCAL_HTML_ANNEXURE_3': 'annexure-3.html',
@@ -29,16 +30,16 @@ window.preloadAllHtmlTemplates = async function() {
     await Promise.all(entries.map(async ([fileId, fileName]) => {
         if (window.loadedTemplatesCache[fileId]) return;
         const candidatePaths = [
-            `/templates/${fileName}?v=9.0`,
-            `templates/${fileName}?v=9.0`,
-            `../templates/${fileName}?v=9.0`
+            `/templates/${fileName}?v=9.1`,
+            `templates/${fileName}?v=9.1`,
+            `../templates/${fileName}?v=9.1`
         ];
         for (const p of candidatePaths) {
             try {
                 const r = await fetch(p);
                 if (r.ok) {
                     let text = await r.text();
-                    const match = text.match(/<div class="affidavit-paper"[\s\S]*<\/div>/i);
+                    const match = text.match(/<div class="affidavit-paper[\s\S]*<\/div>/i);
                     if (match) text = match[0];
                     window.loadedTemplatesCache[fileId] = text;
                     break;
@@ -49,7 +50,6 @@ window.preloadAllHtmlTemplates = async function() {
 };
 window.preloadAllHtmlTemplates();
 
-// ================= AUTOMATIC m.png STAMP ENGINE FOR CASTE & DOMICILE =================
 window.autoMStampDataUrl = '';
 window.preloadAutoMStamp = function() {
     if (window.autoMStampDataUrl) return Promise.resolve(window.autoMStampDataUrl);
@@ -103,6 +103,100 @@ window.openSavedPhotoPreview = function(photoSrc, personName = 'Applicant') {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+};
+
+// ================= PASSPORT PROCESSOR (LINKS TO templates/passport.html) =================
+window.generateRandomPassportNo = function() {
+    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const prefix = letters.charAt(Math.floor(Math.random() * letters.length));
+    const digits = Math.floor(1000000 + Math.random() * 9000000);
+    return prefix + digits;
+};
+
+window.processPassportData = function(rawFormObj) {
+    const fullName = (rawFormObj.NAME || '').toString().trim().toUpperCase();
+    let surname = (rawFormObj.SURNAME || '').toString().trim().toUpperCase();
+    let givenName = (rawFormObj.GIVEN_NAME || '').toString().trim().toUpperCase();
+
+    if (!givenName && fullName) {
+        const parts = fullName.split(/\s+/);
+        if (parts.length > 1 && !surname) {
+            surname = parts[parts.length - 1];
+            givenName = parts.slice(0, -1).join(' ');
+        } else {
+            givenName = fullName;
+        }
+    }
+
+    const passportNo = (rawFormObj.PASSPORT_NO || '').toString().trim().toUpperCase() || window.generateRandomPassportNo();
+    const sexRaw = (rawFormObj.SEX || 'MALE').toString().trim().toUpperCase();
+    const sexShort = sexRaw.startsWith('F') ? 'F' : 'M';
+
+    const formatToSlash = (dStr) => {
+        if (!dStr) return '';
+        const s = String(dStr).trim();
+        if (s.includes('-')) {
+            const p = s.split('-');
+            if (p.length === 3 && p[0].length === 4) return `${p[2]}/${p[1]}/${p[0]}`;
+        }
+        return s;
+    };
+
+    const toYYMMDD = (slashStr) => {
+        const p = String(slashStr || '').split('/');
+        if (p.length === 3 && p[2].length === 4) {
+            return `${p[2].slice(2)}${p[1].padStart(2, '0')}${p[0].padStart(2, '0')}`;
+        }
+        return '900101';
+    };
+
+    const now = new Date();
+    const todaySlash = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+    const dobSlash = formatToSlash(rawFormObj.DOB) || '01/01/1990';
+    const doiSlash = formatToSlash(rawFormObj.ISSUE_DATE) || todaySlash;
+
+    let doeSlash = formatToSlash(rawFormObj.DOE_SLASH);
+    if (!doeSlash) {
+        const p = doiSlash.split('/');
+        if (p.length === 3) {
+            const expYear = (parseInt(p[2], 10) || now.getFullYear()) + 10;
+            doeSlash = `${p[0]}/${p[1]}/${expYear}`;
+        } else {
+            doeSlash = todaySlash;
+        }
+    }
+
+    const pob = (rawFormObj.POB || rawFormObj.ADDRESS || 'UTTAR PRADESH').toString().trim().toUpperCase().slice(0, 28);
+    const poi = (rawFormObj.POI || 'GHAZIABAD').toString().trim().toUpperCase();
+
+    const mrzNamePart = `${surname.replace(/\s+/g, '<')}<<${givenName.replace(/\s+/g, '<')}`.replace(/[^A-Z<]/g, '');
+    const mrzLine1 = (`P<IND${mrzNamePart}` + '<'.repeat(44)).slice(0, 44);
+
+    const dobYYMMDD = toYYMMDD(dobSlash);
+    const doeYYMMDD = toYYMMDD(doeSlash);
+    const mrzPassport = (passportNo + '<'.repeat(9)).slice(0, 9);
+    const mrzLine2 = (`${mrzPassport}0IND${dobYYMMDD}0${sexShort}${doeYYMMDD}0` + '<'.repeat(44)).slice(0, 44);
+
+    return {
+        SERVICE_TYPE: 'Passport',
+        NAME: fullName || `${givenName} ${surname}`.trim(),
+        PASSPORT_NO: passportNo,
+        SURNAME: surname,
+        GIVEN_NAME: givenName,
+        SEX_SHORT: sexShort,
+        DOB_SLASH: dobSlash,
+        POB: pob,
+        POI: poi,
+        DOI_SLASH: doiSlash,
+        DOE_SLASH: doeSlash,
+        MRZ_LINE_1: mrzLine1,
+        MRZ_LINE_2: mrzLine2,
+        FNAME: (rawFormObj.FNAME || '').toString().trim().toUpperCase(),
+        MNAME: (rawFormObj.MNAME || '').toString().trim().toUpperCase(),
+        PIN: (rawFormObj.PIN || '').toString().trim(),
+        ADDRESS: (rawFormObj.ADDRESS || '').toString().trim().toUpperCase(),
+        PHOTO: rawFormObj.PHOTO || ''
+    };
 };
 
 window.processCasteOrDomicileData = function(rawFormObj, serviceType) {
@@ -171,7 +265,6 @@ window.processCasteOrDomicileData = function(rawFormObj, serviceType) {
     return processed;
 };
 
-// ================= MCD DOB DELHI (BIRTH.HTML) PROCESSOR & LIVE SYNC =================
 window.generateMcdRegNo = function() {
     const rand7 = Math.floor(1000000 + Math.random() * 9000000);
     return `MCDOLIR-2219-00${rand7}`;
@@ -214,7 +307,6 @@ window.processDobDelhiData = function(rawFormObj, docId = '') {
         : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
     const customQr = (rawFormObj.CUSTOM_QR || '').toString().trim();
 
-    // Multi-line QR text payload with transparent background
     const qrTextPayload = customQr || 
 `Name Of The Child - ${name}
 Registration No - ${regNo}
@@ -282,7 +374,7 @@ window.syncMcdPreviewFields = function(sourceType, newVal) {
     const docIdForQr = recForQr?.id || recForQr?.formData?.DOC_ID || '';
     const baseUrl = (window.DOB_DELHI_VERIFY_BASE_URL || "https://www.mcdgov.online").replace(/\/+$/, '');
     const verifyUrl = docIdForQr ? `${baseUrl}/verify/${encodeURIComponent(docIdForQr)}` : `${baseUrl}/verify/${encodeURIComponent(regNo)}`;
-    
+
     const qrTextPayload = 
 `Name Of The Child - ${name}
 Registration No - ${regNo}
@@ -309,82 +401,23 @@ Verified URL: ${verifyUrl}`;
     }
 };
 
-// ================= GAZETTE NOTIFICATION (₹100) & DOB PRINT (₹140) PROCESSORS =================
-// === LARGE POOL OF AUTHENTIC INDIAN GAZETTE ENTRIES (OLD NAME & NEW NAME STRICTLY BOLD) ===
 window.RANDOM_GAZETTE_INDIAN_POOL = [
-    {
-        body: "I, hitherto known as <b>PRABHAS MISTRY</b> son of <b>Shri RAM SARUP SHARMA</b>, employed as Mason, residing at L-117, Gali No. 10, Laxman Puri, Pahar Ganj, New Delhi-110055, have changed my name and shall hereafter be known as <b>PRABHAKAR SHARMA</b>.",
-        signName: "PRABHAS MISTRY",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, <b>VISHAL SHUKLA</b> son of <b>Late DAYA SHANKAR SHUKLA</b>, employed as Chief Manager in the Mazagon Dock Limited, Mumbai-400010, residing at P-502, Jal Vayu Vihar, Ph.-2 &amp; 3, Sector-20, Kharghar, Navi Mumbai-410210, have changed the name of my minor son <b>DAKSH SHUKLA</b>, aged 4 years and he shall hereafter be known as <b>PRANAV SHUKLA</b>.",
-        signName: "VISHAL SHUKLA",
-        signCaption: "[Signature of Guardian]"
-    },
-    {
-        body: "I, hitherto known as <b>SUBRATA DAS</b> son of <b>Late RADHA RAMAN DAS</b>, employed in the Indian Navy, residing at 2/10, Field Marshal Cariappa Colony, Opp. Manipal Center, Cubbon Road, Bangalore-560001, have changed my name and shall hereafter be known as <b>DREYVAN DAYSE</b>.",
-        signName: "SUBRATA DAS",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>SUMIT SAWHNEY</b> son of <b>Sh. RAMAN KUMAR SAWHNEY</b>, residing at H-331, 2nd Floor, New Rajinder Nagar, New Delhi-110060, have changed my name and shall hereafter be known as <b>SUMIT KUMAR SAWAHNEY</b>.",
-        signName: "SUMIT SAWHNEY",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, <b>PIYUSH AGGARWAL</b> son of <b>Sh. M. L. AGGARWAL</b>, employed as Director in the Kwality Expo Link India Pvt. Limited, residing at AA-237, Shalimar Bagh, Delhi-110088, have changed the name of my minor son <b>SAUMITRA AGGARWAL</b>, aged 10 years and he shall hereafter be known as <b>PARTH AGGARWAL</b>.",
-        signName: "PIYUSH AGGARWAL",
-        signCaption: "[Signature of Guardian]"
-    },
-    {
-        body: "I, hitherto known as <b>SANDEEP AGARWAL</b> son of <b>Sh. BAL KRISHNA AGARWAL</b>, employed as Jr. Engineer in C.P.W.D., residing at I-2088, Gaur Green City, Vaibhav Khand, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as <b>SANDEEP AGRAWAL</b>.",
-        signName: "SANDEEP AGARWAL",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>SHIVAM</b> son of <b>Sh. KUNWARPAL SINGH YADAV</b>, residing at B-802, Swami Dayanand CGHS Ltd., Plot No. 5, Sector-6, Dwarka, New Delhi-110075, have changed my name and shall hereafter be known as <b>SHIVAM SINGH</b>.",
-        signName: "SHIVAM",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>RASHI RATHAUR</b> daughter of <b>Sh. LAXMIPAT SANGAL</b>, employed in Private Company, residing at A-401, Rishabh Platinum, Ahinsa Khand-II, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as <b>RASHI SANGAL</b>.",
-        signName: "RASHI RATHAUR",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>ROMILLA BAGGA</b> wife of <b>Sh. SEERAJ BAGGA</b>, employed as MCD Primary School Teacher, residing at C-71, Neeti Bagh, New Delhi-110049, have changed my name and shall hereafter be known as <b>ROMILLA SEERAJ BAGGA</b>.",
-        signName: "ROMILLA BAGGA",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>SATISH CHAND</b> son of <b>Sh. AMI CHAND</b>, residing at 43, Block-P, Sector-12, Noida, Gautam Budh Nagar, Uttar Pradesh-201301, have changed my name and shall hereafter be known as <b>SATISH TITORIA</b>.",
-        signName: "SATISH CHAND",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>MUKUL K. MEHTA</b> son of <b>Sh. KULDIP MEHTA</b>, employed as Chartered Accountant in Practice, residing at 706C, 1st Floor, Sector-22B, Near Anand Farm House, Gurgaon-122001, have changed my name and shall hereafter be known as <b>MUKKUL MEHTA</b>.",
-        signName: "MUKUL K. MEHTA",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>KAVITA NEGI</b> wife of <b>Sh. ANAND SINGH NEGI</b>, a housewife, residing at 56, Gali No. 41, B-Block, Kaushik Enclave, Burari, Delhi-110084, have changed my name and shall hereafter be known as <b>KAMLA NEGI</b>.",
-        signName: "KAVITA NEGI",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>SANJEEV KUMAR</b> son of <b>Sh. SURENDRA KUMAR</b>, employed as Technical Support Supervisor in Dell Computers, residing at 46, Gill Colony, Near Montessori School, Saharanpur, have changed my name and shall hereafter be known as <b>SANJEEV KUMAR ARORA</b>.",
-        signName: "SANJEEV KUMAR",
-        signCaption: "[Signature (in existing old name)]"
-    },
-    {
-        body: "I, hitherto known as <b>BASANT</b> son of <b>Sh. ANUP KUMAR</b>, residing at VPO-Morna, District-Muzaffarnagar, Uttar Pradesh, Pin-251316, have changed my name and shall hereafter be known as <b>BASANT MAHESHWARI</b>.",
-        signName: "BASANT",
-        signCaption: "[Signature (in existing old name)]"
-    }
+    { body: "I, hitherto known as <b>PRABHAS MISTRY</b> son of <b>Shri RAM SARUP SHARMA</b>, employed as Mason, residing at L-117, Gali No. 10, Laxman Puri, Pahar Ganj, New Delhi-110055, have changed my name and shall hereafter be known as <b>PRABHAKAR SHARMA</b>.", signName: "PRABHAS MISTRY", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, <b>VISHAL SHUKLA</b> son of <b>Late DAYA SHANKAR SHUKLA</b>, employed as Chief Manager in the Mazagon Dock Limited, Mumbai-400010, residing at P-502, Jal Vayu Vihar, Ph.-2 &amp; 3, Sector-20, Kharghar, Navi Mumbai-410210, have changed the name of my minor son <b>DAKSH SHUKLA</b>, aged 4 years and he shall hereafter be known as <b>PRANAV SHUKLA</b>.", signName: "VISHAL SHUKLA", signCaption: "[Signature of Guardian]" },
+    { body: "I, hitherto known as <b>SUBRATA DAS</b> son of <b>Late RADHA RAMAN DAS</b>, employed in the Indian Navy, residing at 2/10, Field Marshal Cariappa Colony, Opp. Manipal Center, Cubbon Road, Bangalore-560001, have changed my name and shall hereafter be known as <b>DREYVAN DAYSE</b>.", signName: "SUBRATA DAS", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>SUMIT SAWHNEY</b> son of <b>Sh. RAMAN KUMAR SAWHNEY</b>, residing at H-331, 2nd Floor, New Rajinder Nagar, New Delhi-110060, have changed my name and shall hereafter be known as <b>SUMIT KUMAR SAWAHNEY</b>.", signName: "SUMIT SAWHNEY", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, <b>PIYUSH AGGARWAL</b> son of <b>Sh. M. L. AGGARWAL</b>, employed as Director in the Kwality Expo Link India Pvt. Limited, residing at AA-237, Shalimar Bagh, Delhi-110088, have changed the name of my minor son <b>SAUMITRA AGGARWAL</b>, aged 10 years and he shall hereafter be known as <b>PARTH AGGARWAL</b>.", signName: "PIYUSH AGGARWAL", signCaption: "[Signature of Guardian]" },
+    { body: "I, hitherto known as <b>SANDEEP AGARWAL</b> son of <b>Sh. BAL KRISHNA AGARWAL</b>, employed as Jr. Engineer in C.P.W.D., residing at I-2088, Gaur Green City, Vaibhav Khand, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as <b>SANDEEP AGRAWAL</b>.", signName: "SANDEEP AGARWAL", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>SHIVAM</b> son of <b>Sh. KUNWARPAL SINGH YADAV</b>, residing at B-802, Swami Dayanand CGHS Ltd., Plot No. 5, Sector-6, Dwarka, New Delhi-110075, have changed my name and shall hereafter be known as <b>SHIVAM SINGH</b>.", signName: "SHIVAM", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>RASHI RATHAUR</b> daughter of <b>Sh. LAXMIPAT SANGAL</b>, employed in Private Company, residing at A-401, Rishabh Platinum, Ahinsa Khand-II, Indirapuram, Ghaziabad, have changed my name and shall hereafter be known as <b>RASHI SANGAL</b>.", signName: "RASHI RATHAUR", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>ROMILLA BAGGA</b> wife of <b>Sh. SEERAJ BAGGA</b>, employed as MCD Primary School Teacher, residing at C-71, Neeti Bagh, New Delhi-110049, have changed my name and shall hereafter be known as <b>ROMILLA SEERAJ BAGGA</b>.", signName: "ROMILLA BAGGA", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>SATISH CHAND</b> son of <b>Sh. AMI CHAND</b>, residing at 43, Block-P, Sector-12, Noida, Gautam Budh Nagar, Uttar Pradesh-201301, have changed my name and shall hereafter be known as <b>SATISH TITORIA</b>.", signName: "SATISH CHAND", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>MUKUL K. MEHTA</b> son of <b>Sh. KULDIP MEHTA</b>, employed as Chartered Accountant in Practice, residing at 706C, 1st Floor, Sector-22B, Near Anand Farm House, Gurgaon-122001, have changed my name and shall hereafter be known as <b>MUKKUL MEHTA</b>.", signName: "MUKUL K. MEHTA", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>KAVITA NEGI</b> wife of <b>Sh. ANAND SINGH NEGI</b>, a housewife, residing at 56, Gali No. 41, B-Block, Kaushik Enclave, Burari, Delhi-110084, have changed my name and shall hereafter be known as <b>KAMLA NEGI</b>.", signName: "KAVITA NEGI", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>SANJEEV KUMAR</b> son of <b>Sh. SURENDRA KUMAR</b>, employed as Technical Support Supervisor in Dell Computers, residing at 46, Gill Colony, Near Montessori School, Saharanpur, have changed my name and shall hereafter be known as <b>SANJEEV KUMAR ARORA</b>.", signName: "SANJEEV KUMAR", signCaption: "[Signature (in existing old name)]" },
+    { body: "I, hitherto known as <b>BASANT</b> son of <b>Sh. ANUP KUMAR</b>, residing at VPO-Morna, District-Muzaffarnagar, Uttar Pradesh, Pin-251316, have changed my name and shall hereafter be known as <b>BASANT MAHESHWARI</b>.", signName: "BASANT", signCaption: "[Signature (in existing old name)]" }
 ];
 
-// Helper to ensure Old Name & New Name are ALWAYS bolded even in previously saved records
 window.ensureGazetteNamesBold = function(htmlStr = '') {
     if (!htmlStr || htmlStr.includes('<b>')) return htmlStr;
     return htmlStr
@@ -412,7 +445,6 @@ window.processGazetteData = function(rawFormObj) {
     const fixedIssueDate = "24-Jun-2021";
 
     const gazetteNo = (rawFormObj.GAZETTE_NO || '').toString().trim().toUpperCase() || "CG-DL-W-2021-232514";
-
     const oldName = (rawFormObj.OLD_NAME || '').toString().trim().toUpperCase();
     const newName = (rawFormObj.NEW_NAME || rawFormObj.NAME || '').toString().trim().toUpperCase();
     const fname = (rawFormObj.FNAME || '').toString().trim().toUpperCase();
@@ -422,13 +454,9 @@ window.processGazetteData = function(rawFormObj) {
     const profession = (rawFormObj.REASON || '').toString().trim();
 
     let relWordEn = 'son of';
-    if (relType === 'D/O' || relType.toLowerCase().includes('daughter')) {
-        relWordEn = 'daughter of';
-    } else if (relType === 'W/O' || relType.toLowerCase().includes('wife')) {
-        relWordEn = 'wife of';
-    }
+    if (relType === 'D/O' || relType.toLowerCase().includes('daughter')) relWordEn = 'daughter of';
+    else if (relType === 'W/O' || relType.toLowerCase().includes('wife')) relWordEn = 'wife of';
 
-    // Section 2: Customized Data from Portal Form (Old Name & New Name Strictly Bold)
     let englishBody = '';
     let signName = oldName;
     let signCaption = '[Signature (in existing old name)]';
@@ -454,14 +482,6 @@ window.processGazetteData = function(rawFormObj) {
 
     const [rand1, rand2] = window.pickTwoRandomGazetteEntries(oldName);
 
-    const randomBody1 = window.ensureGazetteNamesBold(rawFormObj.RANDOM_ENGLISH_BODY_1 || rand1.body);
-    const randomSign1 = rawFormObj.RANDOM_SIGN_NAME_1 || rand1.signName;
-    const randomCap1  = rawFormObj.RANDOM_SIGN_CAPTION_1 || rand1.signCaption;
-
-    const randomBody2 = window.ensureGazetteNamesBold(rawFormObj.RANDOM_ENGLISH_BODY_2 || rand2.body);
-    const randomSign2 = rawFormObj.RANDOM_SIGN_NAME_2 || rand2.signName;
-    const randomCap2  = rawFormObj.RANDOM_SIGN_CAPTION_2 || rand2.signCaption;
-
     return {
         SERVICE_TYPE: 'Gazette Notification',
         GAZETTE_NO: gazetteNo,
@@ -477,26 +497,20 @@ window.processGazetteData = function(rawFormObj) {
         ISSUE_DATE: fixedIssueDate,
         ADDRESS: address,
         CHANGE_TYPE: changeMode,
-
-        // Section 1 (Left Column Below NOTICE Box -> Random Indian Data #1)
-        RANDOM_ENGLISH_BODY_1: randomBody1,
-        RANDOM_SIGN_NAME_1: randomSign1,
-        RANDOM_SIGN_CAPTION_1: randomCap1,
-
-        // Section 2 (Right Column Top -> Custom Data from User Form)
+        RANDOM_ENGLISH_BODY_1: window.ensureGazetteNamesBold(rawFormObj.RANDOM_ENGLISH_BODY_1 || rand1.body),
+        RANDOM_SIGN_NAME_1: rawFormObj.RANDOM_SIGN_NAME_1 || rand1.signName,
+        RANDOM_SIGN_CAPTION_1: rawFormObj.RANDOM_SIGN_CAPTION_1 || rand1.signCaption,
         ENGLISH_NOTICE_BODY: englishBody,
         SIGN_NAME: signName,
         SIGN_CAPTION: signCaption,
-
-        // Section 3 (Right Column Bottom -> Random Indian Data #2)
-        RANDOM_ENGLISH_BODY_2: randomBody2,
-        RANDOM_SIGN_NAME_2: randomSign2,
-        RANDOM_SIGN_CAPTION_2: randomCap2,
-
+        RANDOM_ENGLISH_BODY_2: window.ensureGazetteNamesBold(rawFormObj.RANDOM_ENGLISH_BODY_2 || rand2.body),
+        RANDOM_SIGN_NAME_2: rawFormObj.RANDOM_SIGN_NAME_2 || rand2.signName,
+        RANDOM_SIGN_CAPTION_2: rawFormObj.RANDOM_SIGN_CAPTION_2 || rand2.signCaption,
         GI_CODE: '1—390 GI/2013',
         PAGE_NO: rawFormObj.PAGE_NO || '1235'
     };
 };
+
 window.generateDobPrintBrn = function() {
     const year = new Date().getFullYear();
     const rand8 = Math.floor(10000000 + Math.random() * 90000000);
@@ -545,34 +559,15 @@ window.processDobPrintData = function(rawFormObj) {
 
     return {
         SERVICE_TYPE: 'DOB Print',
-        BRN_NO: brnNo,
-        NAME: name,
-        SEX: sex,
-        DOB: dob,
-        DOB_WORDS: dobWords,
-        POB: pob,
-        MNAME: mname,
-        FNAME: fname,
-        MA: maFormatted,
-        FA: faFormatted,
-        ADDRESS: address,
-        PERM_ADDRESS: permAddress,
-        REG_DATE: regDate,
-        ISSUE_DATE: issueDate,
-        HOSPITAL_UNIT: hospitalUnit,
-        PB: hospitalUnit,
-        TAHSEEL: tehsil,
-        TEHSIL: tehsil,
-        DISTRICT: district,
-        STATE_NAME: stateName,
-        STATE_GOVT_HI: 'उत्तर प्रदेश सरकार',
-        STATE_GOVT_EN: 'GOVERNMENT OF UTTAR PRADESH',
-        REMARKS: remarks,
-        QR_URL: qrUrl
+        BRN_NO: brnNo, NAME: name, SEX: sex, DOB: dob, DOB_WORDS: dobWords, POB: pob,
+        MNAME: mname, FNAME: fname, MA: maFormatted, FA: faFormatted,
+        ADDRESS: address, PERM_ADDRESS: permAddress, REG_DATE: regDate, ISSUE_DATE: issueDate,
+        HOSPITAL_UNIT: hospitalUnit, PB: hospitalUnit, TAHSEEL: tehsil, TEHSIL: tehsil,
+        DISTRICT: district, STATE_NAME: stateName, STATE_GOVT_HI: 'उत्तर प्रदेश सरकार',
+        STATE_GOVT_EN: 'GOVERNMENT OF UTTAR PRADESH', REMARKS: remarks, QR_URL: qrUrl
     };
 };
 
-// ================= e-VOTER ID PROCESSOR =================
 window.generateRandomEpicNo = function() {
     const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const prefix = letters.charAt(Math.floor(Math.random()*letters.length)) + letters.charAt(Math.floor(Math.random()*letters.length)) + letters.charAt(Math.floor(Math.random()*letters.length));
@@ -607,23 +602,13 @@ window.processEvoterData = function(rawFormObj) {
 
     const processed = {
         SERVICE_TYPE: 'e-Voter ID',
-        EPIC_NO: epicNo,
-        NAME: nameClean,
-        HNAME: hnameClean,
-        DISPLAY_NAME: displayName,
-        REL_TYPE: rawFormObj.REL_TYPE || 'S/O',
-        REL_LABEL: relLabel,
-        FNAME: toTitleCase(rawFormObj.FNAME || ''),
-        DOB: dobFormatted,
-        SEX: rawFormObj.SEX || 'MALE / पुरुष',
-        DISTRICT: rawFormObj.DISTRICT || 'BAGHPAT',
-        TAHSEEL: rawFormObj.TAHSEEL || match.t,
-        TEHSIL: match.t,
-        DISS: match.d,
-        SDM: match.o,
+        EPIC_NO: epicNo, NAME: nameClean, HNAME: hnameClean, DISPLAY_NAME: displayName,
+        REL_TYPE: rawFormObj.REL_TYPE || 'S/O', REL_LABEL: relLabel,
+        FNAME: toTitleCase(rawFormObj.FNAME || ''), DOB: dobFormatted,
+        SEX: rawFormObj.SEX || 'MALE / पुरुष', DISTRICT: rawFormObj.DISTRICT || 'BAGHPAT',
+        TAHSEEL: rawFormObj.TAHSEEL || match.t, TEHSIL: match.t, DISS: match.d, SDM: match.o,
         ADDRESS: (rawFormObj.ADDRESS || '').toString().trim().toUpperCase(),
-        DATE: issueDate,
-        PHOTO: rawFormObj.PHOTO || ''
+        DATE: issueDate, PHOTO: rawFormObj.PHOTO || ''
     };
 
     const qrText = `e-EPIC: ${processed.EPIC_NO} | Name: ${processed.NAME} | Father/Husband: ${processed.FNAME} | DOB: ${processed.DOB} | Gender: ${processed.SEX} | AC/Tehsil: ${processed.TEHSIL}, ${processed.DISS}`;
@@ -659,7 +644,7 @@ window.buildLocalAffidavitHtml = function(fileId, d = {}, withShadow = true, wit
     let finalStampSrc = stampSrc;
 
     if (isCasteOrDomicile) {
-        effectiveWithStamp = true; // ALWAYS AUTOMATICALLY STAMPED WITH m.png
+        effectiveWithStamp = true;
         finalStampSrc = window.autoMStampDataUrl || '/images/m.png';
     } else if (effectiveWithStamp && !finalStampSrc) {
         finalStampSrc = (typeof window.pickRandomAvailableStamp === 'function' ? window.pickRandomAvailableStamp() : '/images/stamp.png');
@@ -735,17 +720,14 @@ window.downloadHtmlDocAsPdf = async function(fileId, formDataObj, fileName, with
             filename: finalPdfName,
             image: { type: 'jpeg', quality: 1.0 },
             html2canvas: {
-                scale: 3,
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: '#ffffff',
+                scale: 3, useCORS: true, allowTaint: true, backgroundColor: '#ffffff',
                 x: 0, y: 0, scrollX: 0, scrollY: 0,
                 width: 794, height: 1122, windowWidth: 794, windowHeight: 1122
             },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: false }
         };
         await html2pdf().set(opt).from(targetEl).save();
-        
+
         if (certificateFileId) {
             setTimeout(() => {
                 window.open(`https://drive.google.com/uc?export=download&id=${certificateFileId}`, '_blank');
@@ -771,7 +753,7 @@ window.directPrintDocument = async function(fileId, formDataObj, fileName, withS
         } else if (withStamp && typeof window.preloadAllAvailableStamps === 'function' && window.availableStampsList?.length === 0) {
             await window.preloadAllAvailableStamps();
         }
-        
+
         if (certificateFileId) {
             window.open(`https://drive.google.com/file/d/${certificateFileId}/view`, '_blank');
         }
