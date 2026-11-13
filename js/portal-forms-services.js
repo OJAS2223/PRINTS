@@ -336,6 +336,52 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
         return true;
     }
 
+
+    // DOB BARAUT (NAGAR PALIKA PARISHAD BARAUT BIRTH CERTIFICATE)
+    if (serviceName === 'dob_baraut') {
+        const hospitalsList = window.HOSPITALS_LIST || [];
+        const pobOptions = hospitalsList.map(h => `<option value="${h}">${h}</option>`).join('');
+        container.innerHTML = `
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
+                <div>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-baby text-emerald-600 mr-1.5"></i> DOB Baraut (नगर पालिका परिषद बड़ौत)</h3>
+                    <p class="text-[11px] font-bold text-slate-500">Nagar Palika Parishad Baraut Birth Certificate • शुल्क: 50 Credits (₹50)</p>
+                </div>
+                <span class="bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-emerald-300 uppercase">50 Credits (₹50)</span>
+            </div>
+            <div class="relative overflow-hidden rounded-2xl p-1 -mx-1">
+                ${getWatermarkHtml('dob_baraut')}
+                <form onsubmit="window.submitForm(event, 'DOB Baraut')" class="space-y-3.5 relative z-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">नाम / Name (English / हिंदी) <span class="text-red-500">*</span></label><input type="text" name="NAME" placeholder="e.g. OJASVI / ओजस्वी" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">लिंग / Sex <span class="text-red-500">*</span></label><select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none relative z-10"><option value="FEMALE / महिला">FEMALE / महिला</option><option value="MALE / पुरुष">MALE / पुरुष</option></select></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">आधार संख्या / Aadhaar No (वैकल्पिक)</label><input type="text" name="AADHAAR_NO" placeholder="Optional" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">जन्म तिथि / Date of Birth <span class="text-red-500">*</span></label><input type="date" name="DOB" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none relative z-10"></div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[11px] font-bold text-emerald-800 uppercase mb-1">जन्म स्थान / Place of Birth (Baraut Hospitals) <span class="text-red-500">*</span></label>
+                            <select name="POB" onchange="window.toggleCustomInput(this, 'barautPobCustom')" class="w-full p-3 border border-emerald-300 rounded-xl text-sm font-bold bg-emerald-50/50 focus:bg-white outline-none relative z-10">
+                                ${pobOptions}
+                                <option value="OTHER">✍️ अन्य अस्पताल / घर का पता लिखें (Custom)</option>
+                            </select>
+                            <input type="text" id="barautPobCustom" name="POB_CUSTOM" placeholder="अस्पताल या जन्म स्थान का पूरा पता लिखें" style="display:none;" class="w-full mt-2 p-3 border border-emerald-300 rounded-xl text-xs bg-emerald-50 uppercase relative z-10">
+                        </div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">माता का नाम / Mother Name <span class="text-red-500">*</span></label><input type="text" name="MNAME" placeholder="e.g. NIKKI / निक्की" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">पिता का नाम / Father Name <span class="text-red-500">*</span></label><input type="text" name="FNAME" placeholder="e.g. HARISH KUMAR / हरीश कुमार" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">माता का आधार नं. / Mother Aadhaar</label><input type="text" name="MA" placeholder="e.g. XXXX-XXXX-2286" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">पिता का आधार नं. / Father Aadhaar</label><input type="text" name="FA" placeholder="e.g. XXXX-XXXX-7550" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">माता-पिता का पता (Birth Time &amp; Permanent Address Same रहेगा) <span class="text-red-500">*</span></label><input type="text" name="ADDRESS" placeholder="e.g. DOGHAT, BARAUT, BAGHPAT, UTTAR PRADESH, / दोघट (नप) , बड़ौत, बागपत, उत्तर प्रदेश," required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">पंजीकरण संख्या / Registration No. <span class="text-red-500">*</span></label><input type="text" name="BRN_NO" placeholder="e.g. B202409900900004833" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-emerald-800 uppercase mb-1">पंजीकरण एवं जारी तिथि (Reg &amp; Issue Date Same) <span class="text-red-500">*</span></label><input type="date" name="REG_DATE" value="${todayISO}" required class="w-full p-3 border border-emerald-300 rounded-xl text-sm bg-emerald-50/50 focus:bg-white outline-none relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">टिप्पणी / Remarks (Optional)</label><input type="text" name="REMARKS" placeholder="Optional" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-indigo-800 uppercase mb-1">QR Code Link (Manual URL) <span class="text-red-500">*</span></label><input type="url" name="QR_LINK" placeholder="https://..." required class="w-full p-3 border border-indigo-300 rounded-xl text-sm bg-indigo-50/50 focus:bg-white outline-none relative z-10"></div>
+                    </div>
+                    <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base relative z-10">Generate DOB Baraut Certificate (50 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i></button>
+                </form>
+            </div>
+        `;
+        return true;
+    }
+
     // PASSPORT SERVICES (Uses LOCAL_HTML_PASSPORT template!)
     if (serviceName === 'passport') {
         const passportBtnText = 'Generate Passport Document (30 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
