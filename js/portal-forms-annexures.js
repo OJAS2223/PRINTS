@@ -145,23 +145,6 @@ window.renderAnnexureFormHtml = function(serviceName, container, submitBtnText, 
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">12-Digit ID Number (4-4 Pair)</label><input type="text" name="idNumber" oninput="window.format12DigitId(this)" pattern="\\d{4} \\d{4} \\d{4}" minlength="14" maxlength="14" placeholder="XXXX XXXX XXXX" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold tracking-wider uppercase bg-slate-50 relative z-10"></div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">पूरा पता (Complete Address)</label><input type="text" name="address" placeholder="VILL, POST, DISTT, PIN" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold uppercase bg-slate-50 relative z-10"></div>
                         <div>
-                            <label class="block text-[11px] font-bold text-amber-800 uppercase mb-1">पहले दिया गया अमान्य दस्तावेज़ (Invalid Doc)</label>
-                            <select name="invalidDocName" onchange="window.toggleCustomInput(this, 'an3InvDocCustom')" class="w-full p-3 border border-amber-300 rounded-xl text-sm font-bold uppercase bg-amber-50 relative z-10">${window.buildDocSelectOptions("INVALID BIRTH CERTIFICATE")}</select>
-                            <input type="text" id="an3InvDocCustom" name="invalidDocNameCustom" placeholder="अमान्य दस्तावेज़ का नाम लिखें" style="display:none;" class="w-full mt-2 p-2.5 border border-amber-300 rounded-xl text-xs bg-amber-50 uppercase relative z-10">
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-1"><label class="text-[11px] font-bold text-amber-800 uppercase">अमान्य दस्तावेज़ का नंबर (Doc No)</label><label class="inline-flex items-center gap-1 cursor-pointer bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded text-[10px] font-black select-none"><input type="checkbox" onchange="window.toggleNaField(this, 'an3InvDocNo', 'text')" class="accent-dark-900 w-3.5 h-3.5"> टिक करें = NA</label></div>
-                            <input type="text" id="an3InvDocNo" name="invalidDocNo" placeholder="Enter Document No" required class="w-full p-3 border border-amber-300 rounded-xl text-sm font-bold uppercase bg-amber-50 relative z-10">
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-1"><label class="text-[11px] font-bold text-amber-800 uppercase">अमान्य दस्तावेज़ की तारीख (Doc Date)</label><label class="inline-flex items-center gap-1 cursor-pointer bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded text-[10px] font-black select-none"><input type="checkbox" onchange="window.toggleNaField(this, 'an3InvDocDate', 'date')" class="accent-dark-900 w-3.5 h-3.5"> टिक करें = NA</label></div>
-                            <input type="date" id="an3InvDocDate" name="invalidDocDate" required class="w-full p-3 border border-amber-300 rounded-xl text-sm font-bold uppercase bg-amber-50 relative z-10">
-                        </div>
-                        <div>
-                            <div class="flex justify-between items-center mb-1"><label class="text-[11px] font-bold text-amber-800 uppercase">EID Number (एनरोलमेंट आईडी)</label><label class="inline-flex items-center gap-1 cursor-pointer bg-amber-200/80 text-amber-950 px-2 py-0.5 rounded text-[10px] font-black select-none"><input type="checkbox" onchange="window.toggleNaField(this, 'an3EidNo', 'text')" class="accent-dark-900 w-3.5 h-3.5"> टिक करें = NA</label></div>
-                            <input type="text" id="an3EidNo" name="eidNumber" placeholder="Enter EID Number" required class="w-full p-3 border border-amber-300 rounded-xl text-sm font-bold uppercase bg-amber-50 relative z-10">
-                        </div>
-                        <div>
                             <label class="block text-[11px] font-bold text-green-800 uppercase mb-1">अभी दिया जा रहा सही दस्तावेज़</label>
                             <select name="newDoc" onchange="window.toggleCustomInput(this, 'an3NewDocCustom')" class="w-full p-3 border border-green-300 rounded-xl text-sm font-bold uppercase bg-green-50 relative z-10">${window.buildDocSelectOptions("BIRTH CERTIFICATE")}</select>
                             <input type="text" id="an3NewDocCustom" name="newDocCustom" placeholder="सही दस्तावेज़ का नाम लिखें" style="display:none;" class="w-full mt-2 p-2.5 border border-green-300 rounded-xl text-xs bg-green-50 uppercase relative z-10">
