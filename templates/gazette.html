@@ -48,30 +48,20 @@
             background-color: #ffffff !important;
             background: #ffffff !important;
         }
-        /* Identical Increased Typography Classes for All 3 CHANGE OF NAME Sections */
+        /* Identical Typography Classes for All 3 CHANGE OF NAME Sections */
         .gazette-part4-paper .gaz-sec-heading {
             text-align: center !important;
             font-size: 15px !important;
             font-weight: 600 !important;
             letter-spacing: 0.3px !important;
-            margin: 0 0 7px 0 !important;
+            margin: 0 0 6px 0 !important;
             line-height: 1.2 !important;
             background-color: #ffffff !important;
             color: #000000 !important;
         }
         .gazette-part4-paper .gaz-sec-para {
             text-align: justify !important;
-            font-size: 13.8px !important;
-            font-weight: 300 !important;
-            line-height: 1.34 !important;
-            text-indent: 20px !important;
-            margin: 0 0 5px 0 !important;
-            background-color: #ffffff !important;
-            color: #000000 !important;
-        }
-        .gazette-part4-paper .gaz-sec-cert {
-            text-align: justify !important;
-            font-size: 13.8px !important;
+            font-size: 13.5px !important;
             font-weight: 300 !important;
             line-height: 1.32 !important;
             text-indent: 20px !important;
@@ -79,16 +69,26 @@
             background-color: #ffffff !important;
             color: #000000 !important;
         }
+        .gazette-part4-paper .gaz-sec-cert {
+            text-align: justify !important;
+            font-size: 13.5px !important;
+            font-weight: 300 !important;
+            line-height: 1.3 !important;
+            text-indent: 20px !important;
+            margin: 0 0 4px 0 !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
         .gazette-part4-paper .gaz-sec-sign {
             text-align: right !important;
-            font-size: 13.8px !important;
-            line-height: 1.28 !important;
+            font-size: 13.5px !important;
+            line-height: 1.26 !important;
             margin-top: 4px !important;
             background-color: #ffffff !important;
             color: #000000 !important;
         }
         .gazette-part4-paper .gaz-sec-caption {
-            font-size: 12.5px !important;
+            font-size: 12.2px !important;
             font-weight: 300 !important;
             background-color: #ffffff !important;
             color: #000000 !important;
@@ -143,10 +143,10 @@
                     ctx.fillRect(34, 350, 726, 82);
                     /* 2. Erase Blurry Scanned NOTICE Box (54, 620, 332, 188) */
                     ctx.fillRect(54, 620, 332, 188);
-                    /* 3. Erase Left Column Hindi Section (from 800px down to bottom) */
-                    ctx.fillRect(36, 800, 358, 272);
-                    /* 4. Erase Right Column Old Entries (from 604px down to bottom) */
-                    ctx.fillRect(399, 604, 360, 468);
+                    /* 3. Erase Left Column Hindi Section (from 800px down to 1085px) */
+                    ctx.fillRect(36, 800, 358, 285);
+                    /* 4. Erase Right Column Old Entries (from 604px down to 1085px) */
+                    ctx.fillRect(399, 604, 360, 481);
                     this.src = c.toDataURL('image/png');
                 } catch (e) {}
             }
@@ -175,7 +175,7 @@
         </div>
     </div>
 
-    <!-- 2B. OVERLAY 1B: CRISP VECTOR HTML NOTICE BOX (Replaces blurry scanned NOTICE box) -->
+    <!-- 2B. OVERLAY 1B: CRISP VECTOR HTML NOTICE BOX -->
     <div class="pure-white-box en" style="position: absolute !important; top: 625px !important; left: 59px !important; width: 322px !important; height: 176px !important; z-index: 5 !important; background-color: #ffffff !important; border: 2.5px solid #000000 !important; padding: 6px 10px 6px 10px !important; display: flex !important; flex-direction: column !important; justify-content: space-between !important;">
         <div style="text-align: center !important; font-size: 11.5px !important; font-weight: 700 !important; letter-spacing: 0.4px !important; line-height: 1.2 !important; color: #000000 !important; margin-bottom: 3px !important;">
             NOTICE
@@ -189,9 +189,9 @@
         </div>
     </div>
 
-    <!-- 3. OVERLAY 2: SECTION 1 (LEFT COLUMN -> top: 831px) -->
-    <div class="pure-white-box" style="position: absolute !important; top: 831px !important; left: 44px !important; width: 349px !important; height: 252px !important; z-index: 5 !important; overflow: hidden !important; background-color: #ffffff !important;">
-        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='349' height='252'><rect width='100%' height='100%' fill='%23ffffff'/></svg>" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; z-index: 1 !important;" alt="" />
+    <!-- 3. OVERLAY 2: SECTION 1 (LEFT COLUMN -> top: 825px, bottom aligned at 1070px) -->
+    <div class="pure-white-box" style="position: absolute !important; top: 825px !important; left: 44px !important; width: 349px !important; height: 245px !important; z-index: 5 !important; overflow: hidden !important; background-color: #ffffff !important;">
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='349' height='245'><rect width='100%' height='100%' fill='%23ffffff'/></svg>" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; z-index: 1 !important;" alt="" />
         <div class="en" style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; padding: 2px 10px 0 12px !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; background-color: #ffffff !important;">
             <div class="gaz-sec-heading">CHANGE OF NAME</div>
             <div class="gaz-sec-para">
@@ -200,16 +200,16 @@
             <div class="gaz-sec-cert">
                 It is certified that I have complied with other legal requirements in this connection.
             </div>
-            <div class="gaz-sec-sign">
+            <div class="gaz-sec-sign" style="margin-top: auto !important; padding-top: 4px !important;">
                 <b>{{RANDOM_SIGN_NAME_1}}</b><br/>
                 <span class="gaz-sec-caption">{{RANDOM_SIGN_CAPTION_1}}</span>
             </div>
         </div>
     </div>
 
-    <!-- 4. OVERLAY 3: RIGHT COLUMN -> SECTION 2 & SECTION 3 (top: 630px) -->
-    <div class="pure-white-box" style="position: absolute !important; top: 630px !important; left: 401px !important; width: 350px !important; height: 440px !important; z-index: 5 !important; overflow: hidden !important; background-color: #ffffff !important;">
-        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='350' height='448'><rect width='100%' height='100%' fill='%23ffffff'/></svg>" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; z-index: 1 !important;" alt="" />
+    <!-- 4. OVERLAY 3: RIGHT COLUMN -> SECTION 2 & SECTION 3 (top: 625px, bottom aligned at 1070px) -->
+    <div class="pure-white-box" style="position: absolute !important; top: 625px !important; left: 401px !important; width: 350px !important; height: 445px !important; z-index: 5 !important; overflow: hidden !important; background-color: #ffffff !important;">
+        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='350' height='445'><rect width='100%' height='100%' fill='%23ffffff'/></svg>" style="position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: 100% !important; object-fit: fill !important; z-index: 1 !important;" alt="" />
         <div class="en" style="position: relative !important; z-index: 2 !important; width: 100% !important; height: 100% !important; padding: 2px 12px 0 10px !important; display: flex !important; flex-direction: column !important; justify-content: flex-start !important; background-color: #ffffff !important;">
             <div class="gaz-sec-heading">CHANGE OF NAME</div>
 
@@ -225,8 +225,8 @@
                 <span class="gaz-sec-caption">{{SIGN_CAPTION}}</span>
             </div>
 
-            <!-- Divider Line Between Section 2 and Section 3 -->
-            <div style="width: 115px !important; border-bottom: 1.5px solid #000000 !important; margin: 16px auto 16px auto !important; background-color: #ffffff !important;"></div>
+            <!-- Dashed Divider Line Between Section 2 and Section 3 -->
+            <div style="width: 125px !important; border-bottom: 1.5px dashed #000000 !important; margin: 10px auto 10px auto !important; background-color: #ffffff !important;"></div>
 
             <!-- Section 3: Automatic Random Indian Data #2 -->
             <div class="gaz-sec-para">
@@ -235,7 +235,7 @@
             <div class="gaz-sec-cert">
                 It is certified that I have complied with other legal requirements in this connection.
             </div>
-            <div class="gaz-sec-sign">
+            <div class="gaz-sec-sign" style="margin-top: auto !important; padding-top: 4px !important;">
                 <b>{{RANDOM_SIGN_NAME_2}}</b><br/>
                 <span class="gaz-sec-caption">{{RANDOM_SIGN_CAPTION_2}}</span>
             </div>
@@ -243,7 +243,7 @@
     </div>
 
     <!-- 5. BOTTOM FOOTER (1—390 GI/2013 & Page No. 1235) -->
-    <div class="en" style="position: absolute !important; bottom: 32px !important; left: 56px !important; width: 682px !important; z-index: 6 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 12.5px !important; font-weight: 700 !important; color: #000000 !important; background-color: transparent !important;">
+    <div class="en" style="position: absolute !important; bottom: 26px !important; left: 56px !important; width: 682px !important; z-index: 6 !important; display: flex !important; justify-content: space-between !important; align-items: center !important; font-size: 12.5px !important; font-weight: 700 !important; color: #000000 !important; background-color: transparent !important;">
         <span style="background-color: #ffffff !important; padding: 0 4px !important;">1—390 GI/2013</span>
         <span style="background-color: #ffffff !important; padding: 0 4px !important;">(1235)</span>
         <span style="width: 75px;"></span>
