@@ -157,6 +157,7 @@ window.unlockAdminWorkspace = async function(user) {
     const btnDeleteUser = document.getElementById('btnDeleteUserAccount');
     const boxManualCredit = document.getElementById('manualCreditAdjustBox');
     const navBar = document.getElementById('adminNavTabsBar');
+    const secretApiCard = document.getElementById('secretDobApiConfigCard');
 
     if (isSub && !isSuper) {
         if (headerTitleEl) headerTitleEl.innerHTML = `Sub-Admin <span class="text-royal-400">Prince</span>`;
@@ -164,12 +165,15 @@ window.unlockAdminWorkspace = async function(user) {
         if (secCreateUser) secCreateUser.style.display = 'none';
         if (btnDeleteUser) btnDeleteUser.style.display = 'none';
         if (boxManualCredit) boxManualCredit.style.display = 'none';
+        if (secretApiCard) secretApiCard.style.display = 'none';
+        if (document.getElementById('inpSecretDobApiKey')) document.getElementById('inpSecretDobApiKey').value = '';
         if (navBar) navBar.className = "grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 bg-white p-1.5 sm:p-2 rounded-2xl shadow-card border border-slate-200/80 sticky top-[52px] md:top-[68px] z-30";
     } else {
         if (headerTitleEl) headerTitleEl.innerHTML = `Admin <span class="text-royal-400">Harish Kumar</span>`;
         if (tabCreateUser) tabCreateUser.style.display = 'flex';
         if (btnDeleteUser) btnDeleteUser.style.display = 'flex';
         if (boxManualCredit) boxManualCredit.style.display = 'block';
+        if (secretApiCard) secretApiCard.style.display = 'block';
     }
 
     const loginSec = document.getElementById('adminLoginSection');
@@ -433,6 +437,7 @@ window.savePortalSettings = async function(event) {
 };
 
 window.loadDobPrintSecretApiConfig = async function() {
+    if (window.currentUserData?.isSubAdmin && !window.currentUserData?.isSuperAdmin) return;
     try {
         const snap = await getDoc(doc(db, "adminSecrets", "dobPrintConfig"));
         if (snap.exists()) {
@@ -447,6 +452,7 @@ window.loadDobPrintSecretApiConfig = async function() {
 };
 
 window.saveDobPrintSecretApiConfig = async function() {
+    if (window.currentUserData?.isSubAdmin && !window.currentUserData?.isSuperAdmin) return alert('⛔ केवल Super Admin ही API सेटिंग्स देख या बदल सकते हैं।');
     try {
         const payload = {
             baseUrl: document.getElementById('inpSecretDobApiUrl').value.trim(),
