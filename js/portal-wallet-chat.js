@@ -821,7 +821,8 @@ window.switchService = async function(serviceName) {
                 <span class="text-xs font-black text-amber-950">सभी यूज़र्स की फाइल्स (यहीं से Edit व Stamp करें)</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <select id="userHistoryUserFilter" onchange="window.handleUserHistoryFilterChange()" class="p-2 border border-amber-300 rounded-xl text-xs bg-white font-bold text-slate-800 outline-none min-w-[160px]">
+                <select id="userHistoryUserFilter" onchange="this.dataset.userSelected='1';window.handleUserHistoryFilterChange()" class="p-2 border border-amber-300 rounded-xl text-xs bg-white font-bold text-slate-800 outline-none min-w-[160px]">
+                    <option value="${window.currentUserData?.uid || ''}">👑 Admin (${window.currentUserData?.email || 'My Files'})</option>
                     <option value="ALL">All Users (सभी यूज़र)</option>
                 </select>
                 <input type="date" id="userHistoryDateFilter" onchange="window.handleUserHistoryFilterChange()" class="p-1.5 border border-amber-300 rounded-xl text-xs bg-white font-bold text-slate-700 outline-none">
