@@ -488,7 +488,7 @@ window.editAnnexureRecord = async function(docId) {
     const sType = record.serviceType;
     const adminEditTabMap = {
         'Domicile': 'domicile', 'Caste': 'caste', 'e-Voter ID': 'evoter',
-        'DOB Delhi': 'dob_delhi', 'DOB Minor': 'dob_delhi', 'Minor': 'minor', 'DOB': 'minor',
+        'DOB Delhi': 'dob_delhi', 'DOB Minor': 'dob_delhi', 'DOB Baraut': 'dob_baraut', 'Minor': 'minor', 'DOB': 'minor',
         'Passport': 'passport', 'Passport Services': 'passport',
         'Gazette Notification': 'gazette',
         ...(window.ANNEXURE_SERVICE_TO_TAB || {})
