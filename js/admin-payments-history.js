@@ -315,8 +315,8 @@ window.loadAdminHistory = async function(isReset = true) {
             if (rec.withStamp && !window.stampSelectionMap[idx]) {
                 window.stampSelectionMap[idx] = {
                     enabled: true,
-                    stampFile: rec.stampFile || 'stamp.png',
-                    stampSrc: window.getStampDataUrlByName(rec.stampFile || 'stamp.png')
+                    stampFile: rec.stampFile || 'paraut.png',
+                    stampSrc: window.getStampDataUrlByName(rec.stampFile || 'paraut.png')
                 };
             }
             const certEnabled = rec.certificateFileId ? (rec.isCertificateAttached !== false) : false;
@@ -537,15 +537,17 @@ window.toggleRowStampCheckbox = async function(origIndex, isChecked) {
             if (chk) chk.checked = false;
             return;
         }
-        if (window.availableStampsList.length === 0) await window.preloadAllAvailableStamps();
-        const cityDropdown = document.getElementById(`stampCitySelect-${origIndex}`);
-        const selectedCity = cityDropdown?.value || record.stampCity || 'baraut';
-        const chosenObj = window.getStampObjForCity(selectedCity);
-        window.stampSelectionMap[origIndex] = { enabled: true, stampFile: chosenObj.name, stampSrc: chosenObj.dataUrl, stampCity: selectedCity };
+        let stampSrc = typeof window.getTransparentStampDataUrl === 'function'
+            ? await window.getTransparentStampDataUrl('paraut.png')
+            : '/images/paraut.png';
+        if ((!stampSrc || stampSrc === '/images/paraut.png') && typeof window.loadSingleStampFile === 'function') {
+            const loaded = await window.loadSingleStampFile('paraut.png');
+            if (loaded && loaded.dataUrl) stampSrc = loaded.dataUrl;
+        }
+        window.stampSelectionMap[origIndex] = { enabled: true, stampFile: 'paraut.png', stampSrc: stampSrc };
         record.withStamp = true;
-        record.stampFile = chosenObj.name;
-        record.stampCity = selectedCity;
-        try { await updateDoc(doc(db, "history", record.id), { withStamp: true, stampFile: chosenObj.name, stampCity: selectedCity, stampedAt: new Date() }); } catch (e) {}
+        record.stampFile = 'paraut.png';
+        try { await updateDoc(doc(db, "history", record.id), { withStamp: true, stampFile: 'paraut.png', stampedAt: new Date() }); } catch (e) {}
         if (feeRes.chargedNow) {
             alert(`✅ स्टैम्प लगा दिया गया है और यूज़र (${feeRes.userEmail}) के वॉलेट से ${feeRes.fee} Credits (₹${feeRes.fee}) काट लिए गए हैं!\nबचे हुए क्रेडिट्स: ${feeRes.newCredits} Cr`);
         }
@@ -819,33 +821,11 @@ window.renderAdminHistory = function() {
             </label>
         ` : '';
 
-        const currentStampCity = data.stampCity || (stampState && stampState.stampCity) || 'baraut';
-        const stampCheckboxHtml = isAutoStampedCert ? `
-            <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-1.5 rounded-xl text-xs font-black shadow-sm">
-                <i class="fa-solid fa-stamp text-emerald-700"></i> Auto Stamped (m.png)
-            </span>
-        ` : (isAnnexure ? `
-            <div class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-900 border-green-400' : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'} border px-2.5 py-1.5 rounded-xl text-xs font-black shadow-sm">
-                <label class="inline-flex items-center gap-1 cursor-pointer select-none">
-                    <input type="checkbox" id="stampChk-${data._origIndex}" ${isStampChecked ? 'checked' : ''} onchange="window.toggleRowStampCheckbox(${data._origIndex}, this.checked)" class="w-4 h-4 accent-green-600 rounded cursor-pointer">
-                    <span><i class="fa-solid fa-stamp ${isStampChecked ? 'text-green-700' : 'text-amber-600'} mr-0.5"></i> ${isStampChecked ? 'Stamped' : 'Stamp'}</span>
-                </label>
-                <select id="stampCitySelect-${data._origIndex}" onchange="window.changeRowStampCity(${data._origIndex}, this.value)" class="p-1 border border-slate-300 rounded-lg text-[10px] font-black bg-white text-slate-800 outline-none cursor-pointer">
-                    <option value="baraut" ${currentStampCity === 'baraut' ? 'selected' : ''}>Baraut (बड़ौत)</option>
-                    <option value="baghpat" ${currentStampCity === 'baghpat' ? 'selected' : ''}>Baghpat (बागपत)</option>
-                    <option value="kairana" ${currentStampCity === 'kairana' ? 'selected' : ''}>Kairana (कैराना)</option>
-                    <option value="shamli" ${currentStampCity === 'shamli' ? 'selected' : ''}>Shamli (शामली)</option>
-                    <option value="ghaziabad" ${currentStampCity === 'ghaziabad' ? 'selected' : ''}>Ghaziabad (गाजियाबाद)</option>
-                    <option value="muzaffarnagar" ${currentStampCity === 'muzaffarnagar' ? 'selected' : ''}>Muzaffarnagar (मुजफ्फरनगर)</option>
-                    <option value="saharanpur" ${currentStampCity === 'saharanpur' ? 'selected' : ''}>Saharanpur (सहारनपुर)</option>
-                    <option value="meerut" ${currentStampCity === 'meerut' ? 'selected' : ''}>Meerut (मेरठ)</option>
-                </select>
-            </div>
-        ` : '');
-
-        const canAdminEditDoc = !isServerDobPrint && (isLocalDoc || (data.formData && Object.keys(data.formData).length > 0));
-        const editAnnexureBtnHtml = canAdminEditDoc ? `
-            <a href="/portal?editAnnexure=${data.id}" target="_blank" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-2 rounded-xl text-xs font-black transition shadow-sm" title="डॉक्यूमेंट एडिट करें"><i class="fa-solid fa-pen-to-square"></i> Edit</a>
+        const stampCheckboxHtml = isAnnexure ? `
+            <label class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-900 border-green-400' : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'} border px-2.5 py-2 rounded-xl text-xs font-black shadow-sm cursor-pointer select-none transition">
+                <input type="checkbox" id="stampChk-${data._origIndex}" ${isStampChecked ? 'checked' : ''} onchange="window.toggleRowStampCheckbox(${data._origIndex}, this.checked)" class="w-4 h-4 accent-green-600 rounded cursor-pointer">
+                <span><i class="fa-solid fa-stamp ${isStampChecked ? 'text-green-700' : 'text-amber-600'} mr-0.5"></i> ${isStampChecked ? 'Stamped' : 'Stamp'}</span>
+            </label>
         ` : '';
 
         let mainActionBtnsHtml = '';
@@ -879,8 +859,6 @@ window.renderAdminHistory = function() {
                         <div class="flex flex-wrap items-center gap-2">
                             <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-md text-[10px] font-black uppercase">${data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType}</span>
                             ${dobStatusBadgesHtml}
-                            ${data.adminStampCharged ? `<span class="bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-md text-[10px] font-black"><i class="fa-solid fa-stamp mr-0.5"></i>20 Cr Stamp</span>` : ""}
-                            ${data.adminCertCharged ? `<span class="bg-indigo-100 text-indigo-900 border border-indigo-300 px-2 py-0.5 rounded-md text-[10px] font-black"><i class="fa-solid fa-certificate mr-0.5"></i>20 Cr Cert</span>` : ""}
                             ${userBadge}
                             <span class="text-[11px] text-slate-400 font-medium ml-auto xl:ml-0">${dateStr} • ${timeStr}</span>
                         </div>
@@ -890,7 +868,6 @@ window.renderAdminHistory = function() {
                 <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto justify-end shrink-0 border-t xl:border-t-0 pt-2 xl:pt-0 border-slate-100">
                     ${certificateCheckboxHtml}
                     ${stampCheckboxHtml}
-                    ${editAnnexureBtnHtml}
                     ${mainActionBtnsHtml}
                     <button onclick="window.deleteHistoryRecord('${data.id}')" class="w-9 h-9 inline-flex items-center justify-center bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition border border-red-100" title="केवल यही 1 फाइल डिलीट करें"><i class="fa-solid fa-trash"></i></button>
                 </div>
@@ -988,9 +965,14 @@ window.toggleModalStampPreview = async function(isChecked) {
         }
     }
     if (isChecked) {
-        if (window.availableStampsList.length === 0) await window.preloadAllAvailableStamps();
-        const chosenObj = window.pickRandomAvailableStampObj();
-        ctx.withStamp = true; ctx.stampFile = chosenObj.name; ctx.stampSrc = chosenObj.dataUrl;
+        let stampSrc = typeof window.getTransparentStampDataUrl === 'function'
+            ? await window.getTransparentStampDataUrl('paraut.png')
+            : '/images/paraut.png';
+        if ((!stampSrc || stampSrc === '/images/paraut.png') && typeof window.loadSingleStampFile === 'function') {
+            const loaded = await window.loadSingleStampFile('paraut.png');
+            if (loaded && loaded.dataUrl) stampSrc = loaded.dataUrl;
+        }
+        ctx.withStamp = true; ctx.stampFile = 'paraut.png'; ctx.stampSrc = stampSrc;
     } else {
         ctx.withStamp = false; ctx.stampFile = ''; ctx.stampSrc = '';
     }
@@ -1071,11 +1053,6 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
             else modalStampLabel.classList.add('hidden');
         }
         if (modalStampCheckbox) modalStampCheckbox.checked = initialWithStamp;
-        const modalCitySelect = document.getElementById('modalStampCitySelect');
-        if (modalCitySelect) {
-            const record = (window.historyData && window.historyData[historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[historyIndex]);
-            modalCitySelect.value = record?.stampCity || 'baraut';
-        }
 
         const record = (window.historyData && window.historyData[historyIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[historyIndex]);
         const fData = record?.formData || {};
