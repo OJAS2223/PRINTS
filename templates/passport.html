@@ -80,14 +80,15 @@
         </div>
     </div>
 
-    <!-- 3. APPLICANT PASSPORT PHOTO OVERLAY (Exact box on SALIMM.jpg) -->
-    <div style="position: absolute !important; top: 525px !important; left: 185px !important; width: 134px !important; height: 156px !important; z-index: 6 !important; overflow: hidden !important; background-color: #d8e3e7 !important; border-radius: 2px !important;">
+    <!-- 3. APPLICANT PASSPORT PHOTO OVERLAY (Sized & Edge-Blended to SALIMM.jpg) -->
+    <div style="position: absolute !important; top: 520px !important; left: 185px !important; width: 135px !important; height: 150px !important; z-index: 6 !important; overflow: hidden !important; background-color: #d8e3e7 !important; border-radius: 3px !important;">
         <img
             src="{{PHOTO}}"
             onerror="this.style.display='none'"
-            style="width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center top !important;"
+            style="width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center top !important; mix-blend-mode: multiply !important; opacity: 0.94 !important; display: block !important;"
             alt="Passport Photo"
         />
+        <div style="position: absolute !important; inset: 0 !important; pointer-events: none !important; z-index: 2 !important; box-shadow: inset 0 0 10px 4px #d8e3e7 !important; background: radial-gradient(closest-side, rgba(216,227,231,0) 68%, rgba(216,227,231,0.5) 88%, rgba(216,227,231,0.92) 100%) !important;"></div>
     </div>
 
     <!-- 4. PASSPORT BIO DATA OVERLAYS (Pixel-aligned to SALIMM.jpg @ 794x1122) -->
