@@ -87,22 +87,10 @@
                     <h3 id="pdfViewerTitle" class="font-black text-slate-800 text-xs md:text-sm truncate">Document Preview</h3>
                 </div>
                 <div class="flex flex-wrap items-center gap-2 shrink-0">
-                    <div id="modalStampToggleLabel" class="hidden inline-flex items-center gap-2 bg-amber-100 text-amber-950 border border-amber-400 px-3 py-1.5 rounded-xl text-xs font-black select-none shadow-sm">
-                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
-                            <input type="checkbox" id="modalStampCheckbox" onchange="window.toggleModalStampPreview(this.checked)" class="w-4 h-4 accent-amber-600 rounded cursor-pointer">
-                            <span><i class="fa-solid fa-stamp text-amber-700 mr-1"></i> Stamp:</span>
-                        </label>
-                        <select id="modalStampCitySelect" onchange="window.changeModalStampCity(this.value)" class="p-1 border border-amber-300 rounded-lg text-xs font-black bg-white text-slate-800 outline-none cursor-pointer">
-                            <option value="baraut">Baraut (बड़ौत)</option>
-                            <option value="baghpat">Baghpat (बागपत)</option>
-                            <option value="kairana">Kairana (कैराना)</option>
-                            <option value="shamli">Shamli (शामली)</option>
-                            <option value="ghaziabad">Ghaziabad (गाजियाबाद)</option>
-                            <option value="muzaffarnagar">Muzaffarnagar (मुजफ्फरनगर)</option>
-                            <option value="saharanpur">Saharanpur (सहारनपुर)</option>
-                            <option value="meerut">Meerut (मेरठ)</option>
-                        </select>
-                    </div>
+                    <label id="modalStampToggleLabel" class="hidden inline-flex items-center gap-1.5 bg-amber-100 text-amber-950 border border-amber-400 px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer select-none shadow-sm">
+                        <input type="checkbox" id="modalStampCheckbox" onchange="window.toggleModalStampPreview(this.checked)" class="w-4 h-4 accent-amber-600 rounded cursor-pointer">
+                        <span><i class="fa-solid fa-stamp text-amber-700 mr-1"></i> Stamp</span>
+                    </label>
                     <button id="modalDownloadBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-black transition shadow-sm flex items-center gap-1.5">
                         <i class="fa-solid fa-download"></i> Download
                     </button>
