@@ -1,7 +1,7 @@
 // ============================================================================
 // FILE: js/portal-forms-services.js
 // Renders Standard & Main Service Forms (Minor, Domicile, Caste, e-Voter, DOB Delhi, Passport, Gazette, DOB Original PDF)
-// ============================================================================ 
+// ============================================================================
 
 window.renderMainServiceFormHtml = function(serviceName, container, submitBtnText, statusTagHtml, getWatermarkHtml) {
     const todayISO = new Date().toISOString().split('T')[0];
@@ -13,6 +13,36 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
         </select>
         <input type="text" id="customVleInput" name="VLE_CUSTOM" placeholder="VLE का नाम यहाँ लिखें" style="display:none;" class="w-full mt-2 p-2.5 border border-amber-300 rounded-xl text-xs bg-amber-50 uppercase relative z-10">
     `;
+
+    const buildDobGroupSwitcherHtml = (activeDob) => {
+        const items = [];
+        if (window.canCurrentUserSeeService('minor')) items.push({ id: 'minor', label: '🎂 DOB Minor (₹50)' });
+        if (window.canCurrentUserSeeService('dob_delhi')) items.push({ id: 'dob_delhi', label: '🏥 DOB Delhi (MCD • ₹50)' });
+        if (window.canCurrentUserSeeService('dob_baraut')) items.push({ id: 'dob_baraut', label: '🏛️ DOB Baraut (Admin • ₹50)' });
+        if (items.length <= 1) return '';
+
+        const tabsHtml = items.map(it => {
+            const isAct = (it.id === activeDob);
+            return `<button type="button" onclick="window.switchService('${it.id}')" class="px-3.5 py-2 rounded-xl text-xs font-black transition flex-1 min-w-[140px] ${isAct ? 'bg-amber-400 text-dark-950 shadow-sm' : 'bg-dark-800 hover:bg-dark-700 text-slate-200 border border-slate-700'}">${it.label}</button>`;
+        }).join('');
+
+        const optsHtml = items.map(it => `<option value="${it.id}" ${it.id === activeDob ? 'selected' : ''}>${it.label}</option>`).join('');
+
+        return `
+            <div class="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-dark-950 to-slate-900 border border-amber-500/40 shadow-md relative z-20 space-y-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label class="text-[11px] font-black text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-cake-candles"></i> Birth Certificate (DOB) चुनें
+                    </label>
+                    <select onchange="window.switchService(this.value)" class="p-2 border border-slate-700 rounded-xl text-xs font-black bg-dark-900 text-white outline-none cursor-pointer focus:border-amber-400">
+                        ${optsHtml}
+                    </select>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    ${tabsHtml}
+                </div>
+            </div>`;
+    };
 
     // 0. MINOR SERVICE
     if (serviceName === 'minor') {
@@ -29,7 +59,7 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
             <input type="text" id="customPbInput" name="PB_CUSTOM" placeholder="अस्पताल का नाम यहाँ लिखें" style="display:none;" class="w-full mt-2 p-2.5 border border-amber-300 rounded-xl text-xs bg-amber-50 uppercase relative z-10">
         `;
 
-        container.innerHTML = `
+        container.innerHTML = `${buildDobGroupSwitcherHtml('minor')}
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
                 <div>
                     <h3 class="text-base md:text-lg font-black text-dark-900 flex items-center gap-2">
@@ -273,7 +303,7 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
     // DOB DELHI
     if (serviceName === 'dob_delhi' || serviceName === 'dob_minor') {
         const dobDelhiBtnText = 'Generate MCD Delhi Birth Certificate (50 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
-        container.innerHTML = `
+        container.innerHTML = `${buildDobGroupSwitcherHtml('dob_delhi')}
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
                 <div>
                     <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-cake-candles text-royal-500 mr-1.5"></i> MCD Delhi Birth Certificate (दिल्ली जन्म प्रमाण पत्र • Form No. 5)</h3>
