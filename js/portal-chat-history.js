@@ -437,6 +437,8 @@ window.loadUserHistory = async function(isReset = true) {
         window.userHistoryHasMore = true;
         window.userHistoryFallbackCache = null;
         historyContainer.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading records...</td></tr>`;
+        const mobC = document.getElementById('historyMobileCards');
+        if (mobC) mobC.innerHTML = `<div class="p-6 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl border border-slate-200"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading records...</div>`;
     }
 
     if (window.userHistoryIsLoading || !window.userHistoryHasMore) return;
@@ -625,8 +627,10 @@ window.editAnnexureRecord = async function(docId) {
 
 window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearch = '', filterUser = 'ALL') {
     const historyContainer = document.getElementById('historyTableBody');
-    if (!historyContainer) return;
-    historyContainer.innerHTML = '';
+    const mobileCardsContainer = document.getElementById('historyMobileCards');
+    if (!historyContainer && !mobileCardsContainer) return;
+    if (historyContainer) historyContainer.innerHTML = '';
+    if (mobileCardsContainer) mobileCardsContainer.innerHTML = '';
     const isAdmin = Boolean(window.currentUserData?.isAdmin);
     const indexedData = window.historyData.map((item, idx) => ({ ...item, _origIndex: idx }));
     let filteredData = indexedData;
@@ -668,7 +672,8 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
     if (countEl) countEl.innerText = `Total Files: ${filteredData.length}`;
 
     if (filteredData.length === 0) {
-        historyContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 text-xs"><i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i><br>No records found.</td></tr>`;
+        if (historyContainer) historyContainer.innerHTML = `<tr><td colspan="4" class="p-8 text-center text-slate-400 text-xs"><i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i><br>No records found.</td></tr>`;
+        if (mobileCardsContainer) mobileCardsContainer.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs bg-slate-50 rounded-2xl border border-slate-200"><i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300"></i><br>No records found.</div>`;
         return;
     }
 
@@ -737,14 +742,30 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                    </div>`)
             : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button></div>`;
 
-        historyContainer.innerHTML += `
-            <tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
-                <td class="p-3 font-bold text-slate-800">${data.fileName}${badgesHtml}</td>
-                <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType}</span></td>
-                <td class="p-3 text-slate-500 text-[11px] font-medium">${dateStr} <br> ${timeStr}</td>
-                <td class="p-3 text-right whitespace-nowrap">${actionBtnsHtml}</td>
-            </tr>
-        `;
+        const typeLabel = data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType;
+        if (historyContainer) {
+            historyContainer.innerHTML += `
+                <tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
+                    <td class="p-3 font-bold text-slate-800">${data.fileName}${badgesHtml}</td>
+                    <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${typeLabel}</span></td>
+                    <td class="p-3 text-slate-500 text-[11px] font-medium">${dateStr} <br> ${timeStr}</td>
+                    <td class="p-3 text-right whitespace-nowrap">${actionBtnsHtml}</td>
+                </tr>
+            `;
+        }
+        if (mobileCardsContainer) {
+            mobileCardsContainer.innerHTML += `
+                <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">${typeLabel}</span>
+                        <span class="text-[10px] font-bold text-slate-400">${dateStr} • ${timeStr}</span>
+                    </div>
+                    <div class="text-xs font-black text-slate-800 leading-snug break-words">${data.fileName}</div>
+                    ${badgesHtml ? `<div class="flex flex-wrap items-center gap-1">${badgesHtml.replace(/ml-1\.5/g, '')}</div>` : ''}
+                    <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-end gap-1.5">${actionBtnsHtml}</div>
+                </div>
+            `;
+        }
     });
 };
 
