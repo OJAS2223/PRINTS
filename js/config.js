@@ -82,6 +82,20 @@ window.ADMIN_EMAIL = "hkosiun1221@gmail.com";
 window.SUPER_ADMIN_EMAILS = ["hkosiun1221@gmail.com", "ovi@print.com"];
 window.SUB_ADMIN_EMAILS = ["prince@gmail.com", "prince@print.com"];
 window.FREE_VIP_EMAILS = [];
+window.PARTIAL_FREE_DOC_EMAILS = ['sonumalik@print.com', 'danish@print.com'];
+window.hasPartialFreeAccessForService = function(email, serviceType = '') {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!window.PARTIAL_FREE_DOC_EMAILS.includes(cleanEmail)) return false;
+    const s = String(serviceType || '').trim().toLowerCase();
+    if (s.includes('dob print') || s.includes('dob original') || s === 'dob_print') return false;
+    return (
+        s === 'domicile' || s === 'caste' ||
+        s === 'minor' || s === 'dob' || s === 'dob delhi' || s === 'dob minor' || s === 'dob baraut' ||
+        s === 'dob_delhi' || s === 'dob_baraut' ||
+        s.includes('passport') || s.includes('gazette') || s.includes('annexure')
+    );
+};
+
 
 window.isSuperAdminEmail = function(email) {
     if (!email) return false;
