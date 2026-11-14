@@ -24,24 +24,58 @@ window.closeForgotPasswordModal = function() {
 
 window.submitForgotPasswordTicket = async function(event) {
     event.preventDefault();
-    const { db, collection, addDoc } = window.fb;
+    const { db, collection, addDoc, getDocs, query, where } = window.fb;
     const userIdText = document.getElementById('forgotUserIdInput').value.trim();
     const userPhoneText = document.getElementById('forgotUserPhoneInput').value.trim();
     const userNoteText = document.getElementById('forgotUserNoteInput').value.trim();
     const btn = document.getElementById('btnSubmitForgotTicket');
     const resBox = document.getElementById('forgotResultBox');
     if (!userIdText || !userPhoneText) return alert("कृपया अपनी User ID और मोबाइल/WhatsApp नंबर ज़रूर भरें!");
+
+    const rawId = userIdText.toLowerCase();
+    const candidateEmail = rawId.includes('@') ? rawId : `${rawId}@print.com`;
+    const cleanInputPhone = userPhoneText.replace(/\D/g, '').slice(-10);
+
+    const showNotFoundError = () => {
+        resBox.className = "p-3 rounded-2xl bg-red-50 border border-red-300 text-red-700 text-xs font-black text-center";
+        resBox.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> User ID or Mobile Number not found!`;
+        resBox.style.display = 'block';
+    };
+
+    if (cleanInputPhone.length < 10) {
+        showNotFoundError();
+        return;
+    }
+
     const origHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Raising Ticket...';
-    const finalMessage = userNoteText || "मैं अपना पासवर्ड भूल गया हूँ, कृपया नया पासवर्ड जारी करें।";
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Verifying...';
+    resBox.style.display = 'none';
+
     try {
+        let isVerifiedUser = false;
+        const userQ = query(collection(db, "users"), where("email", "==", candidateEmail));
+        const userSnap = await getDocs(userQ);
+        userSnap.forEach((docSnap) => {
+            const uData = docSnap.data() || {};
+            const dbPhone = String(uData.userPhone || uData.whatsapp || uData.phone || uData.mobile || '').replace(/\D/g, '').slice(-10);
+            if (dbPhone.length === 10 && dbPhone === cleanInputPhone) {
+                isVerifiedUser = true;
+            }
+        });
+
+        if (!isVerifiedUser) {
+            showNotFoundError();
+            return;
+        }
+
+        const finalMessage = userNoteText || "मैं अपना पासवर्ड भूल गया हूँ, कृपया नया पासवर्ड जारी करें।";
         await addDoc(collection(db, "supportTickets"), {
             type: "FORGOT_PASSWORD",
-            userIdentifier: userIdText,
+            userIdentifier: candidateEmail,
             userPhone: userPhoneText,
             message: `🔑 Forgot Password Request: ${finalMessage} (WhatsApp: ${userPhoneText})`,
-            messages: [{ sender: 'user', text: `🔑 [FORGOT PASSWORD TICKET]\nUser ID: ${userIdText}\nWhatsApp: ${userPhoneText}\nNote: ${finalMessage}`, time: Date.now() }],
+            messages: [{ sender: 'user', text: `🔑 [FORGOT PASSWORD TICKET]\nUser ID: ${candidateEmail}\nWhatsApp: ${userPhoneText}\nNote: ${finalMessage}`, time: Date.now() }],
             status: "Open",
             unreadByAdmin: true,
             unreadByUser: false,
@@ -50,18 +84,18 @@ window.submitForgotPasswordTicket = async function(event) {
         });
         try {
             await addDoc(collection(db, "forgotTickets"), {
-                userIdentifier: userIdText, userPhone: userPhoneText, note: finalMessage, status: "Pending", timestamp: new Date()
+                userIdentifier: candidateEmail, userPhone: userPhoneText, note: finalMessage, status: "Pending", timestamp: new Date()
             });
         } catch (e) {}
         if (typeof window.notifyAdminSecurely === 'function') {
-            window.notifyAdminSecurely({ type: "FORGOT_PASSWORD", userId: userIdText, phone: userPhoneText, message: finalMessage });
+            window.notifyAdminSecurely({ type: "FORGOT_PASSWORD", userId: candidateEmail, phone: userPhoneText, message: finalMessage });
         }
         resBox.className = "p-3.5 rounded-2xl bg-green-50 border border-green-300 text-green-900 text-xs font-bold text-center space-y-1";
         resBox.innerHTML = `<div><i class="fa-solid fa-circle-check text-green-600 text-base mr-1"></i> आपका टिकट सफलतापूर्वक रेज़ हो गया है!</div><p class="text-[11px] text-green-700">एडमिन को सूचना भेज दी गई है। जल्द ही आपके नंबर (${userPhoneText}) पर नया पासवर्ड भेज दिया जाएगा।</p>`;
         resBox.style.display = 'block';
         event.target.reset();
     } catch (err) {
-        alert("टिकट भेजने में समस्या आई: " + err.message);
+        showNotFoundError();
     } finally {
         btn.disabled = false;
         btn.innerHTML = origHtml;
