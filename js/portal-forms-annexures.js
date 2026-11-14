@@ -11,24 +11,43 @@ window.renderAnnexureFormHtml = function(serviceName, container, submitBtnText, 
     }
 
     const todayISO = new Date().toISOString().split('T')[0];
+    let groupTitle = "Official Annexures Collection";
+    let groupOptionsHtml = "";
+    if (serviceName === 'annexure1' || serviceName === 'annexure1a') {
+        groupTitle = "Date of Birth Update / Correction (Annexure I & IA)";
+        groupOptionsHtml = `
+            <option value="annexure1" ${serviceName==='annexure1'?'selected':''}>📜 Annexure-I (Adults DoB Update)</option>
+            <option value="annexure1a" ${serviceName==='annexure1a'?'selected':''}>👶 Annexure-IA (Children DoB Update)</option>
+        `;
+    } else if (serviceName === 'annexure3' || serviceName === 'annexure3a') {
+        groupTitle = "Aadhaar Reactivation Affidavit (Annexure III & IIIA)";
+        groupOptionsHtml = `
+            <option value="annexure3" ${serviceName==='annexure3'?'selected':''}>⚡ Annexure-III (Adults Reactivation)</option>
+            <option value="annexure3a" ${serviceName==='annexure3a'?'selected':''}>👦 Annexure-IIIA (Children Reactivation)</option>
+        `;
+    } else if (serviceName === 'annexureb' || serviceName === 'annexurec' || serviceName === 'annexured') {
+        groupTitle = "Name Update / Correction Affidavit (Annexure B, C & D)";
+        groupOptionsHtml = `
+            <option value="annexureb" ${serviceName==='annexureb'?'selected':''}>🧑 Annexure B (Adults Name Update)</option>
+            <option value="annexurec" ${serviceName==='annexurec'?'selected':''}>👧 Annexure C (Children Name Update)</option>
+            <option value="annexured" ${serviceName==='annexured'?'selected':''}>💍 Annexure D (Name Update after Marriage)</option>
+        `;
+    } else {
+        groupTitle = "Urf / Alias Removal Affidavit (Annexure E & F)";
+        groupOptionsHtml = `
+            <option value="annexuree" ${serviceName==='annexuree'?'selected':''}>✂️ Annexure E (Adults Urf/Alias Removal)</option>
+            <option value="annexuref" ${serviceName==='annexuref'?'selected':''}>🖍 Annexure F (Children Urf/Alias Removal)</option>
+        `;
+    }
+
     const annexureDropdownHtml = `
-        <div class="mb-6 p-1 rounded-2xl bg-gradient-to-r from-amber-400 via-royal-500 to-amber-600 shadow-vip-glow relative z-20">
-            <div class="bg-dark-950 p-4 rounded-[14px]">
-                <label class="block text-[11px] font-black text-amber-400 uppercase mb-2 tracking-widest flex items-center">
-                    <i class="fa-solid fa-file-signature mr-1.5 text-royal-400"></i> Official Annexures Collection (Generate: ₹10 • Stamp: +₹20 • Cert: +₹20 = ₹50 Complete)
-                </label>
-                <select onchange="window.switchService(this.value)" class="w-full p-3.5 border border-slate-700 rounded-xl text-sm font-black bg-dark-900 text-white outline-none cursor-pointer shadow-inner focus:border-amber-400 transition hover:bg-dark-800">
-                    <option value="annexure1" ${serviceName==='annexure1'?'selected':''}>📜 Annexure-I (Adults DoB Update)</option>
-                    <option value="annexure1a" ${serviceName==='annexure1a'?'selected':''}>👶 Annexure-IA (Children DoB Update)</option>
-                    <option value="annexure3" ${serviceName==='annexure3'?'selected':''}>⚡ Annexure-III (Adults Reactivation)</option>
-                    <option value="annexure3a" ${serviceName==='annexure3a'?'selected':''}>👦 Annexure-IIIA (Children Reactivation)</option>
-                    <option value="annexureb" ${serviceName==='annexureb'?'selected':''}>🧑 Annexure B (Adults Name Update)</option>
-                    <option value="annexurec" ${serviceName==='annexurec'?'selected':''}>👧 Annexure C (Children Name Update)</option>
-                    <option value="annexured" ${serviceName==='annexured'?'selected':''}>💍 Annexure D (Name Update after Marriage)</option>
-                    <option value="annexuree" ${serviceName==='annexuree'?'selected':''}>✂️ Annexure E (Adults Urf/Alias Removal)</option>
-                    <option value="annexuref" ${serviceName==='annexuref'?'selected':''}>🖍 Annexure F (Children Urf/Alias Removal)</option>
-                </select>
-            </div>
+        <div class="mb-5 p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-dark-950 to-slate-900 border border-royal-500/40 shadow-md relative z-20">
+            <label class="block text-[11px] font-black text-amber-400 uppercase mb-2 tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-file-signature text-royal-400"></i> ${groupTitle} (₹10)
+            </label>
+            <select onchange="window.switchService(this.value)" class="w-full p-3 border border-slate-700 rounded-xl text-sm font-black bg-dark-900 text-white outline-none cursor-pointer focus:border-amber-400 transition">
+                ${groupOptionsHtml}
+            </select>
         </div>
     `;
 
