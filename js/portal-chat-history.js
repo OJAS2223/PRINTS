@@ -523,11 +523,10 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
     const previewParent = iframe.parentElement;
     previewParent.classList.add('flex', 'flex-col');
     if (shareBtn) shareBtn.style.display = 'none';
-    if (downloadBtn) downloadBtn.style.display = 'inline-flex';
+    if (downloadBtn) downloadBtn.style.display = 'none';
 
     if (isLocalDoc && historyIndex >= 0) {
         await window.preloadAllHtmlTemplates();
-        if (shareBtn) shareBtn.style.display = 'inline-flex';
         if (modalStampLabel) {
             if (isAdmin && isAnnexure) modalStampLabel.classList.remove('hidden');
             else modalStampLabel.classList.add('hidden');
@@ -554,6 +553,8 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
                         iframe.style.borderBottom = 'none';
                         iframe.src = merged.blobUrl;
                         spinner.style.display = 'none';
+                        if (downloadBtn) downloadBtn.style.display = 'inline-flex';
+                        if (shareBtn) shareBtn.style.display = 'inline-flex';
                         mergedOk = true;
                     }
                 } catch (e) {
