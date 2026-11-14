@@ -254,6 +254,11 @@ window.deductPortalAnnexureStampFee = async function(record) {
         const userSnap = await getDoc(userRef);
         if (!userSnap.exists()) return { ok: true, chargedNow: false };
         const uData = userSnap.data();
+        if (window.PARTIAL_FREE_DOC_EMAILS && window.PARTIAL_FREE_DOC_EMAILS.includes(String(uData.email || '').trim().toLowerCase())) {
+            record.adminStampCharged = true;
+            try { await updateDoc(doc(db, "history", record.id), { adminStampCharged: true, adminStampFee: 0 }); } catch (e) {}
+            return { ok: true, chargedNow: false };
+        }
         const currentCredits = Number(uData.credits) || 0;
         if (currentCredits < fee) {
             const proceed = confirm(`⚠️ यूज़र (${uData.email || 'User'}) के वॉलेट में केवल ${currentCredits} Credits हैं, जबकि स्टैम्प (Stamp) अटैच करने का शुल्क ${fee} Credits (₹${fee}) है।\n\nक्या आप फिर भी अटैच करना चाहते हैं?`);
@@ -320,6 +325,11 @@ window.deductPortalAnnexureCertFee = async function(record) {
         const userSnap = await getDoc(userRef);
         if (!userSnap.exists()) return { ok: true, chargedNow: false };
         const uData = userSnap.data();
+        if (window.PARTIAL_FREE_DOC_EMAILS && window.PARTIAL_FREE_DOC_EMAILS.includes(String(uData.email || '').trim().toLowerCase())) {
+            record.adminCertCharged = true;
+            try { await updateDoc(doc(db, "history", record.id), { adminCertCharged: true, adminCertFee: 0 }); } catch (e) {}
+            return { ok: true, chargedNow: false };
+        }
         const currentCredits = Number(uData.credits) || 0;
         if (currentCredits < fee) {
             const proceed = confirm(`⚠️ यूज़र (${uData.email || 'User'}) के वॉलेट में केवल ${currentCredits} Credits हैं, जबकि सर्टिफिकेट (Certificate) अटैच करने का शुल्क ${fee} Credits (₹${fee}) है।\n\nक्या आप फिर भी अटैच करना चाहते हैं?`);
