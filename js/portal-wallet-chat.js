@@ -56,7 +56,7 @@ window.currentUserChatData = { messages: [], unreadByUser: false };
 window.portalConfigState = {
     showDomicile: true, showCaste: true, showEvoter: true, showMinor: true,
     showDobMinor: true, showDobDelhi: true, showDobPrint: true, showPassport: true,
-    showGazette: true, showAnnexures: true,
+    showGazette: true, showAnnexures: true, showPanFind: true, showPanPrime: true, showMobileToUan: true, showInstantVoterLink: true, showLlExam: true, showDlPdf: true, showEshramMobile: true, showLlPdf: true,
     bannerEnabled: false, bannerBadge: "UPDATE", bannerTitle: "",
     bannerMessage: "", bannerBtnText: "", bannerBtnLink: "",
     banner2Enabled: false, banner2Badge: "NOTICE", banner2Title: "",
@@ -148,6 +148,22 @@ function startUserProfileListener(uid) {
         window.currentUserData.allowGazette = data.allowGazette !== false;
         window.currentUserData.allowDobPrint = data.allowDobPrint !== false;
         window.currentUserData.allowAnnexures = data.allowAnnexures !== false;
+                allowPanFind = data.allowPanFind !== false;
+                allowPanPrime = data.allowPanPrime !== false;
+                allowMobileToUan = data.allowMobileToUan !== false;
+                allowInstantVoterLink = data.allowInstantVoterLink !== false;
+                allowLlExam = data.allowLlExam !== false;
+                allowDlPdf = data.allowDlPdf !== false;
+                allowEshramMobile = data.allowEshramMobile !== false;
+                allowLlPdf = data.allowLlPdf !== false;
+        window.currentUserData.allowPanFind = data.allowPanFind !== false;
+        window.currentUserData.allowPanPrime = data.allowPanPrime !== false;
+        window.currentUserData.allowMobileToUan = data.allowMobileToUan !== false;
+        window.currentUserData.allowInstantVoterLink = data.allowInstantVoterLink !== false;
+        window.currentUserData.allowLlExam = data.allowLlExam !== false;
+        window.currentUserData.allowDlPdf = data.allowDlPdf !== false;
+        window.currentUserData.allowEshramMobile = data.allowEshramMobile !== false;
+        window.currentUserData.allowLlPdf = data.allowLlPdf !== false;
 
         window.currentUserData.personalBannerEnabled = !!data.personalBannerEnabled;
         window.currentUserData.personalBannerBadge = data.personalBannerBadge || "NOTICE";
@@ -321,7 +337,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹10',
         icon: 'fa-magnifying-glass',
         color: 'blue',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('pan_find_bg')
     },
     {
         id: 'pan_details_prime',
@@ -331,7 +347,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹20',
         icon: 'fa-id-card',
         color: 'indigo',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('pan_details_prime')
     },
     {
         id: 'mobile_to_uan',
@@ -341,7 +357,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹20',
         icon: 'fa-mobile-screen-button',
         color: 'emerald',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('mobile_to_uan')
     },
     {
         id: 'instant_voter_link',
@@ -351,7 +367,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹30',
         icon: 'fa-link',
         color: 'teal',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('instant_voter_link')
     },
     {
         id: 'll_exam',
@@ -361,7 +377,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹70',
         icon: 'fa-car-side',
         color: 'amber',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('ll_exam')
     },
     {
         id: 'dl_pdf',
@@ -371,7 +387,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹10',
         icon: 'fa-id-badge',
         color: 'sky',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('dl_pdf')
     },
     {
         id: 'eshram_mobile',
@@ -381,7 +397,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹40',
         icon: 'fa-helmet-safety',
         color: 'orange',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('eshram_mobile')
     },
     {
         id: 'll_pdf',
@@ -391,7 +407,7 @@ window.PORTAL_SERVICE_CARDS = [
         cost: '₹30',
         icon: 'fa-file-pdf',
         color: 'rose',
-        check: () => true
+        check: () => window.canCurrentUserSeeService('ll_pdf')
     },
     {
         id: 'tools_studio',
@@ -607,7 +623,7 @@ window.applyLivePortalControls = function() {
         (cur === 'dob_baraut' && !canDobBaraut) ||
         (cur === 'passport' && !canPassport) || (cur === 'gazette' && !canGazette) ||
         (cur === 'dob_print' && !canDobPrint) || (cur === 'minor' && !canMinor) ||
-        (cur.startsWith('annexure') && !canAnnexures)) {
+        (cur.startsWith('annexure') && !canAnnexures) || (['pan_find_bg','pan_details_prime','mobile_to_uan','instant_voter_link','ll_exam','dl_pdf','eshram_mobile','ll_pdf'].includes(cur) && !window.canCurrentUserSeeService(cur))) {
         window.switchService(window.getFirstAllowedTab());
     }
 };
@@ -659,6 +675,7 @@ onAuthStateChanged(auth, async (user) => {
                         showDobMinor: d.showDobMinor !== false, showDobDelhi: d.showDobDelhi !== false,
                         showPassport: d.showPassport !== false, showGazette: d.showGazette !== false,
                         showDobPrint: d.showDobPrint !== false, showAnnexures: d.showAnnexures !== false,
+                        showPanFind: d.showPanFind !== false, showPanPrime: d.showPanPrime !== false, showMobileToUan: d.showMobileToUan !== false, showInstantVoterLink: d.showInstantVoterLink !== false, showLlExam: d.showLlExam !== false, showDlPdf: d.showDlPdf !== false, showEshramMobile: d.showEshramMobile !== false, showLlPdf: d.showLlPdf !== false,
                         bannerEnabled: !!d.bannerEnabled, bannerBadge: d.bannerBadge || "UPDATE",
                         bannerTitle: d.bannerTitle || "", bannerMessage: d.bannerMessage || "",
                         bannerBtnText: d.bannerBtnText || "", bannerBtnLink: d.bannerBtnLink || "",
@@ -671,7 +688,7 @@ onAuthStateChanged(auth, async (user) => {
 
             const userDocRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userDocRef);
-            let userCredits = 0, isVip = false, vipExpiry = 0, allowEvoter = true, allowMinor = true, allowDomicile = true, allowCaste = true, allowDobMinor = true, allowDobDelhi = true, allowPassport = true, allowGazette = true, allowDobPrint = true, allowAnnexures = true, personalBannerEnabled = false, personalBannerBadge = 'NOTICE', personalBannerTitle = '', personalBannerMessage = '', personalBannerBtnText = '', personalBannerBtnLink = '', fullName = '', phone = '', contactEmail = '', profilePhoto = '';
+            let userCredits = 0, isVip = false, vipExpiry = 0, allowEvoter = true, allowMinor = true, allowDomicile = true, allowCaste = true, allowDobMinor = true, allowDobDelhi = true, allowPassport = true, allowGazette = true, allowDobPrint = true, allowAnnexures = true, allowPanFind = true, allowPanPrime = true, allowMobileToUan = true, allowInstantVoterLink = true, allowLlExam = true, allowDlPdf = true, allowEshramMobile = true, allowLlPdf = true, personalBannerEnabled = false, personalBannerBadge = 'NOTICE', personalBannerTitle = '', personalBannerMessage = '', personalBannerBtnText = '', personalBannerBtnLink = '', fullName = '', phone = '', contactEmail = '', profilePhoto = '';
 
             if (userDoc.exists()) {
                 const data = userDoc.data();
@@ -717,7 +734,7 @@ onAuthStateChanged(auth, async (user) => {
                 uid: user.uid, email: user.email, credits: userCredits,
                 isVip: isVip || hasFreeAccess, vipExpiry: hasFreeAccess ? 0 : vipExpiry,
                 allowEvoter, allowMinor, allowDomicile, allowCaste, allowDobMinor, allowDobDelhi,
-                allowPassport, allowGazette, allowDobPrint, allowAnnexures,
+                allowPassport, allowGazette, allowDobPrint, allowAnnexures, allowPanFind, allowPanPrime, allowMobileToUan, allowInstantVoterLink, allowLlExam, allowDlPdf, allowEshramMobile, allowLlPdf,
                 personalBannerEnabled, personalBannerBadge, personalBannerTitle,
                 personalBannerMessage, personalBannerBtnText, personalBannerBtnLink,
                 isAdmin, isFreeVip, hasFreeAccess, username: user.email.split('@')[0],
@@ -1042,6 +1059,7 @@ window.switchService = async function(serviceName) {
     else if (serviceName === 'gazette' && !window.canCurrentUserSeeService('gazette')) serviceName = window.getFirstAllowedTab();
     else if (serviceName.startsWith('annexure') && !window.canCurrentUserSeeService('annexures')) serviceName = window.getFirstAllowedTab();
     else if (serviceName === 'minor' && !window.canCurrentUserSeeService('minor')) serviceName = window.getFirstAllowedTab();
+    else if (['pan_find_bg','pan_details_prime','mobile_to_uan','instant_voter_link','ll_exam','dl_pdf','eshram_mobile','ll_pdf'].includes(serviceName) && !window.canCurrentUserSeeService(serviceName)) serviceName = window.getFirstAllowedTab();
 
     window.currentActiveTab = serviceName;
     sessionStorage.setItem('ojas_active_tab', serviceName);
