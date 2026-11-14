@@ -568,11 +568,48 @@ window.submitLocalAnnexureForm = async function(event, serviceType, fileIdKey) {
     try {
         if (isEditMode) {
             const editDocId = window.currentEditingAnnexure.docId;
-            await updateDoc(doc(db, "history", editDocId), {
+            const { getDoc } = window.fb;
+            let updatePayload = {
                 fileName: pdfFileName,
                 formData: formDataObj,
                 updatedAt: new Date()
-            });
+            };
+
+            try {
+                const existingSnap = await getDoc(doc(db, "history", editDocId));
+                if (existingSnap.exists()) {
+                    const existingData = existingSnap.data() || {};
+                    if (existingData.certificateFileId && existingData.isCertificateAttached !== false && window.API_URLS?.certificate) {
+                        const relRaw = String(formDataObj.rel || 'S/o').trim().toUpperCase();
+                        const relCode = relRaw.includes('D/') ? 'DO' : (relRaw.includes('W/') ? 'WO' : 'SO');
+                        const certPayload = {
+                            candidateName: formDataObj.applicantName || formDataObj.parentName || formDataObj.childName || formDataObj.newName || 'CUSTOMER',
+                            relationCode: relCode,
+                            fatherName: formDataObj.relativeName || '',
+                            date: typeof window.formatPortalDateForCertificate === 'function' ? window.formatPortalDateForCertificate(formDataObj) : (formDataObj.date || '')
+                        };
+                        try {
+                            const certRes = await fetch(window.API_URLS["certificate"], {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                                body: JSON.stringify(certPayload)
+                            });
+                            const certJson = await certRes.json();
+                            if (certJson && certJson.success && certJson.fileId) {
+                                updatePayload.certificateFileId = certJson.fileId;
+                                updatePayload.isCertificateAttached = true;
+                                updatePayload.certificateAttachedAt = new Date();
+                            }
+                        } catch (certErr) {
+                            updatePayload.certificateFileId = '';
+                        }
+                    } else if (existingData.certificateFileId) {
+                        updatePayload.certificateFileId = '';
+                    }
+                }
+            } catch (e) {}
+
+            await updateDoc(doc(db, "history", editDocId), updatePayload);
 
             const inMemoryItem = window.historyData && window.historyData.find(d => d.id === editDocId);
             if (inMemoryItem) {
