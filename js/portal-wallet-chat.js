@@ -133,7 +133,9 @@ function startUserProfileListener(uid) {
         window.currentUserData.fullName = data.fullName || data.name || window.currentUserData.fullName || '';
         window.currentUserData.contactEmail = data.contactEmail || data.email || window.currentUserData.contactEmail || '';
         window.currentUserData.profilePhoto = data.profilePhoto || data.photoURL || window.currentUserData.profilePhoto || '';
-        window.currentUserData.phone = data.phone || data.mobile || data.phoneNumber || window.currentUserData.phone || '';
+        window.currentUserData.phone = data.userPhone || data.whatsapp || data.phone || data.mobile || data.phoneNumber || window.currentUserData.phone || '';
+        const pInp = document.getElementById('profilePhoneInput');
+        if (pInp && window.currentUserData.phone) pInp.value = window.currentUserData.phone;
         window.syncUserProfileHeaderUI(window.currentUserData);
 
         window.currentUserData.allowEvoter = data.allowEvoter !== false;
@@ -613,7 +615,7 @@ onAuthStateChanged(auth, async (user) => {
                 personalBannerBtnText = data.personalBannerBtnText || '';
                 personalBannerBtnLink = data.personalBannerBtnLink || '';
                 fullName = data.fullName || data.name || '';
-                phone = data.phone || data.mobile || data.phoneNumber || '';
+                phone = data.userPhone || data.whatsapp || data.phone || data.mobile || data.phoneNumber || '';
                 contactEmail = data.contactEmail || data.email || user.email || '';
                 profilePhoto = data.profilePhoto || data.photoURL || '';
             }
