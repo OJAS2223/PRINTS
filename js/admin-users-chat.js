@@ -53,6 +53,7 @@ window.handleUserSelection = function() {
     if (document.getElementById('userEvoterToggle')) document.getElementById('userEvoterToggle').checked = uData.allowEvoter !== false;
     if (document.getElementById('userMinorToggle')) document.getElementById('userMinorToggle').checked = uData.allowMinor !== false;
     if (document.getElementById('userDobDelhiToggle')) document.getElementById('userDobDelhiToggle').checked = (uData.allowDobDelhi !== false && uData.allowDobMinor !== false);
+    if (document.getElementById('userDobBarautToggle')) document.getElementById('userDobBarautToggle').checked = uData.allowDobBaraut !== false;
     if (document.getElementById('userDobPrintToggle')) document.getElementById('userDobPrintToggle').checked = uData.allowDobPrint !== false;
     if (document.getElementById('userPassportToggle')) document.getElementById('userPassportToggle').checked = uData.allowPassport !== false;
     if (document.getElementById('userGazetteToggle')) document.getElementById('userGazetteToggle').checked = uData.allowGazette !== false;
@@ -437,6 +438,7 @@ window.createNewUserByAdmin = async function(e) {
             allowEvoter: true,
             allowMinor: true,
             allowDobDelhi: true,
+            allowDobBaraut: true,
             allowDobMinor: true,
             allowDomicile: true,
             allowCaste: true,
