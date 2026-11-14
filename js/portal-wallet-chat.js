@@ -89,6 +89,9 @@ window.canCurrentUserSeeService = function(srv) {
 };
 
 window.getFirstAllowedTab = function() {
+    return 'home';
+};
+window.getFirstAllowedServiceTab = function() {
     if (window.canCurrentUserSeeService('domicile')) return 'domicile';
     if (window.canCurrentUserSeeService('caste')) return 'caste';
     if (window.canCurrentUserSeeService('evoter')) return 'evoter';
@@ -173,6 +176,252 @@ function startPortalSettingsListener() {
         window.applyLivePortalControls();
     });
 }
+
+// ================= CSC / e-MITRA STYLE SERVICE CARDS REGISTRY =================
+// (Nayi service add karne ke liye bas is array mein 1 object jodein)
+window.PORTAL_SERVICE_CARDS = [
+    {
+        id: 'domicile',
+        title: 'Domicile Certificate',
+        subtitle: 'मूल निवास प्रमाण पत्र',
+        desc: 'UP e-District सामान्य निवास प्रमाण पत्र जनरेट करें',
+        cost: '₹10',
+        icon: 'fa-house-chimney',
+        color: 'blue',
+        check: () => window.canCurrentUserSeeService('domicile')
+    },
+    {
+        id: 'caste',
+        title: 'Caste Certificate',
+        subtitle: 'जाति प्रमाण पत्र',
+        desc: 'UP e-District पिछड़ी जाति प्रमाण पत्र जनरेट करें',
+        cost: '₹10',
+        icon: 'fa-users',
+        color: 'indigo',
+        check: () => window.canCurrentUserSeeService('caste')
+    },
+    {
+        id: 'evoter',
+        title: 'e-Voter ID Card',
+        subtitle: 'ई-वोटर पहचान पत्र',
+        desc: 'डिजिटल वोटर आईडी कार्ड तुरंत प्रिंट व डाउनलोड करें',
+        cost: '₹10',
+        icon: 'fa-id-card-clip',
+        color: 'emerald',
+        check: () => window.canCurrentUserSeeService('evoter')
+    },
+    {
+        id: 'dob_hub',
+        target: () => {
+            if (window.canCurrentUserSeeService('minor')) return 'minor';
+            if (window.canCurrentUserSeeService('dob_delhi')) return 'dob_delhi';
+            if (window.canCurrentUserSeeService('dob_print')) return 'dob_print';
+            if (window.canCurrentUserSeeService('dob_baraut')) return 'dob_baraut';
+            return 'home';
+        },
+        title: 'Birth Certificate (DOB)',
+        subtitle: 'जन्म प्रमाण पत्र (Minor / Delhi / Original)',
+        desc: 'DOB Minor, Delhi MCD, Original PDF व Baraut सभी एक जगह',
+        cost: '₹50–₹140',
+        icon: 'fa-cake-candles',
+        color: 'amber',
+        check: () => window.canCurrentUserSeeService('minor') || window.canCurrentUserSeeService('dob_delhi') || window.canCurrentUserSeeService('dob_print') || window.canCurrentUserSeeService('dob_baraut')
+    },
+    {
+        id: 'passport',
+        title: 'Passport Services',
+        subtitle: 'पासपोर्ट प्रिंट सर्विस',
+        desc: 'ऑटो MRZ व फोटो ब्लेंडिंग के साथ पासपोर्ट पेज तैयार करें',
+        cost: '₹30',
+        icon: 'fa-passport',
+        color: 'sky',
+        check: () => window.canCurrentUserSeeService('passport')
+    },
+    {
+        id: 'gazette',
+        title: 'Gazette Notification',
+        subtitle: 'भारत का राजपत्र (Name Change)',
+        desc: 'नाम परिवर्तन हेतु ऑफिशियल गैजेट नोटिफिकेशन तैयार करें',
+        cost: '₹100',
+        icon: 'fa-newspaper',
+        color: 'purple',
+        check: () => window.canCurrentUserSeeService('gazette')
+    },
+    {
+        id: 'annexure1',
+        title: 'Annexure I & IA',
+        subtitle: 'जन्म तिथि सुधार (Adults / Children)',
+        desc: 'DOB Update / Correction के लिए Annexure I व IA शपथ पत्र',
+        cost: '₹10',
+        icon: 'fa-file-signature',
+        color: 'teal',
+        check: () => window.canCurrentUserSeeService('annexures')
+    },
+    {
+        id: 'annexure3',
+        title: 'Annexure III & IIIA',
+        subtitle: 'आधार रीएक्टिवेशन (Adults / Children)',
+        desc: 'निष्क्रिय आधार चालू कराने हेतु Annexure III व IIIA फॉर्म',
+        cost: '₹10',
+        icon: 'fa-bolt',
+        color: 'rose',
+        check: () => window.canCurrentUserSeeService('annexures')
+    },
+    {
+        id: 'annexureb',
+        title: 'Annexure B, C & D',
+        subtitle: 'नाम सुधार व विवाह पश्चात शपथ पत्र',
+        desc: 'Adult, Child व Marriage Name Update हेतु Annexure B/C/D',
+        cost: '₹10',
+        icon: 'fa-file-contract',
+        color: 'cyan',
+        check: () => window.canCurrentUserSeeService('annexures')
+    },
+    {
+        id: 'annexuree',
+        title: 'Annexure E & F',
+        subtitle: 'उर्फ / उपनाम हटाने का शपथ पत्र',
+        desc: 'Adults (E) और Children (F) के Urf/Alias Removal फॉर्म',
+        cost: '₹10',
+        icon: 'fa-scissors',
+        color: 'orange',
+        check: () => window.canCurrentUserSeeService('annexures')
+    }
+];
+
+window.filterPortalHomeCards = function(queryStr = '') {
+    const q = String(queryStr || '').trim().toLowerCase();
+    document.querySelectorAll('.portal-service-card').forEach(card => {
+        const txt = (card.dataset.search || '').toLowerCase();
+        card.style.display = (!q || txt.includes(q)) ? 'flex' : 'none';
+    });
+};
+
+window.renderHomeDashboard = function() {
+    const container = document.getElementById('formContainer');
+    if (!container) return;
+    const u = window.currentUserData || {};
+    const colorMap = {
+        blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200 hover:border-blue-500', badge: 'bg-blue-100 text-blue-800' },
+        indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200 hover:border-indigo-500', badge: 'bg-indigo-100 text-indigo-800' },
+        emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200 hover:border-emerald-500', badge: 'bg-emerald-100 text-emerald-800' },
+        amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200 hover:border-amber-500', badge: 'bg-amber-100 text-amber-900' },
+        sky: { bg: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200 hover:border-sky-500', badge: 'bg-sky-100 text-sky-800' },
+        purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200 hover:border-purple-500', badge: 'bg-purple-100 text-purple-800' },
+        teal: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200 hover:border-teal-500', badge: 'bg-teal-100 text-teal-800' },
+        rose: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200 hover:border-rose-500', badge: 'bg-rose-100 text-rose-800' },
+        cyan: { bg: 'bg-cyan-50', text: 'text-cyan-600', border: 'border-cyan-200 hover:border-cyan-500', badge: 'bg-cyan-100 text-cyan-800' },
+        orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200 hover:border-orange-500', badge: 'bg-orange-100 text-orange-800' }
+    };
+
+    const visibleServiceCards = window.PORTAL_SERVICE_CARDS.filter(c => c.check());
+    const serviceCardsHtml = visibleServiceCards.map(card => {
+        const cm = colorMap[card.color] || colorMap.blue;
+        const targetService = typeof card.target === 'function' ? card.target() : card.id;
+        return `
+        <button type="button" onclick="window.switchService('${targetService}')" data-search="${card.title} ${card.subtitle} ${card.desc}"
+            class="portal-service-card group text-left bg-white hover:bg-slate-50/70 rounded-2xl border ${cm.border} p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-3">
+            <div class="flex items-start justify-between gap-2 w-full">
+                <div class="w-11 h-11 rounded-xl ${cm.bg} ${cm.text} flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">
+                    <i class="fa-solid ${card.icon}"></i>
+                </div>
+                <span class="${cm.badge} px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">${card.cost}</span>
+            </div>
+            <div>
+                <h4 class="text-sm font-black text-dark-900 group-hover:text-royal-700 transition">${card.title}</h4>
+                <p class="text-[11px] font-bold text-slate-600 mt-0.5">${card.subtitle}</p>
+                <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${card.desc}</p>
+            </div>
+            <div class="pt-2 border-t border-slate-100 w-full flex items-center justify-between text-[11px] font-black text-royal-600">
+                <span>Apply / Generate</span>
+                <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
+            </div>
+        </button>`;
+    }).join('');
+
+    const utilityCards = [
+        { action: "window.switchService('history')", title: "Document History", subtitle: "सभी जनरेट की गई फाइल्स", desc: "डाउनलोड, प्रीव्यू और प्रिंट करें", icon: "fa-folder-open", color: "indigo", badge: "Saved Files" },
+        ...(!u.hasFreeAccess ? [
+            { action: "window.switchService('add_credit')", title: "Add Credits (Recharge)", subtitle: "वॉलेट रिचार्ज करें", desc: "Razorpay QR / UPI से तुरंत क्रेडिट्स जोड़ें", icon: "fa-wallet", color: "emerald", badge: "Instant" },
+            { action: "window.switchService('payments_history')", title: "Wallet Passbook", subtitle: "पेमेंट व क्रेडिट हिसाब", desc: "सभी रिचार्ज, खर्च और रिफंड का विवरण", icon: "fa-book-open-reader", color: "teal", badge: "Passbook" }
+        ] : []),
+        { action: "window.switchService('support_chat')", title: "Live Support Chat", subtitle: "एडमिन से सीधी बात", desc: "किसी भी समस्या या मदद के लिए लाइव चैट करें", icon: "fa-headset", color: "amber", badge: "2-Way Live" },
+        { action: "window.open('/tools', '_blank')", title: "Tools Studio", subtitle: "PDF & Photo Tools", desc: "फोटो साइज़, मर्ज व PDF टूल्स स्टूडियो खोलें", icon: "fa-toolbox", color: "sky", badge: "Free Tools" },
+        { action: "window.switchService('password')", title: "Change Password", subtitle: "पासवर्ड बदलें", desc: "अपने पोर्टल अकाउंट का पासवर्ड अपडेट करें", icon: "fa-key", color: "rose", badge: "Security" },
+        ...(u.isAdmin ? [
+            { action: "sessionStorage.setItem('ojas_separate_admin_verified', 'true'); window.location.href='/ovi';", title: "Admin Panel (/ovi)", subtitle: "एडमिन कंट्रोल पैनल", desc: "पेमेंट अप्रूवल, यूज़र्स, स्टैम्प व सेटिंग्स मैनेज करें", icon: "fa-user-shield", color: "purple", badge: "Admin" }
+        ] : [])
+    ];
+
+    const utilityCardsHtml = utilityCards.map(card => {
+        const cm = colorMap[card.color] || colorMap.blue;
+        return `
+        <button type="button" onclick="${card.action}" data-search="${card.title} ${card.subtitle} ${card.desc}"
+            class="portal-service-card group text-left bg-slate-50/70 hover:bg-white rounded-2xl border ${cm.border} p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5">
+            <div class="flex items-start justify-between gap-2 w-full">
+                <div class="w-10 h-10 rounded-xl ${cm.bg} ${cm.text} flex items-center justify-center text-base shrink-0 group-hover:scale-105 transition">
+                    <i class="fa-solid ${card.icon}"></i>
+                </div>
+                <span class="${cm.badge} px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">${card.badge}</span>
+            </div>
+            <div>
+                <h4 class="text-sm font-black text-dark-900 group-hover:text-royal-700 transition">${card.title}</h4>
+                <p class="text-[11px] font-bold text-slate-600 mt-0.5">${card.subtitle}</p>
+                <p class="text-[11px] text-slate-400 mt-1">${card.desc}</p>
+            </div>
+        </button>`;
+    }).join('');
+
+    container.innerHTML = `
+        <div class="space-y-6">
+            <!-- CSC / e-Mitra Welcome & Search Header -->
+            <div class="bg-gradient-to-r from-dark-950 via-slate-900 to-indigo-950 text-white rounded-2xl p-4 md:p-5 border border-royal-500/40 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="inline-flex items-center gap-1.5 bg-royal-500/20 border border-royal-400/40 text-royal-300 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
+                        <i class="fa-solid fa-grid-2"></i> Digital Seva &amp; Print Portal
+                    </div>
+                    <h3 class="text-lg md:text-xl font-black">स्वागत है, <span class="text-royal-300">${(u.username || 'User').toUpperCase()}</span></h3>
+                    <p class="text-xs text-slate-300 font-semibold">नीचे दिए गए कार्ड में से अपनी सेवा चुनें — क्लिक करते ही संबंधित फॉर्म खुल जाएगा।</p>
+                </div>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+                    <div class="relative min-w-[210px]">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="portalCardSearchInput" oninput="window.filterPortalHomeCards(this.value)" placeholder="सर्विस खोजें (Search Service)..." class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-300 text-xs font-bold outline-none focus:bg-white focus:text-dark-900 transition">
+                    </div>
+                    <button type="button" onclick="window.switchService('history')" class="bg-amber-400 hover:bg-amber-300 text-dark-950 font-black px-4 py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5 shrink-0">
+                        <i class="fa-solid fa-folder-open"></i> <span>Document History</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Section 1: Certificate & Document Services -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-5 bg-royal-500 rounded-full inline-block"></span>
+                        Certificate &amp; Document Services (${visibleServiceCards.length})
+                    </h4>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                    ${serviceCardsHtml || '<div class="col-span-full p-8 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl border border-slate-200">कोई भी सर्विस वर्तमान में सक्रिय नहीं है।</div>'}
+                </div>
+            </div>
+
+            <!-- Section 2: History, Wallet & Account Services -->
+            <div>
+                <div class="flex items-center justify-between mb-3 pt-2 border-t border-slate-100">
+                    <h4 class="text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-5 bg-emerald-500 rounded-full inline-block"></span>
+                        History, Wallet &amp; Support
+                    </h4>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                    ${utilityCardsHtml}
+                </div>
+            </div>
+        </div>
+    `;
+};
 
 window.applyLivePortalControls = function() {
     const cfg = window.portalConfigState || {};
@@ -290,6 +539,7 @@ window.applyLivePortalControls = function() {
     if (vipHeaderLabel) vipHeaderLabel.innerHTML = `<i class="fa-solid fa-layer-group text-royal-400"></i> Other Portal Services (DOB, DOB Original PDF, Gazette, Passport &amp; Annexures)`;
 
     const cur = window.currentActiveTab;
+    if (cur === 'home') { window.renderHomeDashboard(); return; }
     if ((cur === 'domicile' && !canDom) || (cur === 'caste' && !canCas) ||
         ((cur === 'evoter' || cur === 'e-voter') && !canEvoter) ||
         ((cur === 'dob_delhi' || cur === 'dob_minor') && !canDobDelhi) ||
@@ -570,11 +820,11 @@ function setupDashboard(userData) {
     document.getElementById('dashboardSection').style.display = 'flex';
     window.applyLivePortalControls();
 
-    const savedTab = sessionStorage.getItem('ojas_active_tab');
+    const savedTab = sessionStorage.getItem('ojas_active_tab') || 'home';
     if (savedTab && window.canCurrentUserSeeService(savedTab)) {
         window.switchService(savedTab);
     } else {
-        window.switchService(window.getFirstAllowedTab());
+        window.switchService('home');
     }
 }
 
@@ -685,9 +935,29 @@ window.switchService = async function(serviceName) {
         }
     }
 
+    const backBar = document.getElementById('serviceBackBar');
+    const breadcrumb = document.getElementById('activeServiceBreadcrumb');
+    const titleLookup = {
+        home: 'All Services', domicile: 'Domicile Certificate', caste: 'Caste Certificate',
+        evoter: 'e-Voter ID', minor: 'DOB (Minor)', dob_delhi: 'DOB Delhi (MCD)',
+        dob_print: 'DOB Original PDF', dob_baraut: 'DOB Baraut', passport: 'Passport Services',
+        gazette: 'Gazette Notification', annexure1: 'Annexure I', annexure1a: 'Annexure IA',
+        annexure3: 'Annexure III', annexure3a: 'Annexure IIIA', annexureb: 'Annexure B',
+        annexurec: 'Annexure C', annexured: 'Annexure D', annexuree: 'Annexure E',
+        annexuref: 'Annexure F', history: 'Document History', add_credit: 'Add Credits',
+        payments_history: 'Wallet Passbook', support_chat: 'Live Support Chat', password: 'Change Password'
+    };
+    if (backBar) backBar.style.display = (serviceName === 'home') ? 'none' : 'flex';
+    if (breadcrumb) breadcrumb.innerText = titleLookup[serviceName] || serviceName.toUpperCase();
+
     window.applyLivePortalControls();
     const container = document.getElementById('formContainer');
     if (!container) return;
+
+    if (serviceName === 'home') {
+        window.renderHomeDashboard();
+        return;
+    }
 
     const submitBtnText = window.currentUserData && window.currentUserData.hasFreeAccess ? 'Generate Document (VIP Free) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>' : 'Generate Document (10 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
     const statusTagHtml = window.currentUserData && window.currentUserData.hasFreeAccess ? '<span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-md text-[10px] font-black border border-green-300 uppercase"><i class="fa-solid fa-crown mr-1"></i>Lifetime VIP Free</span>' : (window.currentUserData && window.currentUserData.isVip ? '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md text-[10px] font-black border border-amber-300 uppercase"><i class="fa-solid fa-crown mr-1"></i>10 Credits</span>' : '<span class="bg-royal-100 text-royal-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-royal-300 uppercase">10 Credits</span>');
