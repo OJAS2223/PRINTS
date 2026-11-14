@@ -886,6 +886,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
         const timeStr = dateObj.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
 
         const isServerDobPrint = (data.fileId === 'SERVER_API_DOB_PRINT');
+        const isServerRtyu = (data.fileId === 'SERVER_API_RTYU' || data.fileId === 'SERVER_API_PAN_DETAILS');
         const isLocalDoc = String(data.fileId || '').startsWith('LOCAL_HTML_');
         const isAnnexure = String(data.fileId || '').startsWith('LOCAL_HTML_ANNEXURE_');
 
@@ -939,7 +940,11 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
             }
         }
 
-        const actionBtnsHtml = isServerDobPrint
+        const rtyuPdfUrl = data.formData?.PDF_URL || data.formData?.RESULT?.pdf_url || '';
+        const rtyuSummary = data.formData?.RESULT?.pan_number || data.formData?.RESULT?.name || data.formData?.RESULT?.matching_uan || data.formData?.RESULT?.order_id || data.formData?.RESULT?.reference_number || 'Success';
+        const actionBtnsHtml = isServerRtyu
+            ? `<div class="inline-flex items-center gap-1.5">${rtyuPdfUrl ? `<a href="${rtyuPdfUrl}" target="_blank" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-file-pdf"></i> Open PDF</a>` : `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg text-[10px] font-black">${rtyuSummary}</span>`}</div>`
+            : (isServerDobPrint
             ? (isCompleted
                 ? `<div class="inline-flex items-center gap-1.5">
                        <button onclick="window.openServerDobPrintPdf('${data.id}', '${safeFileName}')" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button>
@@ -948,7 +953,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                 : `<div class="inline-flex items-center gap-1.5">
                        <button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>
                    </div>`)
-            : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button></div>`;
+            : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button></div>`);
 
         const typeLabel = data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType;
         const hasCustomerPhoto = (data.fileId === 'LOCAL_HTML_CASTE' || data.fileId === 'LOCAL_HTML_DOMICILE' || data.fileId === 'LOCAL_HTML_PASSPORT' || data.fileId === 'LOCAL_HTML_EVOTER') && data.formData?.PHOTO;
