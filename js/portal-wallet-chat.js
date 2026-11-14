@@ -84,6 +84,15 @@ window.canCurrentUserSeeService = function(srv) {
     if (srv === 'dob_print') return cfg.showDobPrint !== false && u.allowDobPrint !== false;
     if (srv === 'annexures' || srv.startsWith('annexure')) return cfg.showAnnexures !== false && u.allowAnnexures !== false;
     if (srv === 'minor' || srv === 'dob') return cfg.showMinor !== false && u.allowMinor !== false;
+    if (srv === 'dob_baraut') return Boolean(u.isAdmin) && cfg.showDobBaraut !== false && u.allowDobBaraut !== false;
+    if (srv === 'pan_find_bg') return cfg.showPanFind !== false && u.allowPanFind !== false;
+    if (srv === 'pan_details_prime') return cfg.showPanPrime !== false && u.allowPanPrime !== false;
+    if (srv === 'mobile_to_uan') return cfg.showMobileToUan !== false && u.allowMobileToUan !== false;
+    if (srv === 'instant_voter_link') return cfg.showInstantVoterLink !== false && u.allowInstantVoterLink !== false;
+    if (srv === 'll_exam') return cfg.showLlExam !== false && u.allowLlExam !== false;
+    if (srv === 'dl_pdf') return cfg.showDlPdf !== false && u.allowDlPdf !== false;
+    if (srv === 'eshram_mobile') return cfg.showEshramMobile !== false && u.allowEshramMobile !== false;
+    if (srv === 'll_pdf') return cfg.showLlPdf !== false && u.allowLlPdf !== false;
 
     return true;
 };
