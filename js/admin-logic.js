@@ -324,6 +324,7 @@ window.loadPortalSettingsForAdmin = async function() {
         if (document.getElementById('chkShowPassport')) document.getElementById('chkShowPassport').checked = cfg.showPassport !== false;
         if (document.getElementById('chkShowGazette')) document.getElementById('chkShowGazette').checked = cfg.showGazette !== false;
         if (document.getElementById('chkShowAnnexures')) document.getElementById('chkShowAnnexures').checked = cfg.showAnnexures !== false;
+        if (document.getElementById('chkShowDobBaraut')) document.getElementById('chkShowDobBaraut').checked = cfg.showDobBaraut !== false;
         if (document.getElementById('chkShowPanFind')) document.getElementById('chkShowPanFind').checked = cfg.showPanFind !== false;
         if (document.getElementById('chkShowPanPrime')) document.getElementById('chkShowPanPrime').checked = cfg.showPanPrime !== false;
         if (document.getElementById('chkShowMobileToUan')) document.getElementById('chkShowMobileToUan').checked = cfg.showMobileToUan !== false;
@@ -384,7 +385,7 @@ window.quickToggleAllCerts = async function(makeVisible) {
     if (document.getElementById('chkShowDobMinor')) document.getElementById('chkShowDobMinor').checked = makeVisible;
     if (document.getElementById('chkShowPassport')) document.getElementById('chkShowPassport').checked = makeVisible;
     if (document.getElementById('chkShowAnnexures')) document.getElementById('chkShowAnnexures').checked = makeVisible;
-    ['chkShowPanFind', 'chkShowPanPrime', 'chkShowMobileToUan', 'chkShowInstantVoterLink', 'chkShowLlExam', 'chkShowDlPdf', 'chkShowEshramMobile', 'chkShowLlPdf'].forEach(id => {
+    ['chkShowDobBaraut', 'chkShowPanFind', 'chkShowPanPrime', 'chkShowMobileToUan', 'chkShowInstantVoterLink', 'chkShowLlExam', 'chkShowDlPdf', 'chkShowEshramMobile', 'chkShowLlPdf'].forEach(id => {
         if (document.getElementById(id)) document.getElementById(id).checked = makeVisible;
     });
     await window.savePortalSettings();
@@ -411,6 +412,7 @@ window.savePortalSettings = async function(event) {
         showPassport: document.getElementById('chkShowPassport') ? document.getElementById('chkShowPassport').checked : true,
         showGazette: document.getElementById('chkShowGazette') ? document.getElementById('chkShowGazette').checked : true,
         showAnnexures: document.getElementById('chkShowAnnexures') ? document.getElementById('chkShowAnnexures').checked : true,
+        showDobBaraut: document.getElementById('chkShowDobBaraut') ? document.getElementById('chkShowDobBaraut').checked : true,
         showPanFind: document.getElementById('chkShowPanFind') ? document.getElementById('chkShowPanFind').checked : true,
         showPanPrime: document.getElementById('chkShowPanPrime') ? document.getElementById('chkShowPanPrime').checked : true,
         showMobileToUan: document.getElementById('chkShowMobileToUan') ? document.getElementById('chkShowMobileToUan').checked : true,
