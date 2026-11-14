@@ -347,6 +347,38 @@
                                     <span class="text-[10px] font-bold text-amber-900">Annexures</span>
                                     <input type="checkbox" id="userAnnexuresToggle" onchange="window.toggleUserAccess('allowAnnexures', this.checked)" class="accent-green-600 w-4 h-4" checked>
                                 </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-blue-50 p-2.5 rounded-xl border border-blue-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-blue-900">PAN Find (₹10)</span>
+                                    <input type="checkbox" id="userPanFindToggle" onchange="window.toggleUserAccess('allowPanFind', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-indigo-50 p-2.5 rounded-xl border border-indigo-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-indigo-900">PAN Prime (₹20)</span>
+                                    <input type="checkbox" id="userPanPrimeToggle" onchange="window.toggleUserAccess('allowPanPrime', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-emerald-50 p-2.5 rounded-xl border border-emerald-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-emerald-900">Mob to UAN (₹20)</span>
+                                    <input type="checkbox" id="userMobileToUanToggle" onchange="window.toggleUserAccess('allowMobileToUan', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-teal-50 p-2.5 rounded-xl border border-teal-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-teal-900">Voter Link (₹30)</span>
+                                    <input type="checkbox" id="userInstantVoterLinkToggle" onchange="window.toggleUserAccess('allowInstantVoterLink', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-amber-50 p-2.5 rounded-xl border border-amber-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-amber-900">LL Exam (₹70)</span>
+                                    <input type="checkbox" id="userLlExamToggle" onchange="window.toggleUserAccess('allowLlExam', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-sky-50 p-2.5 rounded-xl border border-sky-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-sky-900">DL PDF (₹10)</span>
+                                    <input type="checkbox" id="userDlPdfToggle" onchange="window.toggleUserAccess('allowDlPdf', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-orange-50 p-2.5 rounded-xl border border-orange-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-orange-900">eShram Mob (₹40)</span>
+                                    <input type="checkbox" id="userEshramMobileToggle" onchange="window.toggleUserAccess('allowEshramMobile', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
+                                <label class="flex items-center justify-between cursor-pointer bg-rose-50 p-2.5 rounded-xl border border-rose-200 shadow-sm">
+                                    <span class="text-[10px] font-bold text-rose-900">LL PDF (₹30)</span>
+                                    <input type="checkbox" id="userLlPdfToggle" onchange="window.toggleUserAccess('allowLlPdf', this.checked)" class="accent-green-600 w-4 h-4" checked>
+                                </label>
                             </div>
                         </div>
 
@@ -853,6 +885,38 @@
                                 </div>
                             </div>
                             <input type="checkbox" id="chkShowAnnexures" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer">
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-magnifying-glass text-blue-600"></i><div><div class="text-xs font-black text-dark-900">PAN Find by Aadhaar (₹10)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowPanFind" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-id-card text-indigo-600"></i><div><div class="text-xs font-black text-dark-900">PAN Details Prime (₹20)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowPanPrime" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-mobile-screen-button text-emerald-600"></i><div><div class="text-xs font-black text-dark-900">Mobile to UAN (₹20)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowMobileToUan" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-link text-teal-600"></i><div><div class="text-xs font-black text-dark-900">Instant Voter Link (₹30)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowInstantVoterLink" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-car-side text-amber-600"></i><div><div class="text-xs font-black text-dark-900">LL Exam (₹70)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowLlExam" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-id-badge text-sky-600"></i><div><div class="text-xs font-black text-dark-900">DL PDF (₹10)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowDlPdf" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-helmet-safety text-orange-600"></i><div><div class="text-xs font-black text-dark-900">e-Shram Mobile Update (₹40)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowEshramMobile" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
+                        </label>
+                        <label class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer hover:border-royal-400 transition">
+                            <div class="flex items-center gap-2.5"><i class="fa-solid fa-file-pdf text-rose-600"></i><div><div class="text-xs font-black text-dark-900">LL PDF (₹30)</div><div class="text-[10px] text-slate-400 font-bold">पोर्टल पर सभी यूज़र्स के लिए दिखाएं</div></div></div>
+                            <input type="checkbox" id="chkShowLlPdf" onchange="window.savePortalSettings()" class="w-5 h-5 accent-green-600 rounded cursor-pointer" checked>
                         </label>
                     </div>
                 </div>
