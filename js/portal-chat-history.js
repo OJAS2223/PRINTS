@@ -384,15 +384,38 @@ window.closePdfViewer = function() {
     document.body.style.overflow = 'auto';
 };
 
-window.loadUserHistory = async function() {
-    const { db, collection, getDocs, query, where, orderBy, limit } = window.fb;
+window.userHistoryBatchSize = 20;
+window.userHistoryLastVisibleDoc = null;
+window.userHistoryHasMore = true;
+window.userHistoryIsLoading = false;
+window.userHistoryObserver = null;
+window.userHistoryFallbackCache = null;
+
+window.loadUserHistory = async function(isReset = true) {
+    const { db, collection, getDocs, query, where, orderBy, limit, startAfter } = window.fb;
     const historyContainer = document.getElementById('historyTableBody');
+    const btn = document.getElementById('btnLoadMoreUserHistory');
     if (!historyContainer) return;
-    historyContainer.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading records...</td></tr>`;
+
+    if (isReset) {
+        window.historyData = [];
+        window.userHistoryLastVisibleDoc = null;
+        window.userHistoryHasMore = true;
+        window.userHistoryFallbackCache = null;
+        historyContainer.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400 font-bold text-xs"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-royal-500"></i><br>Loading records...</td></tr>`;
+    }
+
+    if (window.userHistoryIsLoading || !window.userHistoryHasMore) return;
+    window.userHistoryIsLoading = true;
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> लोड हो रहा है...';
+    }
+
     const isAdmin = Boolean(window.currentUserData?.isAdmin);
 
     try {
-        if (isAdmin) {
+        if (isAdmin && isReset) {
             await window.preloadPortalStamps();
             try {
                 const usersSnap = await getDocs(collection(db, "users"));
@@ -413,21 +436,54 @@ window.loadUserHistory = async function() {
                 });
                 if (userDropdown) userDropdown.value = prevVal || window.currentUserData.uid;
             } catch (e) {}
+        }
 
-            let querySnapshot;
+        const selectedUid = isAdmin
+            ? (document.getElementById('userHistoryUserFilter')?.value || window.currentUserData.uid)
+            : window.currentUserData.uid;
+
+        if (window.userHistoryFallbackCache !== null) {
+            const nextSlice = window.userHistoryFallbackCache.slice(window.historyData.length, window.historyData.length + window.userHistoryBatchSize);
+            window.historyData.push(...nextSlice);
+            if (window.historyData.length >= window.userHistoryFallbackCache.length) window.userHistoryHasMore = false;
+        } else {
+            const historyCol = collection(db, "history");
+            let q;
             try {
-                const adminQ = query(collection(db, "history"), orderBy("timestamp", "desc"), limit(250));
-                querySnapshot = await getDocs(adminQ);
-            } catch (e) {
-                querySnapshot = await getDocs(collection(db, "history"));
+                if (isAdmin && selectedUid === 'ALL') {
+                    q = window.userHistoryLastVisibleDoc
+                        ? query(historyCol, orderBy("timestamp", "desc"), startAfter(window.userHistoryLastVisibleDoc), limit(window.userHistoryBatchSize))
+                        : query(historyCol, orderBy("timestamp", "desc"), limit(window.userHistoryBatchSize));
+                } else {
+                    q = window.userHistoryLastVisibleDoc
+                        ? query(historyCol, where("userId", "==", selectedUid), orderBy("timestamp", "desc"), startAfter(window.userHistoryLastVisibleDoc), limit(window.userHistoryBatchSize))
+                        : query(historyCol, where("userId", "==", selectedUid), orderBy("timestamp", "desc"), limit(window.userHistoryBatchSize));
+                }
+                const snap = await getDocs(q);
+                if (snap.empty || snap.docs.length < window.userHistoryBatchSize) window.userHistoryHasMore = false;
+                if (!snap.empty) {
+                    window.userHistoryLastVisibleDoc = snap.docs[snap.docs.length - 1];
+                    snap.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
+                }
+            } catch (indexErr) {
+                const fallbackQ = (isAdmin && selectedUid === 'ALL')
+                    ? historyCol
+                    : query(historyCol, where("userId", "==", selectedUid));
+                const fullSnap = await getDocs(fallbackQ);
+                const allRows = [];
+                fullSnap.forEach((docSnap) => { allRows.push({ id: docSnap.id, ...docSnap.data() }); });
+                allRows.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+                window.userHistoryFallbackCache = allRows;
+                const firstSlice = allRows.slice(0, window.userHistoryBatchSize);
+                window.historyData = [...firstSlice];
+                window.userHistoryHasMore = allRows.length > window.historyData.length;
             }
-            window.historyData = [];
-            querySnapshot.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
-            window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
+        }
 
-            window.portalStampSelectionMap = {};
+        if (isAdmin) {
+            window.portalStampSelectionMap = window.portalStampSelectionMap || {};
             window.historyData.forEach((rec, idx) => {
-                if (rec.withStamp) {
+                if (rec.withStamp && !window.portalStampSelectionMap[idx]) {
                     window.portalStampSelectionMap[idx] = {
                         enabled: true,
                         stampFile: rec.stampFile || 'paraut.png',
@@ -435,30 +491,55 @@ window.loadUserHistory = async function() {
                     };
                 }
             });
-        } else {
-            const q = query(collection(db, "history"), where("userId", "==", window.currentUserData.uid));
-            const querySnapshot = await getDocs(q);
-            window.historyData = [];
-            querySnapshot.forEach((docSnap) => { window.historyData.push({ id: docSnap.id, ...docSnap.data() }); });
-            window.historyData.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0));
         }
 
         window.handleUserHistoryFilterChange();
+        window.setupUserHistoryInfiniteScroll();
 
-        const pendingDobPrints = window.historyData.filter(item => {
-            if (item.fileId !== 'SERVER_API_DOB_PRINT') return false;
-            const st = String(item.formData?.API_STATUS || 'pending').toLowerCase();
-            const hasPdf = Boolean(item.formData?.HAS_PDF || item.formData?.ENCRYPTED_PDF_TOKEN || item.formData?.PDF_URL);
-            return !hasPdf && st !== 'successful' && st !== 'approved' && st !== 'failed' && st !== 'rejected';
-        });
-        if (pendingDobPrints.length > 0) {
-            pendingDobPrints.slice(0, 5).forEach((item, idx) => {
-                setTimeout(() => { window.checkDobPrintOrderStatus(item.id, null, true); }, (idx + 1) * 900);
+        if (isReset) {
+            const pendingDobPrints = window.historyData.filter(item => {
+                if (item.fileId !== 'SERVER_API_DOB_PRINT') return false;
+                const st = String(item.formData?.API_STATUS || 'pending').toLowerCase();
+                const hasPdf = Boolean(item.formData?.HAS_PDF || item.formData?.ENCRYPTED_PDF_TOKEN || item.formData?.PDF_URL);
+                return !hasPdf && st !== 'successful' && st !== 'approved' && st !== 'failed' && st !== 'rejected';
             });
+            if (pendingDobPrints.length > 0) {
+                pendingDobPrints.slice(0, 5).forEach((item, idx) => {
+                    setTimeout(() => { window.checkDobPrintOrderStatus(item.id, null, true); }, (idx + 1) * 900);
+                });
+            }
         }
     } catch (err) {
-        historyContainer.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 text-xs">Failed to load history.</td></tr>`;
+        if (isReset) historyContainer.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 text-xs">Failed to load history.</td></tr>`;
+    } finally {
+        window.userHistoryIsLoading = false;
+        if (btn) {
+            btn.disabled = !window.userHistoryHasMore;
+            btn.innerHTML = window.userHistoryHasMore
+                ? '<i class="fa-solid fa-angles-down mr-1"></i> और रिकॉर्ड्स लोड करें (Load More)'
+                : '✅ सभी रिकॉर्ड्स लोड हो चुके हैं';
+            btn.className = window.userHistoryHasMore
+                ? "bg-dark-900 hover:bg-black text-royal-300 font-black px-5 py-2 rounded-xl text-xs shadow-sm transition inline-flex items-center gap-2"
+                : "bg-slate-200 text-slate-500 font-bold px-5 py-2 rounded-xl text-xs transition cursor-default inline-flex items-center gap-2";
+        }
     }
+};
+
+window.loadNextUserHistoryBatch = async function() {
+    if (window.userHistoryIsLoading || !window.userHistoryHasMore) return;
+    await window.loadUserHistory(false);
+};
+
+window.setupUserHistoryInfiniteScroll = function() {
+    const sentinel = document.getElementById('userHistoryScrollSentinel');
+    if (!sentinel) return;
+    if (window.userHistoryObserver) window.userHistoryObserver.disconnect();
+    window.userHistoryObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && window.userHistoryHasMore && !window.userHistoryIsLoading) {
+            window.loadNextUserHistoryBatch();
+        }
+    }, { rootMargin: '150px' });
+    window.userHistoryObserver.observe(sentinel);
 };
 
 window.handleUserHistoryFilterChange = function() {
