@@ -386,24 +386,10 @@ window.renderHomeDashboard = function() {
 
     container.innerHTML = `
         <div class="space-y-6">
-            <!-- CSC / e-Mitra Welcome & Search Header -->
-            <div class="bg-gradient-to-r from-dark-950 via-slate-900 to-indigo-950 text-white rounded-2xl p-4 md:p-5 border border-royal-500/40 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="inline-flex items-center gap-1.5 bg-royal-500/20 border border-royal-400/40 text-royal-300 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider">
-                        <i class="fa-solid fa-grid-2"></i> Digital Seva &amp; Print Portal
-                    </div>
-                    <h3 class="text-lg md:text-xl font-black">स्वागत है, <span class="text-royal-300">${(u.username || 'User').toUpperCase()}</span></h3>
-                    <p class="text-xs text-slate-300 font-semibold">नीचे दिए गए कार्ड में से अपनी सेवा चुनें — क्लिक करते ही संबंधित फॉर्म खुल जाएगा।</p>
-                </div>
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
-                    <div class="relative min-w-[210px]">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
-                        <input type="text" id="portalCardSearchInput" oninput="window.filterPortalHomeCards(this.value)" placeholder="सर्विस खोजें (Search Service)..." class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-slate-300 text-xs font-bold outline-none focus:bg-white focus:text-dark-900 transition">
-                    </div>
-                    <button type="button" onclick="window.switchService('history')" class="bg-amber-400 hover:bg-amber-300 text-dark-950 font-black px-4 py-2.5 rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5 shrink-0">
-                        <i class="fa-solid fa-folder-open"></i> <span>Document History</span>
-                    </button>
-                </div>
+            <!-- Compact Search Bar -->
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                <input type="text" id="portalCardSearchInput" oninput="window.filterPortalHomeCards(this.value)" placeholder="सर्विस खोजें (Search Service)..." class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-dark-900 placeholder-slate-400 text-xs font-bold outline-none focus:bg-white focus:border-royal-500 transition">
             </div>
 
             <!-- Section 1: Certificate & Document Services -->
@@ -816,10 +802,14 @@ function setupDashboard(userData) {
     const portalIcon = document.getElementById('portalHeaderIcon');
     const mainFormCard = document.getElementById('mainFormCard');
 
-    if (creditDisplayBox) {
-        creditDisplayBox.style.display = 'flex';
-        document.getElementById('displayCredits').innerText = userData.credits || 0;
-    }
+    const gearCreditRow = document.getElementById('gearCreditRow');
+    const gearBtnAddCredit = document.getElementById('gearBtnAddCredit');
+    const gearBtnPaymentHistory = document.getElementById('gearBtnPaymentHistory');
+    if (gearCreditRow) gearCreditRow.style.display = userData.hasFreeAccess ? 'none' : 'flex';
+    if (gearBtnAddCredit) gearBtnAddCredit.style.display = userData.hasFreeAccess ? 'none' : 'flex';
+    if (gearBtnPaymentHistory) gearBtnPaymentHistory.style.display = userData.hasFreeAccess ? 'none' : 'flex';
+    const dispCredits = document.getElementById('displayCredits');
+    if (dispCredits) dispCredits.innerText = userData.credits || 0;
     if (portalTitle) portalTitle.innerHTML = `Ojas <span class="text-royal-400">Portal</span>`;
     if (portalIcon) {
         portalIcon.innerHTML = `<img src="/images/logo.png" alt="Logo" class="w-full h-full object-contain" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1211/1211833.png'">`;
