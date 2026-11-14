@@ -886,7 +886,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                 : `<div class="inline-flex items-center gap-1.5">
                        <button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>
                    </div>`)
-            : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-print"></i> Preview / Print</button></div>`;
+            : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button></div>`;
 
         const typeLabel = data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType;
         if (historyContainer) {
