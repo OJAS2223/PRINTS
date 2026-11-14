@@ -540,16 +540,39 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
         spinner.style.display = 'none';
 
         if (initialCertFileId) {
-            iframe.style.display = 'block';
-            iframe.style.flex = '1';
-            iframe.style.minHeight = '350px';
-            iframe.style.borderBottom = '4px solid #cbd5e1';
-            iframe.src = `https://drive.google.com/file/d/${initialCertFileId}/preview`;
+            let mergedOk = false;
+            if (typeof window.buildMergedCertAndAnnexurePdf === 'function' && window.PDFLib) {
+                try {
+                    spinner.style.display = 'flex';
+                    htmlPreviewContainer.style.display = 'none';
+                    htmlPreviewContainer.innerHTML = '';
+                    const merged = await window.buildMergedCertAndAnnexurePdf(fileId, fData, initialWithStamp, initialStampSrc, initialCertFileId);
+                    if (merged && merged.blobUrl) {
+                        iframe.style.display = 'block';
+                        iframe.style.flex = '1';
+                        iframe.style.minHeight = '100%';
+                        iframe.style.borderBottom = 'none';
+                        iframe.src = merged.blobUrl;
+                        spinner.style.display = 'none';
+                        mergedOk = true;
+                    }
+                } catch (e) {
+                    console.warn('2-page merge preview fallback:', e);
+                }
+            }
+            if (!mergedOk) {
+                spinner.style.display = 'none';
+                iframe.style.display = 'block';
+                iframe.style.flex = '1';
+                iframe.style.minHeight = '350px';
+                iframe.style.borderBottom = '4px solid #cbd5e1';
+                iframe.src = `https://drive.google.com/file/d/${initialCertFileId}/preview`;
 
-            htmlPreviewContainer.style.display = 'flex';
-            htmlPreviewContainer.style.flex = '1';
-            htmlPreviewContainer.style.minHeight = '350px';
-            htmlPreviewContainer.innerHTML = window.buildLocalAffidavitHtml(fileId, fData, true, initialWithStamp, initialStampSrc);
+                htmlPreviewContainer.style.display = 'flex';
+                htmlPreviewContainer.style.flex = '1';
+                htmlPreviewContainer.style.minHeight = '350px';
+                htmlPreviewContainer.innerHTML = window.buildLocalAffidavitHtml(fileId, fData, true, initialWithStamp, initialStampSrc);
+            }
         } else {
             iframe.style.display = 'none';
             htmlPreviewContainer.style.display = 'flex';
