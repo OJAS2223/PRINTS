@@ -314,6 +314,86 @@ window.PORTAL_SERVICE_CARDS = [
         check: () => window.canCurrentUserSeeService('annexures')
     },
     {
+        id: 'pan_find_bg',
+        title: 'PAN Find (Aadhaar)',
+        subtitle: 'आधार से PAN खोजें',
+        desc: '12-अंक आधार नंबर से PAN नंबर निकालें',
+        cost: '₹10',
+        icon: 'fa-magnifying-glass',
+        color: 'blue',
+        check: () => true
+    },
+    {
+        id: 'pan_details_prime',
+        title: 'PAN Details Prime',
+        subtitle: 'पैन कार्ड पूरी जानकारी',
+        desc: 'PAN नंबर से Name, Father Name, DOB व Masked Aadhaar',
+        cost: '₹20',
+        icon: 'fa-id-card',
+        color: 'indigo',
+        check: () => true
+    },
+    {
+        id: 'mobile_to_uan',
+        title: 'Mobile to UAN',
+        subtitle: 'मोबाइल से UAN नंबर',
+        desc: 'रजिस्टर्ड मोबाइल नंबर से तुरंत UAN नंबर खोजें',
+        cost: '₹20',
+        icon: 'fa-mobile-screen-button',
+        color: 'emerald',
+        check: () => true
+    },
+    {
+        id: 'instant_voter_link',
+        title: 'Instant Voter Link',
+        subtitle: 'वोटर कार्ड मोबाइल लिंक',
+        desc: 'EPIC नंबर से तुरंत मोबाइल नंबर लिंक करें',
+        cost: '₹30',
+        icon: 'fa-link',
+        color: 'teal',
+        check: () => true
+    },
+    {
+        id: 'll_exam',
+        title: 'LL Exam',
+        subtitle: 'लर्निंग लाइसेंस एग्जाम',
+        desc: 'LL Exam ऑर्डर सबमिट करें',
+        cost: '₹70',
+        icon: 'fa-car-side',
+        color: 'amber',
+        check: () => true
+    },
+    {
+        id: 'dl_pdf',
+        title: 'DL PDF',
+        subtitle: 'ड्राइविंग लाइसेंस PDF',
+        desc: 'DL नंबर व DOB से तुरंत Driving Licence PDF',
+        cost: '₹10',
+        icon: 'fa-id-badge',
+        color: 'sky',
+        check: () => true
+    },
+    {
+        id: 'eshram_mobile',
+        title: 'e-Shram Mobile Update',
+        subtitle: 'ई-श्रम मोबाइल अपडेट',
+        desc: 'आधार व DOB से e-Shram में नया मोबाइल अपडेट करें',
+        cost: '₹40',
+        icon: 'fa-helmet-safety',
+        color: 'orange',
+        check: () => true
+    },
+    {
+        id: 'll_pdf',
+        title: 'LL PDF',
+        subtitle: 'लर्निंग लाइसेंस PDF',
+        desc: 'Application / ID नंबर से Learning Licence PDF',
+        cost: '₹30',
+        icon: 'fa-file-pdf',
+        color: 'rose',
+        check: () => true
+    },
+    {
         id: 'tools_studio',
         externalUrl: '/tools',
         title: 'Tools Studio',
@@ -989,7 +1069,7 @@ window.switchService = async function(serviceName) {
         home: 'All Services', domicile: 'Domicile Certificate', caste: 'Caste Certificate',
         evoter: 'e-Voter ID', minor: 'DOB (Minor)', dob_delhi: 'DOB Delhi (MCD)',
         dob_print: 'DOB Original PDF', dob_baraut: 'DOB Baraut', passport: 'Passport Services',
-        gazette: 'Gazette Notification', annexure1: 'Annexure I', annexure1a: 'Annexure IA',
+        gazette: 'Gazette Notification', pan_find_bg: 'PAN Find (Aadhaar)', pan_details_prime: 'PAN Details Prime', mobile_to_uan: 'Mobile to UAN', instant_voter_link: 'Instant Voter Link', ll_exam: 'LL Exam', dl_pdf: 'DL PDF', eshram_mobile: 'e-Shram Mobile Update', ll_pdf: 'LL PDF', annexure1: 'Annexure I', annexure1a: 'Annexure IA',
         annexure3: 'Annexure III', annexure3a: 'Annexure IIIA', annexureb: 'Annexure B',
         annexurec: 'Annexure C', annexured: 'Annexure D', annexuree: 'Annexure E',
         annexuref: 'Annexure F', history: 'Document History', add_credit: 'Add Credits',
@@ -1178,7 +1258,7 @@ window.switchService = async function(serviceName) {
         const passportOpt = window.canCurrentUserSeeService('passport') ? `<option value="Passport">Passport</option>` : '';
         const minorOpt = window.canCurrentUserSeeService('minor') ? `<option value="Minor">DOB (Minor • ₹50)</option>` : '';
         const dobPrintOpt = window.canCurrentUserSeeService('dob_print') ? `<option value="DOB Print">DOB Original PDF (₹140)</option>` : '';
-        const gazetteOpt = window.canCurrentUserSeeService('gazette') ? `<option value="Gazette Notification">Gazette Notification (₹100)</option>` : '';
+        const gazetteOpt = window.canCurrentUserSeeService('gazette') ? `<option value="Gazette Notification">Gazette Notification (₹100)</option><option value="PAN Find">PAN Find (₹10)</option><option value="PAN Details Prime">PAN Details Prime (₹20)</option><option value="Mobile to UAN">Mobile to UAN (₹20)</option><option value="Instant Voter Link">Instant Voter Link (₹30)</option><option value="LL Exam">LL Exam (₹70)</option><option value="DL PDF">DL PDF (₹10)</option><option value="e-Shram Mobile Update">e-Shram Mobile Update (₹40)</option><option value="LL PDF">LL PDF (₹30)</option>` : '';
         const vipFilterOptions = `${evoterOpt}${dobDelhiOpt}${dobBarautOpt}${passportOpt}${minorOpt}${dobPrintOpt}${gazetteOpt}<option value="Annexure 1">Annexure 1</option><option value="Annexure 1A">Annexure 1A</option><option value="Annexure 3">Annexure 3</option><option value="Annexure 3A">Annexure 3A</option><option value="Annexure B">Annexure B</option><option value="Annexure C">Annexure C</option><option value="Annexure D">Annexure D</option><option value="Annexure E">Annexure E</option><option value="Annexure F">Annexure F</option>`;
 
         const isAdminUser = Boolean(window.currentUserData?.isAdmin);
