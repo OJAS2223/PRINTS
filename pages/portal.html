@@ -193,9 +193,15 @@
 
                 <div id="gearDropdownMenu" class="hidden absolute right-0 top-10 md:top-12 w-56 md:w-60 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 py-2 z-50">
                     <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">Logged in as</p>
-                        <p id="displayUser" class="text-xs font-black text-dark-900 truncate"></p>
-                        <div id="gearCreditRow" class="mt-1.5 flex items-center justify-between bg-royal-50 border border-royal-200 px-2.5 py-1.5 rounded-lg">
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Logged in as</p>
+                        <div class="flex items-center gap-2.5">
+                            <img id="gearUserAvatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="User" class="w-9 h-9 rounded-full object-cover border border-royal-400 bg-white shrink-0">
+                            <div class="min-w-0 flex-1">
+                                <p id="displayUser" class="text-xs font-black text-dark-900 truncate"></p>
+                                <p id="gearUserEmail" class="text-[10px] font-semibold text-slate-500 truncate"></p>
+                            </div>
+                        </div>
+                        <div id="gearCreditRow" class="mt-2 flex items-center justify-between bg-royal-50 border border-royal-200 px-2.5 py-1.5 rounded-lg">
                             <span class="text-[10px] font-black text-royal-800 uppercase"><i class="fa-solid fa-wallet mr-1"></i>Credits</span>
                             <span class="text-xs font-black text-dark-900"><span id="displayCredits">0</span> Cr</span>
                         </div>
