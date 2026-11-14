@@ -57,6 +57,14 @@ window.handleUserSelection = function() {
     if (document.getElementById('userPassportToggle')) document.getElementById('userPassportToggle').checked = uData.allowPassport !== false;
     if (document.getElementById('userGazetteToggle')) document.getElementById('userGazetteToggle').checked = uData.allowGazette !== false;
     if (document.getElementById('userAnnexuresToggle')) document.getElementById('userAnnexuresToggle').checked = uData.allowAnnexures !== false;
+    if (document.getElementById('userPanFindToggle')) document.getElementById('userPanFindToggle').checked = uData.allowPanFind !== false;
+    if (document.getElementById('userPanPrimeToggle')) document.getElementById('userPanPrimeToggle').checked = uData.allowPanPrime !== false;
+    if (document.getElementById('userMobileToUanToggle')) document.getElementById('userMobileToUanToggle').checked = uData.allowMobileToUan !== false;
+    if (document.getElementById('userInstantVoterLinkToggle')) document.getElementById('userInstantVoterLinkToggle').checked = uData.allowInstantVoterLink !== false;
+    if (document.getElementById('userLlExamToggle')) document.getElementById('userLlExamToggle').checked = uData.allowLlExam !== false;
+    if (document.getElementById('userDlPdfToggle')) document.getElementById('userDlPdfToggle').checked = uData.allowDlPdf !== false;
+    if (document.getElementById('userEshramMobileToggle')) document.getElementById('userEshramMobileToggle').checked = uData.allowEshramMobile !== false;
+    if (document.getElementById('userLlPdfToggle')) document.getElementById('userLlPdfToggle').checked = uData.allowLlPdf !== false;
 
     const bannerChk = document.getElementById('chkUserBannerEnabled');
     if (bannerChk) bannerChk.checked = !!uData.personalBannerEnabled;
@@ -435,7 +443,7 @@ window.createNewUserByAdmin = async function(e) {
             allowDobPrint: true,
             allowPassport: true,
             allowGazette: true,
-            allowAnnexures: true,
+            allowAnnexures: true, allowPanFind: true, allowPanPrime: true, allowMobileToUan: true, allowInstantVoterLink: true, allowLlExam: true, allowDlPdf: true, allowEshramMobile: true, allowLlPdf: true,
             userPass: pass,
             adminResetPass: pass,
             userPhone: phone,
