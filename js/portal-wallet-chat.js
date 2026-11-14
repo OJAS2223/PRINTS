@@ -995,26 +995,16 @@ window.switchService = async function(serviceName) {
         annexuref: 'Annexure F', history: 'Document History', add_credit: 'Add Credits',
         payments_history: 'Wallet Passbook', support_chat: 'Live Support Chat', profile: 'My Profile', password: 'My Profile'
     };
-    const desktopBar = document.getElementById('desktopServiceBackBar');
-    const desktopBreadcrumb = document.getElementById('desktopServiceBreadcrumb');
-    const btnHistDesktop = document.getElementById('btnDesktopFormHistory');
     const btnHistInside = document.getElementById('btnInsideFormHistory');
     const activeTitle = titleLookup[serviceName] || serviceName.toUpperCase();
 
     if (backBar) {
         backBar.className = (serviceName === 'home')
             ? 'hidden'
-            : 'flex sm:hidden pb-3 mb-3.5 border-b border-slate-100 items-center justify-between gap-2';
-    }
-    if (desktopBar) {
-        desktopBar.className = (serviceName === 'home')
-            ? 'hidden'
-            : 'hidden sm:flex mb-3.5 flex-wrap items-center justify-between gap-2 bg-white dark:bg-dark-900 px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm';
+            : 'flex pb-3 mb-3.5 border-b border-slate-100 items-center justify-between gap-2';
     }
     if (btnHistInside) btnHistInside.style.display = (serviceName === 'history') ? 'none' : 'inline-flex';
-    if (btnHistDesktop) btnHistDesktop.style.display = (serviceName === 'history') ? 'none' : 'inline-flex';
     if (breadcrumb) breadcrumb.innerText = activeTitle;
-    if (desktopBreadcrumb) desktopBreadcrumb.innerText = activeTitle;
 
     window.applyLivePortalControls();
     const container = document.getElementById('formContainer');
