@@ -108,7 +108,7 @@ window.openSavedPhotoPreview = function(photoSrc, personName = 'Applicant') {
 
 // ================= PASSPORT PROCESSOR (LINKS TO templates/passport.html) =================
 window.generateRandomPassportNo = function() {
-    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    const letters = "T";
     const prefix = letters.charAt(Math.floor(Math.random() * letters.length));
     const digits = Math.floor(1000000 + Math.random() * 9000000);
     return prefix + digits;
@@ -184,7 +184,7 @@ window.processPassportData = function(rawFormObj) {
     const dobYYMMDD = toYYMMDD(dobSlash);
     const doeYYMMDD = toYYMMDD(doeSlash);
     const mrzPassport = (passportNo + '<'.repeat(9)).slice(0, 9);
-    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 2;
+    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 4;
 
     return {
         SERVICE_TYPE: 'Passport',
