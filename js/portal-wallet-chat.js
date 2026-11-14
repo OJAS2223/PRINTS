@@ -55,7 +55,7 @@ window.currentUserChatData = { messages: [], unreadByUser: false };
 
 window.portalConfigState = {
     showDomicile: true, showCaste: true, showEvoter: true, showMinor: true,
-    showDobMinor: true, showDobDelhi: true, showDobPrint: true, showPassport: true,
+    showDobMinor: true, showDobDelhi: true, showDobPrint: true, showDobBaraut: true, showPassport: true,
     showGazette: true, showAnnexures: true, showPanFind: true, showPanPrime: true, showMobileToUan: true, showInstantVoterLink: true, showLlExam: true, showDlPdf: true, showEshramMobile: true, showLlPdf: true,
     bannerEnabled: false, bannerBadge: "UPDATE", bannerTitle: "",
     bannerMessage: "", bannerBtnText: "", bannerBtnLink: "",
@@ -190,7 +190,7 @@ function startPortalSettingsListener() {
                 showEvoter: data.showEvoter !== false, showMinor: data.showMinor !== false,
                 showDobMinor: data.showDobMinor !== false, showDobDelhi: data.showDobDelhi !== false,
                 showPassport: data.showPassport !== false, showGazette: data.showGazette !== false,
-                showDobPrint: data.showDobPrint !== false, showAnnexures: data.showAnnexures !== false,
+                showDobPrint: data.showDobPrint !== false, showDobBaraut: data.showDobBaraut !== false, showAnnexures: data.showAnnexures !== false,
                 showPanFind: data.showPanFind !== false, showPanPrime: data.showPanPrime !== false,
                 showMobileToUan: data.showMobileToUan !== false, showInstantVoterLink: data.showInstantVoterLink !== false,
                 showLlExam: data.showLlExam !== false, showDlPdf: data.showDlPdf !== false,
@@ -671,7 +671,7 @@ onAuthStateChanged(auth, async (user) => {
                         showEvoter: d.showEvoter !== false, showMinor: d.showMinor !== false,
                         showDobMinor: d.showDobMinor !== false, showDobDelhi: d.showDobDelhi !== false,
                         showPassport: d.showPassport !== false, showGazette: d.showGazette !== false,
-                        showDobPrint: d.showDobPrint !== false, showAnnexures: d.showAnnexures !== false,
+                        showDobPrint: d.showDobPrint !== false, showDobBaraut: d.showDobBaraut !== false, showAnnexures: d.showAnnexures !== false,
                         showPanFind: d.showPanFind !== false, showPanPrime: d.showPanPrime !== false, showMobileToUan: d.showMobileToUan !== false, showInstantVoterLink: d.showInstantVoterLink !== false, showLlExam: d.showLlExam !== false, showDlPdf: d.showDlPdf !== false, showEshramMobile: d.showEshramMobile !== false, showLlPdf: d.showLlPdf !== false,
                         bannerEnabled: !!d.bannerEnabled, bannerBadge: d.bannerBadge || "UPDATE",
                         bannerTitle: d.bannerTitle || "", bannerMessage: d.bannerMessage || "",
