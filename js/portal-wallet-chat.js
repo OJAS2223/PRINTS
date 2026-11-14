@@ -827,7 +827,7 @@ window.switchService = async function(serviceName) {
                 <span class="text-xs font-black text-amber-950">सभी यूज़र्स की फाइल्स (यहीं से Edit व Stamp करें)</span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <select id="userHistoryUserFilter" onchange="this.dataset.userSelected='1';window.handleUserHistoryFilterChange()" class="p-2 border border-amber-300 rounded-xl text-xs bg-white font-bold text-slate-800 outline-none min-w-[160px]">
+                <select id="userHistoryUserFilter" onchange="this.dataset.userSelected='1';window.loadUserHistory(true)" class="p-2 border border-amber-300 rounded-xl text-xs bg-white font-bold text-slate-800 outline-none min-w-[160px]">
                     <option value="${window.currentUserData?.uid || ''}">👑 Admin (${window.currentUserData?.email || 'My Files'})</option>
                     <option value="ALL">All Users (सभी यूज़र)</option>
                 </select>
@@ -844,7 +844,10 @@ window.switchService = async function(serviceName) {
             </div>
         </div>
         ${adminToolbarHtml}
-        <div class="overflow-x-auto border border-slate-200 rounded-xl"><table class="w-full text-left border-collapse bg-white min-w-[500px]"><thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase"><tr><th class="p-3">File Name</th><th class="p-3">Type</th><th class="p-3">Date & Time</th><th class="p-3 text-right">Action</th></tr></thead><tbody id="historyTableBody" class="text-xs text-slate-700"></tbody></table></div>`;
+        <div class="overflow-x-auto border border-slate-200 rounded-xl"><table class="w-full text-left border-collapse bg-white min-w-[500px]"><thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase"><tr><th class="p-3">File Name</th><th class="p-3">Type</th><th class="p-3">Date & Time</th><th class="p-3 text-right">Action</th></tr></thead><tbody id="historyTableBody" class="text-xs text-slate-700"></tbody></table></div>
+        <div id="userHistoryScrollSentinel" class="py-3 text-center">
+            <button id="btnLoadMoreUserHistory" onclick="window.loadNextUserHistoryBatch()" class="bg-dark-900 hover:bg-black text-royal-300 font-black px-5 py-2 rounded-xl text-xs shadow-sm transition inline-flex items-center gap-2"><i class="fa-solid fa-angles-down"></i> और रिकॉर्ड्स लोड करें (Load More)</button>
+        </div>`;
 
         window.loadUserHistory();
     }
