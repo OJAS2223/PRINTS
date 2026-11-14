@@ -243,23 +243,8 @@
         <main class="max-w-7xl mx-auto w-full p-2.5 md:p-6 flex-grow">
             <div id="liveUpdateBannerContainer" style="display: none;" class="mb-3.5"></div>
 
-            <!-- DESKTOP-ONLY SEPARATE BACK BAR (Above Form Card on sm+ screens) -->
-            <div id="desktopServiceBackBar" class="hidden">
-                <button onclick="window.switchService('home')" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-royal-600 text-slate-800 hover:text-white font-black px-3.5 py-2 rounded-xl text-xs transition shadow-sm">
-                    <i class="fa-solid fa-arrow-left"></i>
-                    <span>Back to All Services (होम)</span>
-                </button>
-                <div class="flex items-center gap-2">
-                    <span id="desktopServiceBreadcrumb" class="text-xs font-black text-royal-700 dark:text-royal-300 bg-royal-50 dark:bg-royal-500/15 border border-royal-200 dark:border-royal-500/30 px-3 py-1.5 rounded-xl">Service</span>
-                    <button id="btnDesktopFormHistory" onclick="window.switchService('history')" class="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 font-black px-3 py-2 rounded-xl text-xs transition">
-                        <i class="fa-solid fa-folder-open"></i>
-                        <span>History</span>
-                    </button>
-                </div>
-            </div>
-
             <div id="mainFormCard" class="relative overflow-hidden bg-white text-slate-800 rounded-2xl md:rounded-3xl shadow-card border border-slate-100 p-4 md:p-7">
-                <!-- MOBILE-ONLY INSIDE-CARD BACK & HISTORY BAR -->
+                <!-- INSIDE-CARD BACK & HISTORY BAR (Mobile & Desktop) -->
                 <div id="serviceBackBar" class="hidden">
                     <button onclick="window.switchService('home')" class="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-royal-600 text-slate-800 hover:text-white font-black px-3 py-1.5 rounded-xl text-xs transition">
                         <i class="fa-solid fa-arrow-left"></i>
