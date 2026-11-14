@@ -996,6 +996,8 @@ window.switchService = async function(serviceName) {
         payments_history: 'Wallet Passbook', support_chat: 'Live Support Chat', profile: 'My Profile', password: 'My Profile'
     };
     if (backBar) backBar.style.display = (serviceName === 'home') ? 'none' : 'flex';
+    const btnHistInside = document.getElementById('btnInsideFormHistory');
+    if (btnHistInside) btnHistInside.style.display = (serviceName === 'history') ? 'none' : 'inline-flex';
     if (breadcrumb) breadcrumb.innerText = titleLookup[serviceName] || serviceName.toUpperCase();
 
     window.applyLivePortalControls();
