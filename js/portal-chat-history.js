@@ -720,14 +720,14 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                 const stampState = window.portalStampSelectionMap[data._origIndex];
                 const isStampChecked = !!(stampState ? stampState.enabled : data.withStamp);
                 adminInlineControls += `
-                    <label class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-900 border-green-400' : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'} border px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm mr-1 cursor-pointer select-none">
+                    <label title="Stamp" class="inline-flex items-center gap-1 ${isStampChecked ? 'bg-green-100 text-green-700 border-green-400 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-400 border-slate-200'} border px-2 py-1.5 rounded-lg text-xs cursor-pointer select-none transition">
                         <input type="checkbox" id="portalStampChk-${data._origIndex}" ${isStampChecked ? 'checked' : ''} onchange="window.togglePortalRowStampCheckbox(${data._origIndex}, this.checked)" class="w-3.5 h-3.5 accent-green-600 rounded cursor-pointer">
-                        <span><i class="fa-solid fa-stamp ${isStampChecked ? 'text-green-700' : 'text-amber-600'}"></i> ${isStampChecked ? 'Stamped' : 'Stamp'}</span>
+                        <i class="fa-solid fa-stamp"></i>
                     </label>`;
             }
             const canAdminEditDoc = !isServerDobPrint && (isLocalDoc || (data.formData && Object.keys(data.formData).length > 0));
             if (canAdminEditDoc) {
-                adminInlineControls += `<button onclick="window.editAnnexureRecord('${data.id}')" class="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-500 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm mr-1" title="डॉक्यूमेंट एडिट करें"><i class="fa-solid fa-pen-to-square"></i> Edit</button>`;
+                adminInlineControls += `<button onclick="window.editAnnexureRecord('${data.id}')" class="inline-flex items-center justify-center w-8 h-8 bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-500 hover:text-white rounded-lg text-xs transition shadow-xs" title="Edit Document"><i class="fa-solid fa-pen-to-square"></i></button>`;
             }
         }
 
