@@ -270,6 +270,139 @@ window.deductPortalAnnexureStampFee = async function(record) {
     }
 };
 
+window.portalCertSelectionMap = window.portalCertSelectionMap || {};
+
+window.formatPortalRelationCode = function(relStr = '') {
+    const clean = String(relStr).trim().toUpperCase();
+    if (clean.includes('S/') || clean === 'S/O') return 'SO';
+    if (clean.includes('D/') || clean === 'D/O') return 'DO';
+    if (clean.includes('W/') || clean === 'W/O') return 'WO';
+    return 'SO';
+};
+
+window.formatPortalDateForCertificate = function(fData) {
+    const months = { "JAN": "01", "FEB": "02", "MAR": "03", "APR": "04", "MAY": "05", "JUN": "06", "JUL": "07", "AUG": "08", "SEP": "09", "OCT": "10", "NOV": "11", "DEC": "12" };
+    if (fData.day && fData.monthYear) {
+        let dStr = fData.day.replace(/\D/g, '');
+        let d = parseInt(dStr) || 1;
+        let dayNum = d < 10 ? '0' + d : '' + d;
+        let parts = fData.monthYear.trim().split(/\s+/);
+        let mStr = (parts[0] || 'JAN').substring(0, 3).toUpperCase();
+        return `${dayNum}/${months[mStr] || '01'}/${parts[1] || new Date().getFullYear()}`;
+    } else if (fData.date) {
+        let dStr = fData.date;
+        if (dStr.includes('-')) {
+            let parts = dStr.split('-');
+            if (parts.length === 3 && parts[0].length === 4) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        } else if (dStr.includes('/')) {
+            let parts = dStr.split('/');
+            if (parts.length === 3 && parts[2].length === 4) return dStr;
+            else if (parts.length === 3 && parts[0].length === 4) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+    }
+    let now = new Date();
+    return `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+};
+
+window.deductPortalAnnexureCertFee = async function(record) {
+    const { db, doc, getDoc, updateDoc } = window.fb;
+    if (!record || !String(record.fileId || '').startsWith('LOCAL_HTML_ANNEXURE_')) return { ok: true, chargedNow: false };
+    if (record.adminCertCharged) return { ok: true, chargedNow: false };
+    const fee = window.ANNEXURE_CERT_FEE || 20;
+    const targetUid = record.userId;
+    if (!targetUid || (window.currentUserData && targetUid === window.currentUserData.uid)) {
+        record.adminCertCharged = true;
+        try { await updateDoc(doc(db, "history", record.id), { adminCertCharged: true }); } catch (e) {}
+        return { ok: true, chargedNow: false };
+    }
+    try {
+        const userRef = doc(db, "users", targetUid);
+        const userSnap = await getDoc(userRef);
+        if (!userSnap.exists()) return { ok: true, chargedNow: false };
+        const uData = userSnap.data();
+        const currentCredits = Number(uData.credits) || 0;
+        if (currentCredits < fee) {
+            const proceed = confirm(`⚠️ यूज़र (${uData.email || 'User'}) के वॉलेट में केवल ${currentCredits} Credits हैं, जबकि सर्टिफिकेट (Certificate) अटैच करने का शुल्क ${fee} Credits (₹${fee}) है।\n\nक्या आप फिर भी अटैच करना चाहते हैं?`);
+            if (!proceed) return { ok: false, chargedNow: false };
+        }
+        const newCredits = Math.max(0, currentCredits - fee);
+        await updateDoc(userRef, { credits: newCredits });
+        await updateDoc(doc(db, "history", record.id), { adminCertCharged: true, adminCertFee: fee, adminCertChargedAt: new Date() });
+        record.adminCertCharged = true;
+        record.adminCertFee = fee;
+        return { ok: true, chargedNow: true, fee, newCredits, userEmail: uData.email || 'User' };
+    } catch (err) {
+        return { ok: true, chargedNow: false };
+    }
+};
+
+window.togglePortalRowCertCheckbox = async function(origIndex, isChecked) {
+    if (!window.currentUserData?.isAdmin) return;
+    const { db, doc, updateDoc } = window.fb;
+    const record = window.historyData[origIndex];
+    if (!record) return;
+    const chkEl = document.getElementById(`portalCertChk-${origIndex}`);
+    if (chkEl) chkEl.disabled = true;
+
+    if (isChecked) {
+        if (record.certificateFileId) {
+            const feeRes = await window.deductPortalAnnexureCertFee(record);
+            if (!feeRes.ok) {
+                if (chkEl) { chkEl.checked = false; chkEl.disabled = false; }
+                return;
+            }
+            window.portalCertSelectionMap[origIndex] = { enabled: true, certificateFileId: record.certificateFileId };
+            record.isCertificateAttached = true;
+            try { await updateDoc(doc(db, "history", record.id), { isCertificateAttached: true }); } catch (e) {}
+            if (chkEl) chkEl.disabled = false;
+            window.handleUserHistoryFilterChange();
+            if (feeRes.chargedNow) {
+                alert(`✅ सर्टिफिकेट अटैच हो गया है और यूज़र (${feeRes.userEmail}) के वॉलेट से ${feeRes.fee} Credits (₹${feeRes.fee}) काट लिए गए हैं!\nबचे हुए क्रेडिट्स: ${feeRes.newCredits} Cr`);
+            }
+            return;
+        }
+        try {
+            const fData = record.formData || {};
+            const payload = {
+                candidateName: fData.applicantName || fData.parentName || fData.childName || fData.newName || 'CUSTOMER',
+                relationCode: window.formatPortalRelationCode(fData.rel || 'S/o'),
+                fatherName: fData.relativeName || '',
+                date: window.formatPortalDateForCertificate(fData)
+            };
+            const targetUrl = window.API_URLS["certificate"];
+            const response = await fetch(targetUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            });
+            const resData = await response.json();
+            if (resData.success && resData.fileId) {
+                const feeRes = await window.deductPortalAnnexureCertFee(record);
+                window.portalCertSelectionMap[origIndex] = { enabled: true, certificateFileId: resData.fileId };
+                record.certificateFileId = resData.fileId;
+                record.isCertificateAttached = true;
+                await updateDoc(doc(db, "history", record.id), {
+                    certificateFileId: resData.fileId,
+                    isCertificateAttached: true,
+                    certificateAttachedAt: new Date()
+                });
+                alert(`✅ सर्टिफिकेट सफलतापूर्वक जनरेट होकर एनेक्सर के साथ अटैच हो गया है!${feeRes.chargedNow ? `\n\n💰 यूज़र (${feeRes.userEmail}) के वॉलेट से ${feeRes.fee} Credits (₹${feeRes.fee}) काट लिए गए हैं।` : ''}`);
+            } else {
+                throw new Error(resData.error || 'सर्टिफिकेट जनरेशन फेल हो गया');
+            }
+        } catch (err) {
+            alert('सर्टिफिकेट जोड़ने में समस्या आई: ' + err.message);
+            if (chkEl) chkEl.checked = false;
+        }
+    } else {
+        window.portalCertSelectionMap[origIndex] = { enabled: false, certificateFileId: record.certificateFileId };
+        record.isCertificateAttached = false;
+        try { await updateDoc(doc(db, "history", record.id), { isCertificateAttached: false }); } catch (e) {}
+    }
+    if (chkEl) chkEl.disabled = false;
+    window.handleUserHistoryFilterChange();
+};
+
 window.togglePortalRowStampCheckbox = async function(origIndex, isChecked) {
     if (!window.currentUserData?.isAdmin) return;
     const { db, doc, updateDoc } = window.fb;
@@ -518,12 +651,19 @@ window.loadUserHistory = async function(isReset = true) {
 
         if (isAdmin) {
             window.portalStampSelectionMap = window.portalStampSelectionMap || {};
+            window.portalCertSelectionMap = window.portalCertSelectionMap || {};
             window.historyData.forEach((rec, idx) => {
                 if (rec.withStamp && !window.portalStampSelectionMap[idx]) {
                     window.portalStampSelectionMap[idx] = {
                         enabled: true,
                         stampFile: rec.stampFile || 'paraut.png',
                         stampCity: rec.stampCity || 'baraut'
+                    };
+                }
+                if (rec.certificateFileId && !window.portalCertSelectionMap[idx]) {
+                    window.portalCertSelectionMap[idx] = {
+                        enabled: rec.isCertificateAttached !== false,
+                        certificateFileId: rec.certificateFileId
                     };
                 }
             });
@@ -719,7 +859,13 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
             if (isAnnexure) {
                 const stampState = window.portalStampSelectionMap[data._origIndex];
                 const isStampChecked = !!(stampState ? stampState.enabled : data.withStamp);
+                const certState = window.portalCertSelectionMap[data._origIndex];
+                const isCertChecked = !!(certState ? certState.enabled : (data.certificateFileId && data.isCertificateAttached !== false));
                 adminInlineControls += `
+                    <label title="Attach Certificate" class="inline-flex items-center gap-1 ${isCertChecked ? 'bg-indigo-100 text-indigo-700 border-indigo-400 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-400 border-slate-200'} border px-2 py-1.5 rounded-lg text-xs cursor-pointer select-none transition">
+                        <input type="checkbox" id="portalCertChk-${data._origIndex}" ${isCertChecked ? 'checked' : ''} onchange="window.togglePortalRowCertCheckbox(${data._origIndex}, this.checked)" class="w-3.5 h-3.5 accent-indigo-600 rounded cursor-pointer">
+                        <i class="fa-solid fa-certificate"></i>
+                    </label>
                     <label title="Stamp" class="inline-flex items-center gap-1 ${isStampChecked ? 'bg-green-100 text-green-700 border-green-400 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-400 border-slate-200'} border px-2 py-1.5 rounded-lg text-xs cursor-pointer select-none transition">
                         <input type="checkbox" id="portalStampChk-${data._origIndex}" ${isStampChecked ? 'checked' : ''} onchange="window.togglePortalRowStampCheckbox(${data._origIndex}, this.checked)" class="w-3.5 h-3.5 accent-green-600 rounded cursor-pointer">
                         <i class="fa-solid fa-stamp"></i>
