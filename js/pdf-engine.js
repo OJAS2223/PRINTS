@@ -108,7 +108,7 @@ window.openSavedPhotoPreview = function(photoSrc, personName = 'Applicant') {
 
 // ================= PASSPORT PROCESSOR (LINKS TO templates/passport.html) =================
 window.generateRandomPassportNo = function() {
-    const letters = "T";
+    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const prefix = letters.charAt(Math.floor(Math.random() * letters.length));
     const digits = Math.floor(1000000 + Math.random() * 9000000);
     return prefix + digits;
@@ -184,7 +184,7 @@ window.processPassportData = function(rawFormObj) {
     const dobYYMMDD = toYYMMDD(dobSlash);
     const doeYYMMDD = toYYMMDD(doeSlash);
     const mrzPassport = (passportNo + '<'.repeat(9)).slice(0, 9);
-    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 4;
+    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 2;
 
     return {
         SERVICE_TYPE: 'Passport',
@@ -760,6 +760,52 @@ Verified URL: ${verifyUrl}`;
     return `<div class="affidavit-paper ${shadowClass}">${stampOverlayHtml}<div>Template loading... Please click Preview again.</div><div></div></div>`;
 };
 
+
+window.buildMergedCertAndAnnexurePdf = async function(fileId, formDataObj, withStamp = false, stampSrc = '', certificateFileId = '') {
+    if (!certificateFileId || !window.PDFLib || typeof html2pdf === 'undefined') return null;
+    await window.preloadAllHtmlTemplates();
+
+    const certResp = await fetch(`/api/drive-pdf?fileId=${encodeURIComponent(certificateFileId)}`);
+    if (!certResp.ok) throw new Error('Certificate PDF fetch failed');
+    const certBytes = await certResp.arrayBuffer();
+
+    const tempWrapper = document.createElement('div');
+    tempWrapper.style.cssText = 'position:fixed;top:0;left:0;width:794px;height:1122px;margin:0;padding:0;z-index:-9999;background:#ffffff;overflow:hidden;';
+    tempWrapper.innerHTML = window.buildLocalAffidavitHtml(fileId, formDataObj, false, withStamp, stampSrc);
+    document.body.appendChild(tempWrapper);
+    const targetEl = tempWrapper.querySelector('.affidavit-paper');
+    await new Promise(r => setTimeout(r, 250));
+
+    let annexureBytes;
+    try {
+        const opt = {
+            margin: 0,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2.5, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', x: 0, y: 0, scrollX: 0, scrollY: 0, width: 794, height: 1122, windowWidth: 794, windowHeight: 1122 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+        };
+        annexureBytes = await html2pdf().set(opt).from(targetEl).outputPdf('arraybuffer');
+    } finally {
+        if (tempWrapper.parentNode) document.body.removeChild(tempWrapper);
+    }
+
+    const { PDFDocument } = window.PDFLib;
+    const mergedPdf = await PDFDocument.create();
+    const certDoc = await PDFDocument.load(certBytes);
+    const annexDoc = await PDFDocument.load(annexureBytes);
+
+    const certPages = await mergedPdf.copyPages(certDoc, certDoc.getPageIndices());
+    certPages.forEach(p => mergedPdf.addPage(p));
+
+    const annexPages = await mergedPdf.copyPages(annexDoc, annexDoc.getPageIndices());
+    annexPages.forEach(p => mergedPdf.addPage(p));
+
+    const mergedBytes = await mergedPdf.save();
+    const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+    const blobUrl = URL.createObjectURL(blob);
+    return { blob, blobUrl };
+};
+
 window.downloadHtmlDocAsPdf = async function(fileId, formDataObj, fileName, withStamp = false, stampSrc = '', certificateFileId = '') {
     const btn = document.getElementById('modalDownloadBtn');
     const origHtml = btn ? btn.innerHTML : '';
@@ -767,6 +813,24 @@ window.downloadHtmlDocAsPdf = async function(fileId, formDataObj, fileName, with
 
     await window.preloadAllHtmlTemplates();
     const isCasteOrDomicile = (fileId === 'LOCAL_HTML_CASTE' || fileId === 'LOCAL_HTML_DOMICILE');
+
+    if (certificateFileId && window.PDFLib) {
+        try {
+            const merged = await window.buildMergedCertAndAnnexurePdf(fileId, formDataObj, withStamp, stampSrc, certificateFileId);
+            if (merged && merged.blobUrl) {
+                const a = document.createElement('a');
+                a.href = merged.blobUrl;
+                a.download = (!isCasteOrDomicile && withStamp) ? fileName.replace('.pdf', ' (With Stamp + Cert).pdf') : fileName.replace('.pdf', ' (With Cert).pdf');
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
+                return;
+            }
+        } catch (mergeErr) {
+            console.warn('Merged PDF download fallback:', mergeErr);
+        }
+    }
 
     if (isCasteOrDomicile) {
         await window.preloadAutoMStamp();
@@ -819,6 +883,20 @@ window.downloadHtmlDocAsPdf = async function(fileId, formDataObj, fileName, with
 };
 
 window.directPrintDocument = async function(fileId, formDataObj, fileName, withStamp = false, stampSrc = '', certificateFileId = '') {
+    if (certificateFileId && window.PDFLib) {
+        try {
+            const merged = await window.buildMergedCertAndAnnexurePdf(fileId, formDataObj, withStamp, stampSrc, certificateFileId);
+            if (merged && merged.blobUrl) {
+                const win = window.open(merged.blobUrl, '_blank');
+                if (win) {
+                    win.addEventListener('load', () => { try { win.focus(); win.print(); } catch (e) {} });
+                }
+                return;
+            }
+        } catch (mergePrintErr) {
+            console.warn('Merged PDF print fallback:', mergePrintErr);
+        }
+    }
     if (String(fileId).startsWith('LOCAL_HTML_')) {
         await window.preloadAllHtmlTemplates();
         const isCasteOrDomicile = (fileId === 'LOCAL_HTML_CASTE' || fileId === 'LOCAL_HTML_DOMICILE');
