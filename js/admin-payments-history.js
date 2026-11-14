@@ -242,7 +242,7 @@ window.deletePaymentRecord = async function(paymentDocId) {
 window.adminHistoryLastVisibleDoc = null;
 window.adminHistoryHasMore = true;
 window.adminHistoryIsLoading = false;
-window.adminHistoryBatchSize = 50;
+window.adminHistoryBatchSize = 20;
 window.adminHistoryObserver = null;
 
 window.loadAdminHistory = async function(isReset = true) {
