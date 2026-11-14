@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> 
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -171,20 +171,12 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-1 sm:gap-1.5 md:gap-2 relative">
-                <a href="/tools" target="_blank" class="bg-gradient-to-r from-indigo-500 via-royal-500 to-blue-500 text-white font-black w-7 h-7 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-xs shadow-glow transition flex items-center justify-center gap-1.5 shrink-0" title="PDF & Photo Tools Studio">
-                    <i class="fa-solid fa-toolbox text-xs md:text-sm"></i>
-                    <span class="hidden sm:inline">Tools Studio</span>
-                </a>
+            <div class="flex items-center gap-1.5 md:gap-2 relative">
                 <!-- Admin Panel Link (Visible ONLY when Admin or Sub-Admin logs in) -->
                 <a href="/ovi" id="adminPanelLink" onclick="sessionStorage.setItem('ojas_separate_admin_verified', 'true');" style="display: none;" class="bg-amber-500 hover:bg-amber-400 text-dark-950 font-black w-7 h-7 sm:w-auto sm:px-3 sm:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-xs shadow-sm transition items-center justify-center gap-1.5 shrink-0" title="Go to Admin Panel">
                     <i class="fa-solid fa-user-shield text-xs md:text-sm"></i>
                     <span class="hidden sm:inline">Admin Panel</span>
                 </a>
-                
-                <div id="creditDisplayBox" style="display: none;" class="bg-royal-500/15 border border-royal-500/40 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-bold text-royal-300 items-center cursor-pointer hover:bg-royal-500/25 transition" onclick="window.selectGearOption('add_credit')">
-                    <i class="fa-solid fa-wallet mr-1 text-royal-400"></i> <span id="displayCredits" class="font-black text-white">0</span> <span class="hidden sm:inline ml-1 text-[9px] md:text-[10px]">Cr</span>
-                </div>
 
                 <button onclick="window.selectGearOption('support_chat')" class="relative bg-green-600/20 hover:bg-green-600 text-green-400 hover:text-white border border-green-500/40 px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl text-[10px] md:text-xs font-black transition flex items-center gap-1 md:gap-1.5" title="Live Support Chat">
                     <i class="fa-solid fa-comments text-xs md:text-sm"></i>
@@ -200,10 +192,13 @@
                 </button>
 
                 <div id="gearDropdownMenu" class="hidden absolute right-0 top-10 md:top-12 w-56 md:w-60 bg-white text-slate-800 rounded-2xl shadow-2xl border border-slate-200 py-2 z-50">
-                    <div class="px-4 py-2 border-b border-slate-100 bg-slate-50">
+                    <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50">
                         <p class="text-[10px] font-bold text-slate-400 uppercase">Logged in as</p>
                         <p id="displayUser" class="text-xs font-black text-dark-900 truncate"></p>
-                        <p class="text-[10px] font-bold text-royal-600 mt-0.5">Active Portal Account</p>
+                        <div id="gearCreditRow" class="mt-1.5 flex items-center justify-between bg-royal-50 border border-royal-200 px-2.5 py-1.5 rounded-lg">
+                            <span class="text-[10px] font-black text-royal-800 uppercase"><i class="fa-solid fa-wallet mr-1"></i>Credits</span>
+                            <span class="text-xs font-black text-dark-900"><span id="displayCredits">0</span> Cr</span>
+                        </div>
                     </div>
                     <div class="py-1">
                         <a href="/ovi" id="gearAdminPanelLink" onclick="sessionStorage.setItem('ojas_separate_admin_verified', 'true');" style="display: none;" class="w-full px-4 py-2.5 text-left text-xs font-black text-indigo-700 hover:bg-indigo-50 items-center gap-2.5">
