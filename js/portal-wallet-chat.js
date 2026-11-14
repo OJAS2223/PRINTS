@@ -295,6 +295,17 @@ window.PORTAL_SERVICE_CARDS = [
         icon: 'fa-scissors',
         color: 'orange',
         check: () => window.canCurrentUserSeeService('annexures')
+    },
+    {
+        id: 'tools_studio',
+        externalUrl: '/tools',
+        title: 'Tools Studio',
+        subtitle: 'PDF & Photo Tools',
+        desc: 'फोटो साइज़, मर्ज व PDF टूल्स स्टूडियो खोलें',
+        cost: 'Free Tools',
+        icon: 'fa-toolbox',
+        color: 'sky',
+        check: () => true
     }
 ];
 
@@ -327,8 +338,9 @@ window.renderHomeDashboard = function() {
     const serviceCardsHtml = visibleServiceCards.map(card => {
         const cm = colorMap[card.color] || colorMap.blue;
         const targetService = typeof card.target === 'function' ? card.target() : card.id;
+        const clickAction = card.externalUrl ? `window.open('${card.externalUrl}', '_blank')` : `window.switchService('${targetService}')`;
         return `
-        <button type="button" onclick="window.switchService('${targetService}')" data-search="${card.title} ${card.subtitle} ${card.desc}"
+        <button type="button" onclick="${clickAction}" data-search="${card.title} ${card.subtitle} ${card.desc}"
             class="portal-service-card group relative bg-white hover:bg-slate-50/80 rounded-2xl border ${cm.border} p-2.5 pt-5 sm:p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center sm:items-stretch justify-center sm:justify-between text-center sm:text-left gap-1.5 sm:gap-3">
             <!-- Mobile: Top-right corner mini price badge -->
             <span class="sm:hidden absolute top-1.5 right-1.5 ${cm.badge} px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none shadow-sm">${card.cost}</span>
@@ -346,40 +358,6 @@ window.renderHomeDashboard = function() {
             <div class="hidden sm:flex pt-2 border-t border-slate-100 w-full items-center justify-between text-[11px] font-black text-royal-600">
                 <span>Apply / Generate</span>
                 <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
-            </div>
-        </button>`;
-    }).join('');
-
-    const utilityCards = [
-        { action: "window.switchService('history')", title: "Document History", subtitle: "सभी जनरेट की गई फाइल्स", desc: "डाउनलोड, प्रीव्यू और प्रिंट करें", icon: "fa-folder-open", color: "indigo", badge: "Saved Files" },
-        ...(!u.hasFreeAccess ? [
-            { action: "window.switchService('add_credit')", title: "Add Credits (Recharge)", subtitle: "वॉलेट रिचार्ज करें", desc: "Razorpay QR / UPI से तुरंत क्रेडिट्स जोड़ें", icon: "fa-wallet", color: "emerald", badge: "Instant" },
-            { action: "window.switchService('payments_history')", title: "Wallet Passbook", subtitle: "पेमेंट व क्रेडिट हिसाब", desc: "सभी रिचार्ज, खर्च और रिफंड का विवरण", icon: "fa-book-open-reader", color: "teal", badge: "Passbook" }
-        ] : []),
-        { action: "window.switchService('support_chat')", title: "Live Support Chat", subtitle: "एडमिन से सीधी बात", desc: "किसी भी समस्या या मदद के लिए लाइव चैट करें", icon: "fa-headset", color: "amber", badge: "2-Way Live" },
-        { action: "window.open('/tools', '_blank')", title: "Tools Studio", subtitle: "PDF & Photo Tools", desc: "फोटो साइज़, मर्ज व PDF टूल्स स्टूडियो खोलें", icon: "fa-toolbox", color: "sky", badge: "Free Tools" },
-        { action: "window.switchService('password')", title: "Change Password", subtitle: "पासवर्ड बदलें", desc: "अपने पोर्टल अकाउंट का पासवर्ड अपडेट करें", icon: "fa-key", color: "rose", badge: "Security" },
-        ...(u.isAdmin ? [
-            { action: "sessionStorage.setItem('ojas_separate_admin_verified', 'true'); window.location.href='/ovi';", title: "Admin Panel (/ovi)", subtitle: "एडमिन कंट्रोल पैनल", desc: "पेमेंट अप्रूवल, यूज़र्स, स्टैम्प व सेटिंग्स मैनेज करें", icon: "fa-user-shield", color: "purple", badge: "Admin" }
-        ] : [])
-    ];
-
-    const utilityCardsHtml = utilityCards.map(card => {
-        const cm = colorMap[card.color] || colorMap.blue;
-        return `
-        <button type="button" onclick="${card.action}" data-search="${card.title} ${card.subtitle} ${card.desc}"
-            class="portal-service-card group relative bg-slate-50/80 hover:bg-white rounded-2xl border ${cm.border} p-2.5 pt-5 sm:p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center sm:items-stretch justify-center sm:justify-between text-center sm:text-left gap-1.5 sm:gap-2.5">
-            <span class="sm:hidden absolute top-1.5 right-1.5 ${cm.badge} px-1.5 py-0.5 rounded-full text-[8px] font-black leading-none shadow-sm">${card.badge}</span>
-            <div class="flex items-center sm:items-start justify-center sm:justify-between gap-2 w-full">
-                <div class="w-10 h-10 rounded-2xl sm:rounded-xl ${cm.bg} ${cm.text} flex items-center justify-center text-base shrink-0 group-hover:scale-105 transition shadow-xs">
-                    <i class="fa-solid ${card.icon}"></i>
-                </div>
-                <span class="hidden sm:inline-block ${cm.badge} px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">${card.badge}</span>
-            </div>
-            <div class="w-full">
-                <h4 class="text-[11px] sm:text-sm font-black text-dark-900 group-hover:text-royal-700 transition leading-tight">${card.title}</h4>
-                <p class="hidden sm:block text-[11px] font-bold text-slate-600 mt-0.5">${card.subtitle}</p>
-                <p class="hidden sm:block text-[11px] text-slate-400 mt-1">${card.desc}</p>
             </div>
         </button>`;
     }).join('');
@@ -405,18 +383,6 @@ window.renderHomeDashboard = function() {
                 </div>
             </div>
 
-            <!-- Section 2: History, Wallet & Account Services -->
-            <div>
-                <div class="flex items-center justify-between mb-3 pt-2 border-t border-slate-100">
-                    <h4 class="text-xs md:text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                        <span class="w-2 h-5 bg-emerald-500 rounded-full inline-block"></span>
-                        History, Wallet &amp; Support
-                    </h4>
-                </div>
-                <div class="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3.5">
-                    ${utilityCardsHtml}
-                </div>
-            </div>
         </div>
     `;
 };
@@ -608,7 +574,7 @@ onAuthStateChanged(auth, async (user) => {
 
             const userDocRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userDocRef);
-            let userCredits = 0, isVip = false, vipExpiry = 0, allowEvoter = true, allowMinor = true, allowDomicile = true, allowCaste = true, allowDobMinor = true, allowDobDelhi = true, allowPassport = true, allowGazette = true, allowDobPrint = true, allowAnnexures = true, personalBannerEnabled = false, personalBannerBadge = 'NOTICE', personalBannerTitle = '', personalBannerMessage = '', personalBannerBtnText = '', personalBannerBtnLink = '';
+            let userCredits = 0, isVip = false, vipExpiry = 0, allowEvoter = true, allowMinor = true, allowDomicile = true, allowCaste = true, allowDobMinor = true, allowDobDelhi = true, allowPassport = true, allowGazette = true, allowDobPrint = true, allowAnnexures = true, personalBannerEnabled = false, personalBannerBadge = 'NOTICE', personalBannerTitle = '', personalBannerMessage = '', personalBannerBtnText = '', personalBannerBtnLink = '', fullName = '', phone = '', contactEmail = '', profilePhoto = '';
 
             if (userDoc.exists()) {
                 const data = userDoc.data();
@@ -631,6 +597,10 @@ onAuthStateChanged(auth, async (user) => {
                 personalBannerMessage = data.personalBannerMessage || '';
                 personalBannerBtnText = data.personalBannerBtnText || '';
                 personalBannerBtnLink = data.personalBannerBtnLink || '';
+                fullName = data.fullName || data.name || '';
+                phone = data.phone || data.mobile || data.phoneNumber || '';
+                contactEmail = data.contactEmail || data.email || user.email || '';
+                profilePhoto = data.profilePhoto || data.photoURL || '';
             }
 
             const isSuperAdmin = window.isSuperAdminEmail ? window.isSuperAdminEmail(emailLower) : (emailLower === window.ADMIN_EMAIL.toLowerCase() || emailLower === 'ovi@print.com');
@@ -653,7 +623,8 @@ onAuthStateChanged(auth, async (user) => {
                 allowPassport, allowGazette, allowDobPrint, allowAnnexures,
                 personalBannerEnabled, personalBannerBadge, personalBannerTitle,
                 personalBannerMessage, personalBannerBtnText, personalBannerBtnLink,
-                isAdmin, isFreeVip, hasFreeAccess, username: user.email.split('@')[0]
+                isAdmin, isFreeVip, hasFreeAccess, username: user.email.split('@')[0],
+                fullName, phone, contactEmail: contactEmail || user.email, profilePhoto
             };
 
             setupDashboard(window.currentUserData);
@@ -851,6 +822,65 @@ window.togglePassVisibility = function(inputId, btnEl) {
     }
 };
 
+window.handleProfilePhotoSelect = function(input) {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const size = 200;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const minDim = Math.min(img.width, img.height);
+            const sx = (img.width - minDim) / 2;
+            const sy = (img.height - minDim) / 2;
+            ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            const prev = document.getElementById('profilePhotoPreview');
+            const hiddenInp = document.getElementById('profilePhotoDataInput');
+            if (prev) prev.src = dataUrl;
+            if (hiddenInp) hiddenInp.value = dataUrl;
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+window.saveUserProfile = async function(event) {
+    event.preventDefault();
+    const u = window.currentUserData;
+    if (!u) return;
+    const fullNameVal = document.getElementById('profileFullNameInput').value.trim();
+    const emailVal = document.getElementById('profileEmailInput').value.trim();
+    const photoVal = document.getElementById('profilePhotoDataInput').value;
+    const msgBox = document.getElementById('profileSaveMsg');
+    const btn = document.getElementById('btnSaveProfile');
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
+    try {
+        const payload = { fullName: fullNameVal, contactEmail: emailVal, updatedAt: new Date() };
+        if (photoVal) payload.profilePhoto = photoVal;
+        await updateDoc(doc(db, "users", u.uid), payload);
+        u.fullName = fullNameVal;
+        u.contactEmail = emailVal;
+        if (photoVal) u.profilePhoto = photoVal;
+        msgBox.className = "text-xs font-bold p-3 rounded-xl border text-center bg-green-50 text-green-700 border-green-200";
+        msgBox.innerHTML = "<i class='fa-solid fa-check-circle mr-1'></i> प्रोफाइल सफलतापूर्वक अपडेट हो गई!";
+        msgBox.style.display = 'block';
+    } catch (err) {
+        msgBox.className = "text-xs font-bold p-3 rounded-xl border text-center bg-red-50 text-red-600 border-red-200";
+        msgBox.innerHTML = "<i class='fa-solid fa-circle-exclamation mr-1'></i> " + err.message;
+        msgBox.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+    }
+};
+
 window.changeUserPassword = async function(event) {
     event.preventDefault();
     const currPass = document.getElementById('currentPassInput').value;
@@ -947,7 +977,7 @@ window.switchService = async function(serviceName) {
         annexure3: 'Annexure III', annexure3a: 'Annexure IIIA', annexureb: 'Annexure B',
         annexurec: 'Annexure C', annexured: 'Annexure D', annexuree: 'Annexure E',
         annexuref: 'Annexure F', history: 'Document History', add_credit: 'Add Credits',
-        payments_history: 'Wallet Passbook', support_chat: 'Live Support Chat', password: 'Change Password'
+        payments_history: 'Wallet Passbook', support_chat: 'Live Support Chat', profile: 'My Profile', password: 'My Profile'
     };
     if (backBar) backBar.style.display = (serviceName === 'home') ? 'none' : 'flex';
     if (breadcrumb) breadcrumb.innerText = titleLookup[serviceName] || serviceName.toUpperCase();
@@ -964,16 +994,52 @@ window.switchService = async function(serviceName) {
     const submitBtnText = window.currentUserData && window.currentUserData.hasFreeAccess ? 'Generate Document (VIP Free) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>' : 'Generate Document (10 Credits) <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>';
     const statusTagHtml = window.currentUserData && window.currentUserData.hasFreeAccess ? '<span class="bg-green-100 text-green-700 px-2.5 py-1 rounded-md text-[10px] font-black border border-green-300 uppercase"><i class="fa-solid fa-crown mr-1"></i>Lifetime VIP Free</span>' : (window.currentUserData && window.currentUserData.isVip ? '<span class="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md text-[10px] font-black border border-amber-300 uppercase"><i class="fa-solid fa-crown mr-1"></i>10 Credits</span>' : '<span class="bg-royal-100 text-royal-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-royal-300 uppercase">10 Credits</span>');
 
-    if (serviceName === 'password') {
+    if (serviceName === 'profile' || serviceName === 'password') {
+        const u = window.currentUserData || {};
+        const avatarSrc = u.profilePhoto || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
         container.innerHTML = `
-        <div class="max-w-md mx-auto space-y-4 pt-2">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4"><h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-key text-royal-500 mr-1.5"></i> Change Portal Password</h3></div>
-            <form onsubmit="window.changeUserPassword(event)" class="bg-slate-50 p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Current Password</label><div class="relative"><input type="password" id="currentPassInput" required class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('currentPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">New Password</label><div class="relative"><input type="password" id="newPassInput" required minlength="6" placeholder="कम से कम 6 अक्षर" class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('newPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
-                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Confirm New Password</label><div class="relative"><input type="password" id="confirmPassInput" required minlength="6" placeholder="दोबारा लिखें" class="w-full p-3.5 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('confirmPassInput', this)" class="absolute right-4 top-3.5 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
+        <div class="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
+            <!-- Profile Details Card -->
+            <form onsubmit="window.saveUserProfile(event)" class="bg-slate-50 p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="border-b border-slate-200 pb-3">
+                    <h3 class="text-base font-black text-dark-900"><i class="fa-solid fa-user-circle text-royal-500 mr-1.5"></i> My Profile (मेरी प्रोफाइल)</h3>
+                    <p class="text-[11px] font-semibold text-slate-500">अपना नाम, फोटो और ईमेल अपडेट करें</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <img id="profilePhotoPreview" src="${avatarSrc}" alt="Profile" class="w-16 h-16 rounded-full object-cover border-2 border-royal-400 shadow-sm bg-white shrink-0">
+                    <div class="flex-1">
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Profile Photo</label>
+                        <input type="file" id="profilePhotoInput" accept="image/*" onchange="window.handleProfilePhotoSelect(this)" class="w-full text-xs text-slate-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-royal-100 file:text-royal-800 cursor-pointer">
+                        <input type="hidden" id="profilePhotoDataInput" value="${u.profilePhoto || ''}">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name (पूरा नाम)</label>
+                    <input type="text" id="profileFullNameInput" value="${(u.fullName || u.username || '').replace(/"/g, '&quot;')}" placeholder="अपना पूरा नाम लिखें" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-royal-500 bg-white">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mobile Number (बदला नहीं जा सकता)</label>
+                    <input type="text" id="profilePhoneInput" value="${u.phone || 'Not Registered'}" readonly disabled class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-200/70 text-slate-500 cursor-not-allowed outline-none">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email ID (ईमेल)</label>
+                    <input type="email" id="profileEmailInput" value="${(u.contactEmail || u.email || '').replace(/"/g, '&quot;')}" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-royal-500 bg-white">
+                </div>
+                <div id="profileSaveMsg" style="display:none;"></div>
+                <button type="submit" id="btnSaveProfile" class="w-full bg-royal-600 hover:bg-royal-700 text-white font-black py-3 rounded-xl shadow-sm transition text-sm">Save Profile</button>
+            </form>
+
+            <!-- Change Password Card inside Profile -->
+            <form onsubmit="window.changeUserPassword(event)" class="bg-slate-50 p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="border-b border-slate-200 pb-3">
+                    <h3 class="text-base font-black text-dark-900"><i class="fa-solid fa-key text-indigo-500 mr-1.5"></i> Change Password</h3>
+                    <p class="text-[11px] font-semibold text-slate-500">सुरक्षा के लिए अपना पासवर्ड बदलें</p>
+                </div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Current Password</label><div class="relative"><input type="password" id="currentPassInput" required class="w-full p-3 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('currentPassInput', this)" class="absolute right-4 top-3 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">New Password</label><div class="relative"><input type="password" id="newPassInput" required minlength="6" placeholder="कम से कम 6 अक्षर" class="w-full p-3 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('newPassInput', this)" class="absolute right-4 top-3 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
+                <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Confirm New Password</label><div class="relative"><input type="password" id="confirmPassInput" required minlength="6" placeholder="दोबारा लिखें" class="w-full p-3 pr-12 border border-slate-200 rounded-xl text-sm font-semibold outline-none focus:border-royal-500 bg-white"><button type="button" onclick="window.togglePassVisibility('confirmPassInput', this)" class="absolute right-4 top-3 text-slate-400 hover:text-royal-600 transition"><i class="fa-solid fa-eye text-base"></i></button></div></div>
                 <div id="passChangeMsg" style="display:none;"></div>
-                <button type="submit" id="btnChangePass" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-glow transition">Update Password</button>
+                <button type="submit" id="btnChangePass" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3 rounded-xl shadow-glow transition text-sm">Update Password</button>
             </form>
         </div>`;
         return;
