@@ -448,6 +448,43 @@ window.changePortalRowStampCity = async function(origIndex, cityId) {
     window.handleUserHistoryFilterChange();
 };
 
+window.fitPreviewPaperToViewport = function() {
+    const htmlContainer = document.getElementById('htmlDocPreviewContainer');
+    if (!htmlContainer || htmlContainer.style.display === 'none') return;
+    const papers = htmlContainer.querySelectorAll('.affidavit-paper');
+    if (!papers.length) return;
+    const availW = Math.max(260, htmlContainer.clientWidth - 16);
+    const scale = availW < 794 ? (availW / 794) : 1;
+
+    papers.forEach(paper => {
+        let wrap = paper.parentElement;
+        if (!wrap || !wrap.classList.contains('a4-scale-wrapper')) {
+            wrap = document.createElement('div');
+            wrap.className = 'a4-scale-wrapper';
+            paper.parentNode.insertBefore(wrap, paper);
+            wrap.appendChild(paper);
+        }
+        if (scale < 1) {
+            wrap.style.cssText = `width: ${Math.floor(794 * scale)}px; height: ${Math.floor(1122 * scale)}px; margin: 0 auto; overflow: hidden; position: relative;`;
+            paper.style.transform = `scale(${scale})`;
+            paper.style.transformOrigin = 'top left';
+            paper.style.margin = '0';
+        } else {
+            wrap.style.cssText = 'width: 794px; margin: 0 auto;';
+            paper.style.transform = 'none';
+            paper.style.transformOrigin = 'top center';
+            paper.style.margin = '0 auto';
+        }
+    });
+};
+
+window.addEventListener('resize', () => {
+    const modal = document.getElementById('pdfViewerModal');
+    if (modal && modal.style.display !== 'none' && !modal.classList.contains('hidden')) {
+        window.fitPreviewPaperToViewport();
+    }
+});
+
 window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
     document.getElementById('pdfViewerTitle').innerText = fileName;
     const iframe = document.getElementById('pdfIframe');
@@ -519,6 +556,7 @@ window.openPdfViewer = async function(fileId, fileName, historyIndex = -1) {
             htmlPreviewContainer.style.flex = '1';
             htmlPreviewContainer.innerHTML = window.buildLocalAffidavitHtml(fileId, fData, true, initialWithStamp, initialStampSrc);
         }
+        requestAnimationFrame(() => window.fitPreviewPaperToViewport());
 
         if (downloadBtn) { downloadBtn.onclick = async function() { await window.downloadHtmlDocAsPdf(fileId, fData, fileName, window.currentModalContext.withStamp, window.currentModalContext.stampSrc, window.currentModalContext.certificateFileId); }; }
         if (printBtn) { printBtn.onclick = function() { window.directPrintDocument(fileId, fData, fileName, window.currentModalContext.withStamp, window.currentModalContext.stampSrc, window.currentModalContext.certificateFileId); }; }
