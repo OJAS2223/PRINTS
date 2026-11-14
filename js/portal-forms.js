@@ -156,7 +156,8 @@ window.submitForm = async function(event, serviceType) {
 
     const isEditMode = !!(window.currentEditingAnnexure && window.currentEditingAnnexure.docId && window.currentUserData && window.currentUserData.isAdmin);
     const isSuperAdminUser = !!(window.isSuperAdminEmail && window.isSuperAdminEmail(window.currentUserData.email));
-    const isFreeForThisService = (serviceType === 'DOB Print' || serviceType === 'DOB Original PDF') ? (isSuperAdminUser || isEditMode) : !!(window.currentUserData.isAdmin || isEditMode);
+    const isPartialFreeUser = !!(window.hasPartialFreeAccessForService && window.hasPartialFreeAccessForService(window.currentUserData.email, serviceType));
+    const isFreeForThisService = (serviceType === 'DOB Print' || serviceType === 'DOB Original PDF') ? (isSuperAdminUser || isEditMode) : !!(window.currentUserData.isAdmin || isPartialFreeUser || isEditMode);
     const docCost = isFreeForThisService ? 0 : (typeof window.getServiceCreditCost === 'function' ? window.getServiceCreditCost(serviceType) : 10);
 
     if (!isFreeForThisService && window.currentUserData.credits < docCost) {
@@ -531,8 +532,10 @@ window.submitLocalAnnexureForm = async function(event, serviceType, fileIdKey) {
     if (!window.canCurrentUserSeeService('annexures')) return alert('यह सर्विस वर्तमान में बंद है।');
 
     const isEditMode = !!(window.currentEditingAnnexure && window.currentEditingAnnexure.docId && window.currentUserData && window.currentUserData.isAdmin);
-    const docCost = 10;
-    if (!isEditMode && !window.currentUserData.hasFreeAccess && window.currentUserData.credits < docCost) {
+    const isPartialFreeAnnex = !!(window.hasPartialFreeAccessForService && window.hasPartialFreeAccessForService(window.currentUserData.email, serviceType));
+    const isFreeAnnex = Boolean(window.currentUserData.hasFreeAccess || isPartialFreeAnnex);
+    const docCost = isFreeAnnex ? 0 : 10;
+    if (!isEditMode && !isFreeAnnex && window.currentUserData.credits < docCost) {
         return alert(`Insufficient credits! You need ${docCost} credits to generate ${serviceType}. Please add credits.`);
     }
 
@@ -627,7 +630,7 @@ window.submitLocalAnnexureForm = async function(event, serviceType, fileIdKey) {
             return;
         }
 
-        const effectiveAnnexureCost = window.currentUserData.hasFreeAccess ? 0 : docCost;
+        const effectiveAnnexureCost = isFreeAnnex ? 0 : docCost;
         formDataObj.CREDITS_DEDUCTED = effectiveAnnexureCost;
         await addDoc(collection(db, "history"), {
             userId: window.currentUserData.uid,
@@ -639,7 +642,7 @@ window.submitLocalAnnexureForm = async function(event, serviceType, fileIdKey) {
             timestamp: new Date()
         });
 
-        if (!window.currentUserData.hasFreeAccess) {
+        if (!isFreeAnnex && docCost > 0) {
             const userDocRef = doc(db, "users", window.currentUserData.uid);
             const newCredits = window.currentUserData.credits - docCost;
             await updateDoc(userDocRef, { credits: newCredits });
