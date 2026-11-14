@@ -218,6 +218,7 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
     };
 
     if (rtyuFormSpecs[serviceName]) {
+        if (!window.canCurrentUserSeeService(serviceName)) { window.switchService('home'); return true; }
         const spec = rtyuFormSpecs[serviceName];
         const btnText = window.currentUserData?.hasFreeAccess ? `Submit (VIP Free)` : `Submit (${spec.cost} Credits)`;
         container.innerHTML = `
