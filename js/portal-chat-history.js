@@ -951,10 +951,20 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
             : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button></div>`;
 
         const typeLabel = data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType;
+        const hasCustomerPhoto = (data.fileId === 'LOCAL_HTML_CASTE' || data.fileId === 'LOCAL_HTML_DOMICILE' || data.fileId === 'LOCAL_HTML_PASSPORT' || data.fileId === 'LOCAL_HTML_EVOTER') && data.formData?.PHOTO;
+        const photoThumbHtml = hasCustomerPhoto
+            ? `<img src="${data.formData.PHOTO}" alt="Photo" onclick="if(window.openSavedPhotoPreview) window.openSavedPhotoPreview(this.src, '${safeFileName}')" title="फोटो बड़ा देखने के लिए क्लिक करें" class="w-9 h-10 rounded-lg object-cover border border-slate-300 shadow-xs shrink-0 cursor-pointer bg-slate-100" onerror="this.style.display='none'">`
+            : '';
+
         if (historyContainer) {
             historyContainer.innerHTML += `
                 <tr class="border-b border-slate-100 text-xs hover:bg-slate-50 transition">
-                    <td class="p-3 font-bold text-slate-800">${data.fileName}${badgesHtml}</td>
+                    <td class="p-3 font-bold text-slate-800">
+                        <div class="flex items-center gap-2.5">
+                            ${photoThumbHtml}
+                            <div class="min-w-0">${data.fileName}${badgesHtml}</div>
+                        </div>
+                    </td>
                     <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${typeLabel}</span></td>
                     <td class="p-3 text-slate-500 text-[11px] font-medium">${dateStr} <br> ${timeStr}</td>
                     <td class="p-3 text-right whitespace-nowrap">${actionBtnsHtml}</td>
@@ -968,7 +978,10 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                         <span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-black uppercase">${typeLabel}</span>
                         <span class="text-[10px] font-bold text-slate-400">${dateStr} • ${timeStr}</span>
                     </div>
-                    <div class="text-xs font-black text-slate-800 leading-snug break-words">${data.fileName}</div>
+                    <div class="flex items-center gap-2.5">
+                        ${photoThumbHtml}
+                        <div class="text-xs font-black text-slate-800 leading-snug break-words min-w-0 flex-1">${data.fileName}</div>
+                    </div>
                     ${badgesHtml ? `<div class="flex flex-wrap items-center gap-1">${badgesHtml.replace(/ml-1\.5/g, '')}</div>` : ''}
                     <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-end gap-1.5">${actionBtnsHtml}</div>
                 </div>
