@@ -242,76 +242,21 @@
         <main class="max-w-7xl mx-auto w-full p-2.5 md:p-6 flex-grow">
             <div id="liveUpdateBannerContainer" style="display: none;" class="mb-3.5"></div>
 
-            <!-- ROW 1: COMPACT MOBILE 3-COLUMN TABS (Icon + Short Label on Mobile, Full Label on Desktop) -->
-            <div id="standardServicesGrid" class="grid grid-cols-3 gap-1.5 sm:gap-2.5 mb-2.5">
-                <button onclick="window.switchService('domicile')" id="btn-domicile" class="service-tab">
-                    <i class="fa-solid fa-house-chimney text-xs sm:text-sm"></i>
-                    <span class="sm:hidden text-[11px] font-black">निवास</span>
-                    <span class="hidden sm:inline">Domicile (मूल निवास • ₹10)</span>
+            <!-- BACK BAR (Visible when inside any Service Form, History, Wallet, etc.) -->
+            <div id="serviceBackBar" style="display: none;" class="mb-3.5 flex flex-wrap items-center justify-between gap-2 bg-white dark:bg-dark-900 px-3.5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                <button onclick="window.switchService('home')" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-royal-600 text-slate-800 hover:text-white font-black px-3.5 py-2 rounded-xl text-xs transition shadow-sm">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <span>Back to All Services (होम)</span>
                 </button>
-                <button onclick="window.switchService('caste')" id="btn-caste" class="service-tab">
-                    <i class="fa-solid fa-users text-xs sm:text-sm"></i>
-                    <span class="sm:hidden text-[11px] font-black">जाति</span>
-                    <span class="hidden sm:inline">Caste (जाति प्रमाण पत्र • ₹10)</span>
-                </button>
-                <button onclick="window.switchService('evoter')" id="btn-evoter-main" class="service-tab">
-                    <i class="fa-solid fa-id-card-clip text-xs sm:text-sm"></i>
-                    <span class="sm:hidden text-[11px] font-black">वोटर</span>
-                    <span class="hidden sm:inline">e-Voter ID (वोटर कार्ड • ₹10)</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <span id="activeServiceBreadcrumb" class="text-xs font-black text-royal-700 dark:text-royal-300 bg-royal-50 dark:bg-royal-500/15 border border-royal-200 dark:border-royal-500/30 px-3 py-1.5 rounded-xl">Service</span>
+                    <button onclick="window.switchService('history')" class="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 font-black px-3 py-2 rounded-xl text-xs transition">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <span class="hidden sm:inline">History</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- ROW 2: COMPACT MOBILE 3-COL / DESKTOP 6-COL SERVICES BAR (INCLUDES DOB PRINT ₹50 & GAZETTE ₹100) -->
-            <div id="vipServicesBar" class="mb-3.5 p-2 sm:p-3.5 rounded-2xl bg-dark-950/95 border border-royal-500/50 shadow-glow">
-                <div class="flex items-center justify-between mb-1.5 sm:mb-2 pb-1 border-b border-slate-800">
-                    <span id="vipBarTitleLabel" class="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-royal-300 flex items-center gap-1.5 truncate">
-                        <i class="fa-solid fa-layer-group text-royal-400"></i>
-                        <span class="sm:hidden">Other Services</span>
-                        <span class="hidden sm:inline">Other Portal Services (DOB, DOB Original PDF, Gazette, Passport &amp; Annexures)</span>
-                    </span>
-                    <button onclick="window.selectGearOption('history')" class="text-[10px] text-slate-300 hover:text-royal-300 font-bold shrink-0">
-                        <i class="fa-solid fa-folder-open mr-1"></i> <span class="hidden sm:inline">Saved</span> Files
-                    </button>
-                </div>
-                <div class="grid grid-cols-3 sm:grid-cols-7 gap-1.5 sm:gap-2">
-                    <button onclick="window.switchService('minor')" id="btn-minor" class="vip-tab">
-                        <i class="fa-solid fa-cake-candles text-amber-400"></i>
-                        <span class="sm:hidden text-[10px] font-black">DOB</span>
-                        <span class="hidden sm:inline">DOB (₹50)</span>
-                    </button>
-                    <button onclick="window.switchService('dob_print')" id="btn-dob_print" class="vip-tab">
-                        <i class="fa-solid fa-file-pdf text-teal-400"></i>
-                        <span class="sm:hidden text-[10px] font-black">DOB PDF</span>
-                        <span class="hidden sm:inline">DOB ORIGINAL PDF (₹140)</span>
-                    </button>
-                    <button onclick="window.switchService('dob_delhi')" id="btn-dob_delhi" class="vip-tab">
-                        <i class="fa-solid fa-building-columns text-emerald-400"></i>
-                        <span class="sm:hidden text-[10px] font-black">Delhi</span>
-                        <span class="hidden sm:inline">DOB DELHI (₹50)</span>
-                    </button>
-                    <button onclick="window.switchService('dob_baraut')" id="btn-dob_baraut" style="display: none !important;" class="vip-tab">
-                        <i class="fa-solid fa-baby text-emerald-400"></i>
-                        <span class="sm:hidden text-[10px] font-black">Baraut</span>
-                        <span class="hidden sm:inline">DOB BARAUT (₹50)</span>
-                    </button>
-                    <button onclick="window.switchService('passport')" id="btn-passport" class="vip-tab">
-                        <i class="fa-solid fa-passport text-sky-400"></i>
-                        <span class="sm:hidden text-[10px] font-black">Passport</span>
-                        <span class="hidden sm:inline">PASSPORT (₹30)</span>
-                    </button>
-                    <button onclick="window.switchService('gazette')" id="btn-gazette" class="vip-tab">
-                        <i class="fa-solid fa-newspaper text-purple-400"></i>
-                        <span class="sm:hidden text-[10px] font-black">Gazette</span>
-                        <span class="hidden sm:inline">GAZETTE (₹100)</span>
-                    </button>
-                    <button onclick="window.switchService('annexure1')" id="btn-annexures" class="vip-tab">
-                        <i class="fa-solid fa-file-signature text-amber-400"></i>
-                        <span class="sm:hidden text-[10px] font-black">Annexure</span>
-                        <span class="hidden sm:inline">Annexures (₹10)</span>
-                    </button>
-                </div>
-            </div>
-            
             <div id="mainFormCard" class="relative overflow-hidden bg-white text-slate-800 rounded-2xl md:rounded-3xl shadow-card border border-slate-100 p-4 md:p-7">
                 <div id="formContainer"></div>
             </div>
