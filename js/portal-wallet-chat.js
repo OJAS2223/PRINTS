@@ -34,7 +34,7 @@ import "./portal-chat-history.js?v=9.1";
 const {
     auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged,
     updatePassword, EmailAuthProvider, reauthenticateWithCredential,
-    doc, getDoc, updateDoc, onSnapshot
+    doc, getDoc, setDoc, updateDoc, onSnapshot
 } = window.fb;
 
 window.currentUserData = null;
@@ -114,12 +114,27 @@ window.notifyAdminSecurely = async function(payload) {
     } catch (e) {}
 };
 
+window.syncUserProfileHeaderUI = function(u) {
+    if (!u) return;
+    const nameEl = document.getElementById('displayUser');
+    const emailEl = document.getElementById('gearUserEmail');
+    const avatarEl = document.getElementById('gearUserAvatar');
+    if (nameEl) nameEl.innerText = u.fullName ? u.fullName : (u.username || 'User').toUpperCase();
+    if (emailEl) emailEl.innerText = u.contactEmail || u.email || '';
+    if (avatarEl) avatarEl.src = u.profilePhoto || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+};
+
 function startUserProfileListener(uid) {
     if (window.userProfileUnsubscribe) window.userProfileUnsubscribe();
     window.userProfileUnsubscribe = onSnapshot(doc(db, "users", uid), (snap) => {
         if (!snap.exists() || !window.currentUserData) return;
         const data = snap.data();
         window.currentUserData.credits = data.credits || 0;
+        window.currentUserData.fullName = data.fullName || data.name || window.currentUserData.fullName || '';
+        window.currentUserData.contactEmail = data.contactEmail || data.email || window.currentUserData.contactEmail || '';
+        window.currentUserData.profilePhoto = data.profilePhoto || data.photoURL || window.currentUserData.profilePhoto || '';
+        window.currentUserData.phone = data.phone || data.mobile || data.phoneNumber || window.currentUserData.phone || '';
+        window.syncUserProfileHeaderUI(window.currentUserData);
 
         window.currentUserData.allowEvoter = data.allowEvoter !== false;
         window.currentUserData.allowMinor = data.allowMinor !== false;
@@ -753,7 +768,7 @@ window.dismissCornerAlert = function() {
 };
 
 function setupDashboard(userData) {
-    document.getElementById('displayUser').innerText = userData.username.toUpperCase();
+    window.syncUserProfileHeaderUI(userData);
     const adminLink = document.getElementById('adminPanelLink');
     const gearAdminLink = document.getElementById('gearAdminPanelLink');
 
@@ -862,12 +877,13 @@ window.saveUserProfile = async function(event) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
     try {
-        const payload = { fullName: fullNameVal, contactEmail: emailVal, updatedAt: new Date() };
+        const payload = { email: u.email, fullName: fullNameVal, contactEmail: emailVal, updatedAt: new Date() };
         if (photoVal) payload.profilePhoto = photoVal;
-        await updateDoc(doc(db, "users", u.uid), payload);
+        await setDoc(doc(db, "users", u.uid), payload, { merge: true });
         u.fullName = fullNameVal;
         u.contactEmail = emailVal;
         if (photoVal) u.profilePhoto = photoVal;
+        window.syncUserProfileHeaderUI(u);
         msgBox.className = "text-xs font-bold p-3 rounded-xl border text-center bg-green-50 text-green-700 border-green-200";
         msgBox.innerHTML = "<i class='fa-solid fa-check-circle mr-1'></i> प्रोफाइल सफलतापूर्वक अपडेट हो गई!";
         msgBox.style.display = 'block';
