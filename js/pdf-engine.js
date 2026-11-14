@@ -952,6 +952,28 @@ window.directPrintDocument = async function(fileId, formDataObj, fileName, withS
 };
 
 window.shareHtmlDocAsPdf = async function(fileId, formDataObj, fileName, withStamp = false, stampSrc = '', certificateFileId = '') {
+    if (certificateFileId && window.PDFLib) {
+        try {
+            const merged = await window.buildMergedCertAndAnnexurePdf(fileId, formDataObj, withStamp, stampSrc, certificateFileId);
+            if (merged && merged.blob) {
+                const shareName = fileName.replace(/\.pdf$/i, '') + ' (2-Page).pdf';
+                const pdfFile = new File([merged.blob], shareName, { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                    await navigator.share({ files: [pdfFile], title: shareName });
+                    return;
+                }
+                const a = document.createElement('a');
+                a.href = merged.blobUrl;
+                a.download = shareName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                return;
+            }
+        } catch (e) {
+            if (e && e.name === 'AbortError') return;
+        }
+    }
     const btn = document.getElementById('modalShareBtn');
     const origHtml = btn ? btn.innerHTML : '';
     if (btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparing...'; btn.disabled = true; }
