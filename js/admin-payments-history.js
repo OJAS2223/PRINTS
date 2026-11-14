@@ -815,16 +815,16 @@ window.renderAdminHistory = function() {
         }
 
         const certificateCheckboxHtml = isAnnexure ? `
-            <label class="inline-flex items-center gap-1.5 ${isCertChecked ? 'bg-indigo-100 text-indigo-900 border-indigo-400' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'} border px-2.5 py-2 rounded-xl text-xs font-black cursor-pointer select-none transition shadow-sm" title="सर्टिफिकेट ऑटोमैटिक जनरेट करके अटैच करें">
+            <label class="inline-flex items-center gap-1.5 ${isCertChecked ? 'bg-indigo-100 text-indigo-700 border-indigo-400 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-400 border-slate-200'} border px-2.5 py-2 rounded-xl text-sm cursor-pointer select-none transition" title="Attach Certificate">
                 <input type="checkbox" id="certChk-${data._origIndex}" ${isCertChecked ? 'checked' : ''} onchange="window.toggleCertificateCheckbox(${data._origIndex}, this.checked)" class="w-4 h-4 accent-indigo-600 rounded cursor-pointer">
-                <span><i class="fa-solid fa-certificate ${isCertChecked ? 'text-indigo-700' : 'text-slate-500'} mr-0.5"></i> ${isCertChecked ? 'Cert Attached' : 'Attach Cert'}</span>
+                <i class="fa-solid fa-certificate"></i>
             </label>
         ` : '';
 
         const stampCheckboxHtml = isAnnexure ? `
-            <label class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-900 border-green-400' : 'bg-amber-50 hover:bg-amber-100 text-amber-950 border-amber-300'} border px-2.5 py-2 rounded-xl text-xs font-black shadow-sm cursor-pointer select-none transition">
+            <label class="inline-flex items-center gap-1.5 ${isStampChecked ? 'bg-green-100 text-green-700 border-green-400 shadow-sm' : 'bg-slate-50 hover:bg-slate-100 text-slate-400 border-slate-200'} border px-2.5 py-2 rounded-xl text-sm cursor-pointer select-none transition" title="Stamp">
                 <input type="checkbox" id="stampChk-${data._origIndex}" ${isStampChecked ? 'checked' : ''} onchange="window.toggleRowStampCheckbox(${data._origIndex}, this.checked)" class="w-4 h-4 accent-green-600 rounded cursor-pointer">
-                <span><i class="fa-solid fa-stamp ${isStampChecked ? 'text-green-700' : 'text-amber-600'} mr-0.5"></i> ${isStampChecked ? 'Stamped' : 'Stamp'}</span>
+                <i class="fa-solid fa-stamp"></i>
             </label>
         ` : '';
 
