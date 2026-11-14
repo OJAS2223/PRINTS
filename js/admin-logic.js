@@ -324,6 +324,14 @@ window.loadPortalSettingsForAdmin = async function() {
         if (document.getElementById('chkShowPassport')) document.getElementById('chkShowPassport').checked = cfg.showPassport !== false;
         if (document.getElementById('chkShowGazette')) document.getElementById('chkShowGazette').checked = cfg.showGazette !== false;
         if (document.getElementById('chkShowAnnexures')) document.getElementById('chkShowAnnexures').checked = cfg.showAnnexures !== false;
+        if (document.getElementById('chkShowPanFind')) document.getElementById('chkShowPanFind').checked = cfg.showPanFind !== false;
+        if (document.getElementById('chkShowPanPrime')) document.getElementById('chkShowPanPrime').checked = cfg.showPanPrime !== false;
+        if (document.getElementById('chkShowMobileToUan')) document.getElementById('chkShowMobileToUan').checked = cfg.showMobileToUan !== false;
+        if (document.getElementById('chkShowInstantVoterLink')) document.getElementById('chkShowInstantVoterLink').checked = cfg.showInstantVoterLink !== false;
+        if (document.getElementById('chkShowLlExam')) document.getElementById('chkShowLlExam').checked = cfg.showLlExam !== false;
+        if (document.getElementById('chkShowDlPdf')) document.getElementById('chkShowDlPdf').checked = cfg.showDlPdf !== false;
+        if (document.getElementById('chkShowEshramMobile')) document.getElementById('chkShowEshramMobile').checked = cfg.showEshramMobile !== false;
+        if (document.getElementById('chkShowLlPdf')) document.getElementById('chkShowLlPdf').checked = cfg.showLlPdf !== false;
 
         if (document.getElementById('chkBannerEnabled')) document.getElementById('chkBannerEnabled').checked = !!cfg.bannerEnabled;
         if (document.getElementById('inpBannerBadge')) document.getElementById('inpBannerBadge').value = cfg.bannerBadge || 'UPDATE';
@@ -376,6 +384,9 @@ window.quickToggleAllCerts = async function(makeVisible) {
     if (document.getElementById('chkShowDobMinor')) document.getElementById('chkShowDobMinor').checked = makeVisible;
     if (document.getElementById('chkShowPassport')) document.getElementById('chkShowPassport').checked = makeVisible;
     if (document.getElementById('chkShowAnnexures')) document.getElementById('chkShowAnnexures').checked = makeVisible;
+    ['chkShowPanFind', 'chkShowPanPrime', 'chkShowMobileToUan', 'chkShowInstantVoterLink', 'chkShowLlExam', 'chkShowDlPdf', 'chkShowEshramMobile', 'chkShowLlPdf'].forEach(id => {
+        if (document.getElementById(id)) document.getElementById(id).checked = makeVisible;
+    });
     await window.savePortalSettings();
 };
 
@@ -400,6 +411,14 @@ window.savePortalSettings = async function(event) {
         showPassport: document.getElementById('chkShowPassport') ? document.getElementById('chkShowPassport').checked : true,
         showGazette: document.getElementById('chkShowGazette') ? document.getElementById('chkShowGazette').checked : true,
         showAnnexures: document.getElementById('chkShowAnnexures') ? document.getElementById('chkShowAnnexures').checked : true,
+        showPanFind: document.getElementById('chkShowPanFind') ? document.getElementById('chkShowPanFind').checked : true,
+        showPanPrime: document.getElementById('chkShowPanPrime') ? document.getElementById('chkShowPanPrime').checked : true,
+        showMobileToUan: document.getElementById('chkShowMobileToUan') ? document.getElementById('chkShowMobileToUan').checked : true,
+        showInstantVoterLink: document.getElementById('chkShowInstantVoterLink') ? document.getElementById('chkShowInstantVoterLink').checked : true,
+        showLlExam: document.getElementById('chkShowLlExam') ? document.getElementById('chkShowLlExam').checked : true,
+        showDlPdf: document.getElementById('chkShowDlPdf') ? document.getElementById('chkShowDlPdf').checked : true,
+        showEshramMobile: document.getElementById('chkShowEshramMobile') ? document.getElementById('chkShowEshramMobile').checked : true,
+        showLlPdf: document.getElementById('chkShowLlPdf') ? document.getElementById('chkShowLlPdf').checked : true,
 
         bannerEnabled: !!document.getElementById('chkBannerEnabled')?.checked,
         bannerBadge: document.getElementById('inpBannerBadge')?.value.trim() || 'UPDATE',
