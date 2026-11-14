@@ -1,5 +1,127 @@
+window.formatDateToDMY = function(isoStr) {
+    const s = String(isoStr || '').trim();
+    if (s.includes('-')) {
+        const p = s.split('-');
+        if (p.length === 3 && p[0].length === 4) return `${p[2]}-${p[1]}-${p[0]}`;
+    }
+    return s;
+};
+
+window.submitRtyuService = async function(event, opts) {
+    event.preventDefault();
+    const { auth, db, doc, setDoc, collection, addDoc } = window.fb;
+    if (!window.currentUserData || !auth.currentUser) return alert('Please login first!');
+
+    const formEl = event.target;
+    const cost = Number(opts.cost) || 10;
+    if (!window.currentUserData.hasFreeAccess && (window.currentUserData.credits || 0) < cost) {
+        return alert(`Insufficient credits! इस सर्विस के लिए ${cost} Credits चाहिए। कृपया Add Credits करें।`);
+    }
+
+    const fd = new FormData(formEl);
+    const params = {};
+    fd.forEach((val, k) => {
+        let v = String(val || '').trim();
+        if (k === 'dob') v = window.formatDateToDMY(v);
+        else if (k === 'pan_number' || k === 'epic_number' || k === 'dl_number') v = v.toUpperCase();
+        params[k] = v;
+    });
+
+    const btn = formEl.querySelector('button[type="submit"]');
+    const resBox = document.getElementById('rtyuServiceResultBox');
+    const origHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Processing...';
+    if (resBox) resBox.style.display = 'none';
+
+    try {
+        const idToken = await auth.currentUser.getIdToken(true);
+        const resp = await fetch('/api/rtyu-services', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+            body: JSON.stringify({ serviceKey: opts.serviceKey, params })
+        });
+        const json = await resp.json();
+        if (!resp.ok || !json.status) {
+            throw new Error(json.message || 'Service request failed!');
+        }
+
+        const r = json.result || {};
+        const inner = (r.data && r.data.data && typeof r.data.data === 'object') ? r.data.data : (r.data && typeof r.data.data !== 'object' ? r.data : (r.data || r));
+
+        if (!window.currentUserData.hasFreeAccess) {
+            const newCredits = Math.max(0, (window.currentUserData.credits || 0) - cost);
+            await setDoc(doc(db, "users", window.currentUserData.uid), { credits: newCredits }, { merge: true });
+            window.currentUserData.credits = newCredits;
+            const crEl = document.getElementById('displayCredits');
+            if (crEl) crEl.innerText = newCredits;
+        }
+
+        const rawPdf = r.pdf || inner.pdf || '';
+        const pdfBase64 = rawPdf ? (String(rawPdf).startsWith('data:application/pdf') ? rawPdf : `data:application/pdf;base64,${rawPdf}`) : '';
+        const pdfUrl = r.pdf_url || inner.pdf_url || '';
+        const primaryVal = params.pan_number || params.aadhaar || params.mobile || params.mobile_number || params.epic_number || params.dl_number || params.appno || params.id_number || 'Record';
+        const displayTitle = `${primaryVal} - ${opts.serviceType}`;
+
+        await addDoc(collection(db, "history"), {
+            userId: window.currentUserData.uid,
+            fileName: displayTitle,
+            fileId: 'SERVER_API_RTYU',
+            serviceType: opts.serviceType,
+            formData: {
+                SERVICE_KEY: opts.serviceKey,
+                PARAMS: params,
+                RESULT: inner,
+                PDF_URL: pdfUrl,
+                HAS_PDF: Boolean(pdfBase64 || pdfUrl),
+                CREDITS_DEDUCTED: window.currentUserData.hasFreeAccess ? 0 : cost
+            },
+            creditsDeducted: window.currentUserData.hasFreeAccess ? 0 : cost,
+            timestamp: new Date()
+        });
+
+        // Build clean visual result card
+        let detailsHtml = '';
+        const skipKeys = new Set(['pdf', 'pdf_url', 'status', 'response_code', 'provider_http_code']);
+        const flatObj = (inner && typeof inner === 'object') ? inner : {};
+        Object.entries(flatObj).forEach(([k, v]) => {
+            if (skipKeys.has(k) || v === null || v === undefined || v === '') return;
+            const valStr = Array.isArray(v) ? v.join(', ') : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+            detailsHtml += `<div class="bg-white p-2.5 rounded-xl border border-emerald-200"><p class="text-[10px] font-bold text-slate-400 uppercase">${k.replace(/_/g, ' ')}</p><p class="text-xs sm:text-sm font-black text-dark-900 break-all mt-0.5">${valStr}</p></div>`;
+        });
+
+        const pdfActionHtml = (pdfBase64 || pdfUrl) ? `
+            <div class="flex flex-wrap gap-2 pt-2">
+                ${pdfBase64 ? `<a href="${pdfBase64}" download="${primaryVal} - ${opts.serviceType}.pdf" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 px-4 rounded-xl text-xs shadow-sm transition"><i class="fa-solid fa-download mr-1"></i> Download PDF</a>` : ''}
+                ${pdfUrl ? `<a href="${pdfUrl}" target="_blank" class="flex-1 text-center bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-4 rounded-xl text-xs shadow-sm transition"><i class="fa-solid fa-external-link-alt mr-1"></i> Open PDF Link</a>` : ''}
+            </div>` : '';
+
+        if (resBox) {
+            resBox.className = "mt-4 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 space-y-3 shadow-sm";
+            resBox.innerHTML = `
+                <div class="flex items-center justify-between border-b border-emerald-200 pb-2">
+                    <span class="text-xs font-black text-emerald-900 uppercase"><i class="fa-solid fa-circle-check text-emerald-600 mr-1"></i> ${opts.serviceType} — Success</span>
+                    <span class="bg-emerald-200 text-emerald-950 px-2.5 py-0.5 rounded-full text-[10px] font-black">${r.message || 'Completed'}</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">${detailsHtml || '<div class="col-span-full text-xs font-bold text-emerald-800">अनुरोध सफलतापूर्वक सबमिट हो गया!</div>'}</div>
+                ${pdfActionHtml}
+            `;
+            resBox.style.display = 'block';
+        }
+    } catch (err) {
+        if (resBox) {
+            resBox.className = "mt-4 p-3.5 rounded-2xl bg-red-50 border border-red-300 text-red-700 text-xs font-black text-center";
+            resBox.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i> ${err.message}`;
+            resBox.style.display = 'block';
+        }
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+    }
+};
+
 // ============================================================================
-// FILE: js/portal-forms-services.js 
+// FILE: js/portal-forms-services.js
 // Renders Standard & Main Service Forms (Minor, Domicile, Caste, e-Voter, DOB Delhi, Passport, Gazette, DOB Original PDF)
 // ============================================================================
 
@@ -43,6 +165,79 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
                 </div>
             </div>`;
     };
+
+
+    // 8 NEW RTYU API SERVICES
+    const rtyuFormSpecs = {
+        pan_find_bg: {
+            title: 'PAN Find by Aadhaar', subtitle: '12-अंक आधार नंबर से PAN नंबर खोजें',
+            serviceType: 'PAN Find', serviceKey: 'pan-find-bg', cost: 10, icon: 'fa-magnifying-glass', color: 'blue',
+            fields: `<div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">12-Digit Aadhaar Number <span class="text-red-500">*</span></label><input type="text" name="aadhaar" maxlength="12" pattern="\\d{12}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,12)" placeholder="123456789012" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black tracking-widest bg-slate-50 focus:bg-white outline-none"></div>`
+        },
+        pan_details_prime: {
+            title: 'PAN Details Prime', subtitle: 'PAN नंबर से Name, Father Name, Masked Aadhaar व DOB निकालें',
+            serviceType: 'PAN Details Prime', serviceKey: 'pan-details-prime', cost: 20, icon: 'fa-id-card', color: 'indigo',
+            fields: `<div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">10-Digit PAN Number <span class="text-red-500">*</span></label><input type="text" name="pan_number" maxlength="10" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" placeholder="ABCDE1234F" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black tracking-widest bg-slate-50 focus:bg-white outline-none uppercase"></div>`
+        },
+        mobile_to_uan: {
+            title: 'Mobile to UAN Instant', subtitle: 'रजिस्टर्ड मोबाइल नंबर से तुरंत UAN नंबर निकालें',
+            serviceType: 'Mobile to UAN', serviceKey: 'mobile-to-uan-num-instant', cost: 20, icon: 'fa-mobile-screen-button', color: 'emerald',
+            fields: `<div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">10-Digit Mobile Number <span class="text-red-500">*</span></label><input type="tel" name="mobile" maxlength="10" pattern="\\d{10}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,10)" placeholder="9999999999" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black tracking-widest bg-slate-50 focus:bg-white outline-none"></div>`
+        },
+        instant_voter_link: {
+            title: 'Instant Voter Mobile Link', subtitle: 'EPIC नंबर के साथ तुरंत मोबाइल नंबर लिंक करें',
+            serviceType: 'Instant Voter Link', serviceKey: 'instant-voter-mobile-link', cost: 30, icon: 'fa-link', color: 'teal',
+            fields: `<div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Voter EPIC Number <span class="text-red-500">*</span></label><input type="text" name="epic_number" oninput="this.value=this.value.toUpperCase()" placeholder="AAU1229236" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none uppercase"></div>
+                     <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">10-Digit Mobile Number <span class="text-red-500">*</span></label><input type="tel" name="mobile_number" maxlength="10" pattern="\\d{10}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,10)" placeholder="9999999999" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none"></div>`
+        },
+        ll_exam: {
+            title: 'Learning Licence Exam', subtitle: 'LL Exam ऑर्डर सबमिट करें',
+            serviceType: 'LL Exam', serviceKey: 'll-exam', cost: 70, icon: 'fa-car-side', color: 'amber',
+            fields: `<div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Application Number <span class="text-red-500">*</span></label><input type="text" name="appno" placeholder="Enter Application No" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none"></div>
+                     <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Password <span class="text-red-500">*</span></label><input type="text" name="password" placeholder="Enter Password" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none"></div>
+                     <div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth <span class="text-red-500">*</span></label><input type="date" name="dob" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none"></div>`
+        },
+        dl_pdf: {
+            title: 'Driving Licence PDF', subtitle: 'DL नंबर और जन्मतिथि से तुरंत Driving Licence PDF निकालें',
+            serviceType: 'DL PDF', serviceKey: 'dl-pdf', cost: 10, icon: 'fa-id-badge', color: 'sky',
+            fields: `<div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">DL Number <span class="text-red-500">*</span></label><input type="text" name="dl_number" oninput="this.value=this.value.toUpperCase()" placeholder="MH2120250001353" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none uppercase"></div>
+                     <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth <span class="text-red-500">*</span></label><input type="date" name="dob" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none"></div>`
+        },
+        eshram_mobile: {
+            title: 'e-Shram Mobile Update', subtitle: 'आधार और DOB से e-Shram कार्ड में नया मोबाइल नंबर अपडेट करें',
+            serviceType: 'e-Shram Mobile Update', serviceKey: 'eshram-mobile-update', cost: 40, icon: 'fa-helmet-safety', color: 'orange',
+            fields: `<div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">12-Digit Aadhaar Number <span class="text-red-500">*</span></label><input type="text" name="aadhaar" maxlength="12" pattern="\\d{12}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,12)" placeholder="123456789012" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none"></div>
+                     <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth <span class="text-red-500">*</span></label><input type="date" name="dob" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-50 focus:bg-white outline-none"></div>
+                     <div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">New 10-Digit Mobile Number <span class="text-red-500">*</span></label><input type="tel" name="new_mobile" maxlength="10" pattern="\\d{10}" oninput="this.value=this.value.replace(/\\D/g,'').slice(0,10)" placeholder="9999999999" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black bg-slate-50 focus:bg-white outline-none"></div>`
+        },
+        ll_pdf: {
+            title: 'Learning Licence PDF', subtitle: 'Application / LL Number से तुरंत Learning Licence PDF निकालें',
+            serviceType: 'LL PDF', serviceKey: 'learning-license-pdf', cost: 30, icon: 'fa-file-pdf', color: 'rose',
+            fields: `<div class="md:col-span-2"><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Application / ID Number <span class="text-red-500">*</span></label><input type="text" name="id_number" placeholder="4655917725" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-black tracking-wider bg-slate-50 focus:bg-white outline-none"></div>`
+        }
+    };
+
+    if (rtyuFormSpecs[serviceName]) {
+        const spec = rtyuFormSpecs[serviceName];
+        const btnText = window.currentUserData?.hasFreeAccess ? `Submit (VIP Free)` : `Submit (${spec.cost} Credits)`;
+        container.innerHTML = `
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
+                <div>
+                    <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid ${spec.icon} text-${spec.color}-600 mr-1.5"></i> ${spec.title}</h3>
+                    <p class="text-[11px] font-bold text-slate-500">${spec.subtitle} • शुल्क: ${spec.cost} Credits (₹${spec.cost})</p>
+                </div>
+                <span class="bg-${spec.color}-100 text-${spec.color}-900 px-2.5 py-1 rounded-md text-[10px] font-black border border-${spec.color}-300 uppercase">${spec.cost} Credits (₹${spec.cost})</span>
+            </div>
+            <form onsubmit="window.submitRtyuService(event, { serviceKey: '${spec.serviceKey}', serviceType: '${spec.serviceType}', cost: ${spec.cost} })" class="max-w-xl mx-auto space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">${spec.fields}</div>
+                <button type="submit" class="w-full bg-dark-900 hover:bg-black text-royal-300 font-black py-3.5 rounded-xl shadow-vip-glow transition text-sm md:text-base flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>${btnText}</span>
+                </button>
+                <div id="rtyuServiceResultBox" style="display: none;"></div>
+            </form>
+        `;
+        return true;
+    }
 
     // 0. MINOR SERVICE
     if (serviceName === 'minor') {
