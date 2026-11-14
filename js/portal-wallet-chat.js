@@ -871,7 +871,6 @@ window.saveUserProfile = async function(event) {
     const u = window.currentUserData;
     if (!u) return;
     const fullNameVal = document.getElementById('profileFullNameInput').value.trim();
-    const emailVal = document.getElementById('profileEmailInput').value.trim();
     const photoVal = document.getElementById('profilePhotoDataInput').value;
     const msgBox = document.getElementById('profileSaveMsg');
     const btn = document.getElementById('btnSaveProfile');
@@ -879,11 +878,10 @@ window.saveUserProfile = async function(event) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> Saving...';
     try {
-        const payload = { email: u.email, fullName: fullNameVal, contactEmail: emailVal, updatedAt: new Date() };
+        const payload = { email: u.email, fullName: fullNameVal, updatedAt: new Date() };
         if (photoVal) payload.profilePhoto = photoVal;
         await setDoc(doc(db, "users", u.uid), payload, { merge: true });
         u.fullName = fullNameVal;
-        u.contactEmail = emailVal;
         if (photoVal) u.profilePhoto = photoVal;
         window.syncUserProfileHeaderUI(u);
         msgBox.className = "text-xs font-bold p-3 rounded-xl border text-center bg-green-50 text-green-700 border-green-200";
@@ -1048,8 +1046,8 @@ window.switchService = async function(serviceName) {
                     <input type="text" id="profilePhoneInput" value="${u.phone || 'Not Registered'}" readonly disabled class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-200/70 text-slate-500 cursor-not-allowed outline-none">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email ID (ईमेल)</label>
-                    <input type="email" id="profileEmailInput" value="${(u.contactEmail || u.email || '').replace(/"/g, '&quot;')}" required class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-royal-500 bg-white">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Email / User ID (बदला नहीं जा सकता)</label>
+                    <input type="email" id="profileEmailInput" value="${(u.email || '').replace(/"/g, '&quot;')}" readonly disabled class="w-full p-3 border border-slate-200 rounded-xl text-sm font-bold bg-slate-200/70 text-slate-500 cursor-not-allowed outline-none">
                 </div>
                 <div id="profileSaveMsg" style="display:none;"></div>
                 <button type="submit" id="btnSaveProfile" class="w-full bg-royal-600 hover:bg-royal-700 text-white font-black py-3 rounded-xl shadow-sm transition text-sm">Save Profile</button>
