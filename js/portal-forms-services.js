@@ -1,7 +1,7 @@
 // ============================================================================
 // FILE: js/portal-forms-services.js
 // Renders Standard & Main Service Forms (Minor, Domicile, Caste, e-Voter, DOB Delhi, Passport, Gazette, DOB Original PDF)
-// ============================================================================ 
+// ============================================================================
 
 window.renderMainServiceFormHtml = function(serviceName, container, submitBtnText, statusTagHtml, getWatermarkHtml) {
     const todayISO = new Date().toISOString().split('T')[0];
@@ -342,7 +342,7 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
         if (!window.currentUserData?.isAdmin) return false;
         const hospitalsList = window.HOSPITALS_LIST || [];
         const pobOptions = hospitalsList.map(h => `<option value="${h}">${h}</option>`).join('');
-        container.innerHTML = `
+        container.innerHTML = `${buildDobGroupSwitcherHtml('dob_baraut')}
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-3 mb-4 relative z-20">
                 <div>
                     <h3 class="text-base md:text-lg font-black text-dark-900"><i class="fa-solid fa-baby text-emerald-600 mr-1.5"></i> DOB Baraut (नगर पालिका परिषद बड़ौत)</h3>
@@ -408,6 +408,7 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
                         </div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Full Name (पूरा नाम) <span class="text-red-500">*</span></label><input type="text" name="NAME" placeholder="Enter Full Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Father / Husband Name <span class="text-red-500">*</span></label><input type="text" name="FNAME" placeholder="Enter Father/Husband Name" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Mother Name (वैकल्पिक)</label><input type="text" name="MNAME" placeholder="Enter Mother Name" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Sex / Gender</label><select name="SEX" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select></div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Date of Birth (DOB) <span class="text-red-500">*</span></label><input type="date" name="DOB" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none relative z-10"></div>
                         <div>
@@ -418,6 +419,7 @@ window.renderMainServiceFormHtml = function(serviceName, container, submitBtnTex
                             <input type="date" id="inpPassportIssueDate" name="ISSUE_DATE" value="${defaultIssueDate}" required class="w-full p-3 border border-sky-300 rounded-xl text-sm bg-sky-50 focus:bg-white outline-none relative z-10">
                         </div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Place of Issue (जारी स्थान)</label><input type="text" name="POI" value="GHAZIABAD" placeholder="e.g. GHAZIABAD" class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
+                        <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Pin Code <span class="text-red-500">*</span></label><input type="text" name="PIN" placeholder="Enter Pin Code" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
                         <div><label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Place of Birth / Address <span class="text-red-500">*</span></label><input type="text" name="ADDRESS" placeholder="e.g. BAGHPAT, UTTAR PRADESH" required class="w-full p-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white outline-none uppercase relative z-10"></div>
                         <div class="md:col-span-2">
                             <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Upload Photo (पासपोर्ट फोटो)</label>
