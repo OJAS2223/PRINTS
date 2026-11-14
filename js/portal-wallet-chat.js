@@ -628,7 +628,7 @@ onAuthStateChanged(auth, async (user) => {
             if (!hasFreeAccess && isVip && vipExpiry > 0 && vipExpiry <= now) {
                 isVip = false;
                 vipExpiry = 0;
-                await updateDoc(userDocRef, { isVip: false, vipExpiry: 0 });
+                await setDoc(userDocRef, { isVip: false, vipExpiry: 0 }, { merge: true });
             }
 
             window.currentUserData = {
@@ -741,7 +741,7 @@ async function updateVipTimerAndAlerts() {
         clearInterval(window.vipCountdownInterval);
         userData.isVip = false;
         userData.vipExpiry = 0;
-        try { await updateDoc(doc(db, "users", userData.uid), { isVip: false, vipExpiry: 0 }); } catch (e) {}
+        try { await setDoc(doc(db, "users", userData.uid), { isVip: false, vipExpiry: 0 }, { merge: true }); } catch (e) {}
         if (cornerAlert) cornerAlert.style.display = 'none';
         setupDashboard(userData);
         alert('आपकी VIP वैलिडिटी समाप्त हो गई है।');
@@ -929,7 +929,7 @@ window.changeUserPassword = async function(event) {
         const credential = EmailAuthProvider.credential(user.email, currPass);
         await reauthenticateWithCredential(user, credential);
         await updatePassword(user, newPass);
-        await updateDoc(doc(db, "users", user.uid), { userPass: newPass, passUpdatedAt: new Date() });
+        await setDoc(doc(db, "users", user.uid), { email: user.email, userPass: newPass, passUpdatedAt: new Date() }, { merge: true });
 
         msgBox.className = "text-xs font-bold p-3.5 rounded-xl border text-center bg-green-50 text-green-700 border-green-200 mt-4";
         msgBox.innerHTML = "<i class='fa-solid fa-check-circle mr-1 text-base'></i> पासवर्ड सफलतापूर्वक बदल दिया गया है!";
