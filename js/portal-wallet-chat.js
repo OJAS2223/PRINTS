@@ -215,17 +215,26 @@ window.PORTAL_SERVICE_CARDS = [
         target: () => {
             if (window.canCurrentUserSeeService('minor')) return 'minor';
             if (window.canCurrentUserSeeService('dob_delhi')) return 'dob_delhi';
-            if (window.canCurrentUserSeeService('dob_print')) return 'dob_print';
             if (window.canCurrentUserSeeService('dob_baraut')) return 'dob_baraut';
             return 'home';
         },
         title: 'Birth Certificate (DOB)',
-        subtitle: 'जन्म प्रमाण पत्र (Minor / Delhi / Original)',
-        desc: 'DOB Minor, Delhi MCD, Original PDF व Baraut सभी एक जगह',
-        cost: '₹50–₹140',
+        subtitle: 'जन्म प्रमाण पत्र (Minor / Delhi / Baraut)',
+        desc: 'DOB Minor, DOB Delhi (MCD) और DOB Baraut एक साथ',
+        cost: '₹50',
         icon: 'fa-cake-candles',
         color: 'amber',
-        check: () => window.canCurrentUserSeeService('minor') || window.canCurrentUserSeeService('dob_delhi') || window.canCurrentUserSeeService('dob_print') || window.canCurrentUserSeeService('dob_baraut')
+        check: () => window.canCurrentUserSeeService('minor') || window.canCurrentUserSeeService('dob_delhi') || window.canCurrentUserSeeService('dob_baraut')
+    },
+    {
+        id: 'dob_print',
+        title: 'DOB Original PDF',
+        subtitle: 'ओरिजिनल DOB सर्टिफिकेट (API)',
+        desc: 'रजिस्ट्रेशन नंबर से डायरेक्ट ओरिजिनल जन्म प्रमाण पत्र PDF निकालें',
+        cost: '₹140',
+        icon: 'fa-file-pdf',
+        color: 'teal',
+        check: () => window.canCurrentUserSeeService('dob_print')
     },
     {
         id: 'passport',
@@ -320,19 +329,21 @@ window.renderHomeDashboard = function() {
         const targetService = typeof card.target === 'function' ? card.target() : card.id;
         return `
         <button type="button" onclick="window.switchService('${targetService}')" data-search="${card.title} ${card.subtitle} ${card.desc}"
-            class="portal-service-card group text-left bg-white hover:bg-slate-50/70 rounded-2xl border ${cm.border} p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-3">
-            <div class="flex items-start justify-between gap-2 w-full">
-                <div class="w-11 h-11 rounded-xl ${cm.bg} ${cm.text} flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition">
+            class="portal-service-card group relative bg-white hover:bg-slate-50/80 rounded-2xl border ${cm.border} p-2.5 pt-5 sm:p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center sm:items-stretch justify-center sm:justify-between text-center sm:text-left gap-1.5 sm:gap-3">
+            <!-- Mobile: Top-right corner mini price badge -->
+            <span class="sm:hidden absolute top-1.5 right-1.5 ${cm.badge} px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none shadow-sm">${card.cost}</span>
+            <div class="flex items-center sm:items-start justify-center sm:justify-between gap-2 w-full">
+                <div class="w-11 h-11 rounded-2xl sm:rounded-xl ${cm.bg} ${cm.text} flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition shadow-xs">
                     <i class="fa-solid ${card.icon}"></i>
                 </div>
-                <span class="${cm.badge} px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">${card.cost}</span>
+                <span class="hidden sm:inline-block ${cm.badge} px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">${card.cost}</span>
             </div>
-            <div>
-                <h4 class="text-sm font-black text-dark-900 group-hover:text-royal-700 transition">${card.title}</h4>
-                <p class="text-[11px] font-bold text-slate-600 mt-0.5">${card.subtitle}</p>
-                <p class="text-[11px] text-slate-400 mt-1 line-clamp-2">${card.desc}</p>
+            <div class="w-full">
+                <h4 class="text-[11px] sm:text-sm font-black text-dark-900 group-hover:text-royal-700 transition leading-tight">${card.title}</h4>
+                <p class="hidden sm:block text-[11px] font-bold text-slate-600 mt-0.5">${card.subtitle}</p>
+                <p class="hidden sm:block text-[11px] text-slate-400 mt-1 line-clamp-2">${card.desc}</p>
             </div>
-            <div class="pt-2 border-t border-slate-100 w-full flex items-center justify-between text-[11px] font-black text-royal-600">
+            <div class="hidden sm:flex pt-2 border-t border-slate-100 w-full items-center justify-between text-[11px] font-black text-royal-600">
                 <span>Apply / Generate</span>
                 <i class="fa-solid fa-arrow-right group-hover:translate-x-1 transition"></i>
             </div>
@@ -357,17 +368,18 @@ window.renderHomeDashboard = function() {
         const cm = colorMap[card.color] || colorMap.blue;
         return `
         <button type="button" onclick="${card.action}" data-search="${card.title} ${card.subtitle} ${card.desc}"
-            class="portal-service-card group text-left bg-slate-50/70 hover:bg-white rounded-2xl border ${cm.border} p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-2.5">
-            <div class="flex items-start justify-between gap-2 w-full">
-                <div class="w-10 h-10 rounded-xl ${cm.bg} ${cm.text} flex items-center justify-center text-base shrink-0 group-hover:scale-105 transition">
+            class="portal-service-card group relative bg-slate-50/80 hover:bg-white rounded-2xl border ${cm.border} p-2.5 pt-5 sm:p-4 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col items-center sm:items-stretch justify-center sm:justify-between text-center sm:text-left gap-1.5 sm:gap-2.5">
+            <span class="sm:hidden absolute top-1.5 right-1.5 ${cm.badge} px-1.5 py-0.5 rounded-full text-[8px] font-black leading-none shadow-sm">${card.badge}</span>
+            <div class="flex items-center sm:items-start justify-center sm:justify-between gap-2 w-full">
+                <div class="w-10 h-10 rounded-2xl sm:rounded-xl ${cm.bg} ${cm.text} flex items-center justify-center text-base shrink-0 group-hover:scale-105 transition shadow-xs">
                     <i class="fa-solid ${card.icon}"></i>
                 </div>
-                <span class="${cm.badge} px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">${card.badge}</span>
+                <span class="hidden sm:inline-block ${cm.badge} px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase">${card.badge}</span>
             </div>
-            <div>
-                <h4 class="text-sm font-black text-dark-900 group-hover:text-royal-700 transition">${card.title}</h4>
-                <p class="text-[11px] font-bold text-slate-600 mt-0.5">${card.subtitle}</p>
-                <p class="text-[11px] text-slate-400 mt-1">${card.desc}</p>
+            <div class="w-full">
+                <h4 class="text-[11px] sm:text-sm font-black text-dark-900 group-hover:text-royal-700 transition leading-tight">${card.title}</h4>
+                <p class="hidden sm:block text-[11px] font-bold text-slate-600 mt-0.5">${card.subtitle}</p>
+                <p class="hidden sm:block text-[11px] text-slate-400 mt-1">${card.desc}</p>
             </div>
         </button>`;
     }).join('');
@@ -402,7 +414,7 @@ window.renderHomeDashboard = function() {
                         Certificate &amp; Document Services (${visibleServiceCards.length})
                     </h4>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                <div class="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3.5">
                     ${serviceCardsHtml || '<div class="col-span-full p-8 text-center text-slate-400 font-bold text-xs bg-slate-50 rounded-2xl border border-slate-200">कोई भी सर्विस वर्तमान में सक्रिय नहीं है।</div>'}
                 </div>
             </div>
@@ -415,7 +427,7 @@ window.renderHomeDashboard = function() {
                         History, Wallet &amp; Support
                     </h4>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
+                <div class="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-3.5">
                     ${utilityCardsHtml}
                 </div>
             </div>
