@@ -258,8 +258,8 @@ window.PORTAL_SERVICE_CARDS = [
             return 'home';
         },
         title: 'Birth Certificate (DOB)',
-        subtitle: 'जन्म प्रमाण पत्र (Minor / Delhi / Baraut)',
-        desc: 'DOB Minor, DOB Delhi (MCD) और DOB Baraut एक साथ',
+        subtitle: 'जन्म प्रमाण पत्र (Minor / Delhi / Custom DOB)',
+        desc: 'DOB Minor, DOB Delhi (MCD) और Custom Date of Birth एक साथ',
         cost: '₹50',
         icon: 'fa-cake-candles',
         color: 'amber',
@@ -1092,7 +1092,7 @@ window.switchService = async function(serviceName) {
     const titleLookup = {
         home: 'All Services', domicile: 'Domicile Certificate', caste: 'Caste Certificate',
         evoter: 'e-Voter ID', minor: 'DOB (Minor)', dob_delhi: 'DOB Delhi (MCD)',
-        dob_print: 'DOB Original PDF', dob_baraut: 'DOB Baraut', passport: 'Passport Services',
+        dob_print: 'DOB Original PDF', dob_baraut: 'Custom Date of Birth', passport: 'Passport Services',
         gazette: 'Gazette Notification', pan_find_bg: 'PAN Find (Aadhaar)', pan_details_prime: 'PAN Details Prime', mobile_to_uan: 'Mobile to UAN', instant_voter_link: 'Instant Voter Link', ll_exam: 'LL Exam', dl_pdf: 'DL PDF', eshram_mobile: 'e-Shram Mobile Update', ll_pdf: 'LL PDF', annexure1: 'Annexure I', annexure1a: 'Annexure IA',
         annexure3: 'Annexure III', annexure3a: 'Annexure IIIA', annexureb: 'Annexure B',
         annexurec: 'Annexure C', annexured: 'Annexure D', annexuree: 'Annexure E',
@@ -1278,7 +1278,7 @@ window.switchService = async function(serviceName) {
         const casOpt = cfg.showCaste !== false ? `<option value="Caste">जाति प्रमाण पत्र (Caste)</option>` : '';
         const evoterOpt = window.canCurrentUserSeeService('evoter') ? `<option value="e-Voter ID">e-Voter ID</option>` : '';
         const dobDelhiOpt = window.canCurrentUserSeeService('dob_delhi') ? `<option value="DOB Delhi">DOB Delhi (MCD)</option>` : '';
-        const dobBarautOpt = window.canCurrentUserSeeService('dob_baraut') ? `<option value="DOB Baraut">DOB Baraut (₹50)</option>` : '';
+        const dobBarautOpt = window.canCurrentUserSeeService('dob_baraut') ? `<option value="DOB Baraut">Custom Date of Birth (₹50)</option>` : '';
         const passportOpt = window.canCurrentUserSeeService('passport') ? `<option value="Passport">Passport</option>` : '';
         const minorOpt = window.canCurrentUserSeeService('minor') ? `<option value="Minor">DOB (Minor • ₹50)</option>` : '';
         const dobPrintOpt = window.canCurrentUserSeeService('dob_print') ? `<option value="DOB Print">DOB Original PDF (₹140)</option>` : '';
