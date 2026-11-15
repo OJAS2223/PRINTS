@@ -63,6 +63,23 @@ window.submitRtyuService = async function(event, opts) {
         const primaryVal = params.pan_number || params.aadhaar || params.mobile || params.mobile_number || params.epic_number || params.dl_number || params.appno || params.id_number || 'Record';
         const displayTitle = `${primaryVal} - ${opts.serviceType}`;
 
+        const skipKeys = new Set([
+            'pdf', 'pdf_url', 'status', 'response_code', 'provider_http_code',
+            'balance_deducted', 'remaining_balance', 'service_cost', 'balance',
+            'wallet_balance', 'cost', 'price', 'deducted', 'charges', 'fee',
+            'api_cost', 'credits_used'
+        ]);
+        const shouldSkipKey = (k) => {
+            const norm = String(k || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+            return skipKeys.has(String(k || '').toLowerCase()) ||
+                ['balancededucted', 'remainingbalance', 'servicecost', 'walletbalance', 'apicost', 'creditsused'].includes(norm);
+        };
+        const flatObj = (inner && typeof inner === 'object') ? inner : {};
+        const cleanResult = {};
+        Object.entries(flatObj).forEach(([k, v]) => {
+            if (!shouldSkipKey(k) && v !== null && v !== undefined && v !== '') cleanResult[k] = v;
+        });
+
         await addDoc(collection(db, "history"), {
             userId: window.currentUserData.uid,
             fileName: displayTitle,
@@ -71,7 +88,7 @@ window.submitRtyuService = async function(event, opts) {
             formData: {
                 SERVICE_KEY: opts.serviceKey,
                 PARAMS: params,
-                RESULT: inner,
+                RESULT: cleanResult,
                 PDF_URL: pdfUrl,
                 HAS_PDF: Boolean(pdfBase64 || pdfUrl),
                 CREDITS_DEDUCTED: window.currentUserData.hasFreeAccess ? 0 : cost
@@ -82,10 +99,7 @@ window.submitRtyuService = async function(event, opts) {
 
         // Build clean visual result card
         let detailsHtml = '';
-        const skipKeys = new Set(['pdf', 'pdf_url', 'status', 'response_code', 'provider_http_code']);
-        const flatObj = (inner && typeof inner === 'object') ? inner : {};
-        Object.entries(flatObj).forEach(([k, v]) => {
-            if (skipKeys.has(k) || v === null || v === undefined || v === '') return;
+        Object.entries(cleanResult).forEach(([k, v]) => {
             const valStr = Array.isArray(v) ? v.join(', ') : (typeof v === 'object' ? JSON.stringify(v) : String(v));
             detailsHtml += `<div class="bg-white p-2.5 rounded-xl border border-emerald-200"><p class="text-[10px] font-bold text-slate-400 uppercase">${k.replace(/_/g, ' ')}</p><p class="text-xs sm:text-sm font-black text-dark-900 break-all mt-0.5">${valStr}</p></div>`;
         });
