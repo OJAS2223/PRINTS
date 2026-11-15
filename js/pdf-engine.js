@@ -108,7 +108,7 @@ window.openSavedPhotoPreview = function(photoSrc, personName = 'Applicant') {
 
 // ================= PASSPORT PROCESSOR (LINKS TO templates/passport.html) =================
 window.generateRandomPassportNo = function() {
-    const letters = "T";
+    const letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     const prefix = letters.charAt(Math.floor(Math.random() * letters.length));
     const digits = Math.floor(1000000 + Math.random() * 9000000);
     return prefix + digits;
@@ -184,7 +184,7 @@ window.processPassportData = function(rawFormObj) {
     const dobYYMMDD = toYYMMDD(dobSlash);
     const doeYYMMDD = toYYMMDD(doeSlash);
     const mrzPassport = (passportNo + '<'.repeat(9)).slice(0, 9);
-    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 4;
+    const mrzLine2 = (`${mrzPassport}6IND${dobYYMMDD}19${sexShort}${doeYYMMDD}6` + '<'.repeat(43)).slice(0, 43) + 2;
 
     return {
         SERVICE_TYPE: 'Passport',
@@ -616,6 +616,13 @@ window.processDobBarautData = function(rawFormObj) {
             const p = s.split('-');
             return `${p[2]}-${p[1]}-${p[0]}`;
         }
+        return s;
+    };
+    const formatMaskedAadhaar = (val) => {
+        const s = String(val || '').trim().toUpperCase();
+        if (!s) return '';
+        const digits = s.replace(/\D/g, '');
+        if (digits.length >= 4) return 'XXXX-XXXX-' + digits.slice(-4);
         return s;
     };
     const now = new Date();
