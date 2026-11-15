@@ -101,7 +101,8 @@ window.submitRtyuService = async function(event, opts) {
         let detailsHtml = '';
         Object.entries(cleanResult).forEach(([k, v]) => {
             const valStr = Array.isArray(v) ? v.join(', ') : (typeof v === 'object' ? JSON.stringify(v) : String(v));
-            detailsHtml += `<div class="bg-white p-2.5 rounded-xl border border-emerald-200"><p class="text-[10px] font-bold text-slate-400 uppercase">${k.replace(/_/g, ' ')}</p><p class="text-xs sm:text-sm font-black text-dark-900 break-all mt-0.5">${valStr}</p></div>`;
+            const encVal = encodeURIComponent(valStr);
+            detailsHtml += `<div onclick="if(window.copyRtyuCardValue) window.copyRtyuCardValue(this, '${encVal}')" title="Click to copy" class="group cursor-pointer bg-white hover:bg-indigo-50/40 p-2.5 rounded-xl border border-emerald-200 hover:border-indigo-300 transition"><div class="flex items-center justify-between gap-1"><p class="text-[10px] font-bold text-slate-400 uppercase">${k.replace(/_/g, ' ')}</p><span class="copy-badge text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-700 transition"><i class="fa-regular fa-copy mr-0.5"></i>Copy</span></div><p class="text-xs sm:text-sm font-black text-dark-900 break-all mt-0.5">${valStr}</p></div>`;
         });
 
         const pdfActionHtml = (pdfBase64 || pdfUrl) ? `
