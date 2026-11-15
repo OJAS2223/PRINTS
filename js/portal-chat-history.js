@@ -1122,7 +1122,7 @@ window.closeRtyuDetailsModal = function() {
 };
 
 window.openRtyuHistoryDetails = function(origIndex) {
-    const rec = (window.portalAllHistoryRecords || [])[origIndex];
+    const rec = (window.historyData && window.historyData[origIndex]) || (window.adminAllHistoryData && window.adminAllHistoryData[origIndex]);
     if (!rec) return alert('Record not found!');
     const res = rec.formData?.RESULT || {};
     const params = rec.formData?.PARAMS || {};
