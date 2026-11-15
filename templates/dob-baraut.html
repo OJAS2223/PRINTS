@@ -10,17 +10,17 @@
                         <img src="/images/sealofup.jpg" onerror="this.onerror=null;this.src='images/sealofup.jpg';" style="width: 66px; height: 66px; object-fit: contain; display: inline-block;" alt="UP Seal" />
                     </div>
                     <div style="flex: 1; text-align: center; padding: 0 8px;">
-                        <img src="/images/s.png" onerror="this.onerror=null;this.src='images/s.png';" style="width: 30px; height: 42px; object-fit: contain; display: block; margin: 0 auto 3px auto;" alt="Emblem" />
+                        <img src="/images/stamp.png" onerror="this.onerror=null;this.src='images/stamp.png';" style="width: 30px; height: 42px; object-fit: contain; display: block; margin: 0 auto 3px auto;" alt="Emblem" />
                         <div style="font-size: 12px; font-weight: bold; line-height: 1.3;">उत्तर प्रदेश सरकार</div>
                         <div style="font-size: 12px; font-weight: bold; line-height: 1.3; letter-spacing: 0.3px;">GOVERNMENT OF UTTAR PRADESH</div>
                         <div style="font-size: 11.5px; font-weight: bold; line-height: 1.3; margin-top: 2px;">चिकित्सा एवं स्वास्थ्य विभाग</div>
                         <div style="font-size: 11.5px; font-weight: bold; line-height: 1.3;">DEPARTMENT OF MEDICAL AND HEALTH</div>
-                        <div style="font-size: 12.5px; font-weight: bold; color: #0f2966; line-height: 1.35; margin-top: 2px;">नगर पालिका परिषद बड़ौत</div>
-                        <div style="font-size: 12.5px; font-weight: bold; color: #0f2966; line-height: 1.35;">NAGAR PALIKA PARISHAD BARAUT</div>
+                        <div style="font-size: 12.5px; font-weight: bold; color: #0f2966; line-height: 1.35; margin-top: 2px;">{{REGISTRAR_HI}}</div>
+                        <div style="font-size: 12.5px; font-weight: bold; color: #0f2966; line-height: 1.35;">{{REGISTRAR_EN}}</div>
                     </div>
                     <div style="width: 105px; text-align: center;">
                         <div style="font-size: 11px; line-height: 1.25; margin-bottom: 4px;">प्रपत्र 5<br>FORM5</div>
-                        <img src="/images/dob.png" onerror="this.onerror=null;this.src='images/dob.png';" style="width: 64px; height: 64px; object-fit: contain; display: inline-block;" alt="CRS Logo" />
+                        <img src="/images/crs.png" onerror="this.onerror=null;this.src='images/crs.png';" style="width: 64px; height: 64px; object-fit: contain; display: inline-block;" alt="CRS Logo" />
                     </div>
                 </div>
 
@@ -34,8 +34,8 @@
                 <div style="font-size: 10.5px; line-height: 1.38; text-align: justify; margin-bottom: 10px;">
                     (जन्म और मृत्यु रजिस्ट्रीकरण अधिनियम, 1969 की धारा 12/17 तथा उत्तर प्रदेश जन्म और मृत्यु रजिस्ट्रीकरण नियम 2002 के नियम 8/13 के अंतर्गत जारी किया गया)<br>
                     (ISSUED UNDER SECTION 12/17 OF THE REGISTRATION OF BIRTHS AND DEATHS ACT, 1969 AND RULE 8/13 OF THE UTTAR PRADESH REGISTRATION OF BIRTHS &amp; DEATHS RULES 2002)<br>
-                    यह प्रमाणित किया जाता है कि निम्नलिखित सूचना जन्म के मूल लेख से ली गई है जो कि नगर पालिका परिषद बड़ौत तहसील बड़ौत जिला बागपत राज्य/संघ प्रदेश उत्तर प्रदेश, भारत के रजिस्टर में उल्लिखित है।<br>
-                    THIS IS TO CERTIFY THAT THE FOLLOWING INFORMATION HAS BEEN TAKEN FROM THE ORIGINAL RECORD OF BIRTH WHICH IS THE REGISTER FOR NAGAR PALIKA PARISHAD BARAUT OF TAHSIL/BLOCK BARAUT OF DISTRICT BAGHPAT OF STATE/UNION TERRITORY OF UTTAR PRADESH, INDIA
+                    यह प्रमाणित किया जाता है कि निम्नलिखित सूचना जन्म के मूल लेख से ली गई है जो कि {{REGISTRAR_HI}} तहसील {{TEHSIL_HI}} जिला {{DISTRICT_HI}} राज्य/संघ प्रदेश उत्तर प्रदेश, भारत के रजिस्टर में उल्लिखित है।<br>
+                    THIS IS TO CERTIFY THAT THE FOLLOWING INFORMATION HAS BEEN TAKEN FROM THE ORIGINAL RECORD OF BIRTH WHICH IS THE REGISTER FOR {{REGISTRAR_EN}} OF TAHSIL/BLOCK {{TEHSIL_EN}} OF DISTRICT {{DISTRICT_EN}} OF STATE/UNION TERRITORY OF UTTAR PRADESH, INDIA
                 </div>
 
                 <!-- Fields Table (Borderless 2-Column Layout Matching Original PDF) -->
@@ -130,12 +130,13 @@
                         <div style="font-size: 11px; font-weight: bold; line-height: 1.3;">'This QR code can be used to check the authenticity of the certificate'</div>
                     </div>
                     <div style="width: 46%; text-align: center; font-size: 11px; line-height: 1.35;">
-                        <div style="height: 48px;"></div>
+                        <div style="height: 50px; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 2px;">{{SIGN_IMG_HTML}}</div>
                         <div style="font-weight: bold; margin-bottom: 2px;">प्राधिकारी के हस्ताक्षर / SIGNATURE OF ISSUING AUTHORITY :</div>
+                        {{AUTH_OFFICER_BLOCK}}
                         <div style="color: #1e3a8a;">रजिस्ट्रार (जन्म एवं मृत्यु)</div>
                         <div style="color: #1e3a8a;">Registrar (BIRTH &amp; DEATH)</div>
-                        <div style="color: #1e3a8a;">नगर पालिका परिषद बड़ौत</div>
-                        <div style="color: #1e3a8a;">NAGAR PALIKA PARISHAD BARAUT</div>
+                        <div style="color: #1e3a8a;">{{REGISTRAR_HI}}</div>
+                        <div style="color: #1e3a8a;">{{REGISTRAR_EN}}</div>
                     </div>
                 </div>
                 <div style="text-align: center; font-size: 10.5px; font-weight: bold; color: #1e3a8a; padding-top: 2px;">
