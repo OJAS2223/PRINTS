@@ -951,9 +951,29 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
         }
 
         const rtyuPdfUrl = data.formData?.PDF_URL || data.formData?.RESULT?.pdf_url || '';
-        const rtyuSummary = data.formData?.RESULT?.pan_number || data.formData?.RESULT?.name || data.formData?.RESULT?.matching_uan || data.formData?.RESULT?.order_id || data.formData?.RESULT?.reference_number || 'Success';
+        const rtyuRes = data.formData?.RESULT || {};
+        const rtyuParams = data.formData?.PARAMS || {};
+        const rtyuAadhaar = rtyuRes.aadhaar_number || rtyuParams.aadhaar || rtyuParams.aadhaar_number || '';
+        const rtyuPan = rtyuRes.pan_number || rtyuParams.pan_number || '';
+        const rtyuMobile = rtyuParams.mobile || rtyuParams.mobile_number || rtyuRes.mobile || '';
+        const rtyuUan = rtyuRes.matching_uan || rtyuRes.uan || '';
+        const rtyuName = rtyuRes.name || rtyuRes.full_name || '';
+        const rtyuEpic = rtyuParams.epic_number || rtyuRes.epic_number || '';
+        const rtyuDl = rtyuParams.dl_number || rtyuRes.dl_number || '';
+        const rtyuInfoParts = [];
+        if (rtyuAadhaar) rtyuInfoParts.push(`<span class="bg-slate-100 text-slate-800 border border-slate-200 px-1.5 py-0.5 rounded font-bold">Aadhaar: ${rtyuAadhaar}</span>`);
+        if (rtyuPan) rtyuInfoParts.push(`<span class="bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.5 rounded font-black">PAN: ${rtyuPan}</span>`);
+        if (rtyuMobile) rtyuInfoParts.push(`<span class="bg-slate-100 text-slate-800 border border-slate-200 px-1.5 py-0.5 rounded font-bold">Mob: ${rtyuMobile}</span>`);
+        if (rtyuUan) rtyuInfoParts.push(`<span class="bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.5 rounded font-black">UAN: ${rtyuUan}</span>`);
+        if (rtyuEpic) rtyuInfoParts.push(`<span class="bg-indigo-50 text-indigo-800 border border-indigo-200 px-1.5 py-0.5 rounded font-bold">EPIC: ${rtyuEpic}</span>`);
+        if (rtyuDl) rtyuInfoParts.push(`<span class="bg-indigo-50 text-indigo-800 border border-indigo-200 px-1.5 py-0.5 rounded font-bold">DL: ${rtyuDl}</span>`);
+        if (rtyuName) rtyuInfoParts.push(`<span class="bg-amber-50 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded font-bold">${rtyuName}</span>`);
+        const rtyuSubInfoHtml = (isServerRtyu && rtyuInfoParts.length)
+            ? `<div class="flex flex-wrap gap-1 mt-1 text-[10px]">${rtyuInfoParts.join('')}</div>`
+            : '';
+        const rtyuSummary = rtyuPan || rtyuName || rtyuUan || rtyuRes.order_id || rtyuRes.reference_number || 'Success';
         const actionBtnsHtml = isServerRtyu
-            ? `<div class="inline-flex items-center gap-1.5">${rtyuPdfUrl ? `<a href="${rtyuPdfUrl}" target="_blank" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-file-pdf"></i> Open PDF</a>` : `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg text-[10px] font-black">${rtyuSummary}</span>`}</div>`
+            ? `<div class="inline-flex items-center gap-1.5 flex-wrap justify-end">${rtyuPdfUrl ? `<a href="${rtyuPdfUrl}" target="_blank" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-file-pdf"></i> Open PDF</a>` : ''}<button onclick="window.openRtyuHistoryDetails(${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Details</button></div>`
             : (isServerDobPrint
             ? (isCompleted
                 ? `<div class="inline-flex items-center gap-1.5">
@@ -977,7 +997,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                     <td class="p-3 font-bold text-slate-800">
                         <div class="flex items-center gap-2.5">
                             ${photoThumbHtml}
-                            <div class="min-w-0">${data.fileName}${badgesHtml}</div>
+                            <div class="min-w-0">${data.fileName}${badgesHtml}${rtyuSubInfoHtml}</div>
                         </div>
                     </td>
                     <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${typeLabel}</span></td>
