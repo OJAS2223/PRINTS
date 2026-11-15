@@ -973,7 +973,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
             : '';
         const rtyuSummary = rtyuPan || rtyuName || rtyuUan || rtyuRes.order_id || rtyuRes.reference_number || 'Success';
         const actionBtnsHtml = isServerRtyu
-            ? `<div class="inline-flex items-center gap-1.5 flex-wrap justify-end">${rtyuPdfUrl ? `<a href="${rtyuPdfUrl}" target="_blank" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-file-pdf"></i> Open PDF</a>` : ''}<button onclick="window.openRtyuHistoryDetails(${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Details</button></div>`
+            ? `<div class="inline-flex items-center gap-1.5 flex-wrap justify-end">${rtyuPdfUrl ? `<a href="${rtyuPdfUrl}" target="_blank" class="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-file-pdf"></i> Open PDF</a>` : ''}<button onclick="window.openRtyuHistoryDetails(${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> View</button></div>`
             : (isServerDobPrint
             ? (isCompleted
                 ? `<div class="inline-flex items-center gap-1.5">
@@ -997,7 +997,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                     <td class="p-3 font-bold text-slate-800">
                         <div class="flex items-center gap-2.5">
                             ${photoThumbHtml}
-                            <div class="min-w-0">${data.fileName}${badgesHtml}${rtyuSubInfoHtml}</div>
+                            <div class="min-w-0">${data.fileName}${badgesHtml}</div>
                         </div>
                     </td>
                     <td class="p-3"><span class="bg-indigo-100 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase">${typeLabel}</span></td>
@@ -1078,4 +1078,98 @@ window.downloadServerDobPrintPdf = async function(docId) {
     if (!window.fb.auth.currentUser) return;
     const idToken = await window.fb.auth.currentUser.getIdToken();
     window.open(`/api/dob-print?action=proxy_pdf&docId=${encodeURIComponent(docId)}&token=${encodeURIComponent(idToken)}&download=1`, '_blank');
+};
+
+window.copyRtyuCardValue = function(cardEl, encodedVal) {
+    const val = decodeURIComponent(encodedVal || '');
+    if (!val) return;
+    const showCopied = () => {
+        const badge = cardEl.querySelector('.copy-badge');
+        if (badge) {
+            const orig = badge.innerHTML;
+            badge.innerHTML = '<i class="fa-solid fa-check mr-0.5"></i>Copied';
+            badge.className = 'copy-badge text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-600 text-white transition';
+            setTimeout(() => {
+                badge.innerHTML = orig;
+                badge.className = 'copy-badge text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-700 transition';
+            }, 1500);
+        }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(val).then(showCopied).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = val;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            showCopied();
+        });
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = val;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showCopied();
+    }
+};
+
+window.closeRtyuDetailsModal = function() {
+    const m = document.getElementById('rtyuDetailsModal');
+    if (m) m.remove();
+};
+
+window.openRtyuHistoryDetails = function(origIndex) {
+    const rec = (window.portalAllHistoryRecords || [])[origIndex];
+    if (!rec) return alert('Record not found!');
+    const res = rec.formData?.RESULT || {};
+    const params = rec.formData?.PARAMS || {};
+    const pdfUrl = rec.formData?.PDF_URL || res.pdf_url || '';
+    const skip = new Set(['pdf', 'pdf_url', 'status', 'response_code', 'provider_http_code', 'balance_deducted', 'remaining_balance', 'service_cost', 'balance', 'wallet_balance', 'cost', 'price', 'deducted', 'charges', 'fee', 'api_cost', 'credits_used']);
+    const isSkip = (k) => skip.has(String(k || '').toLowerCase()) || ['balancededucted', 'remainingbalance', 'servicecost', 'walletbalance', 'apicost', 'creditsused'].includes(String(k || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+    const merged = { ...params, ...res };
+    const esc = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const cardsHtml = Object.entries(merged)
+        .filter(([k, v]) => !isSkip(k) && v !== null && v !== undefined && v !== '')
+        .map(([k, v]) => {
+            const valStr = Array.isArray(v) ? v.join(', ') : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+            const enc = encodeURIComponent(valStr);
+            return `
+                <div onclick="window.copyRtyuCardValue(this, '${enc}')" title="Click to copy"
+                    class="group cursor-pointer bg-white hover:bg-indigo-50/40 p-3 rounded-xl border border-emerald-200 hover:border-indigo-300 shadow-xs transition select-all">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">${esc(k.replace(/_/g, ' '))}</span>
+                        <span class="copy-badge text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 group-hover:bg-indigo-100 group-hover:text-indigo-700 transition"><i class="fa-regular fa-copy mr-0.5"></i>Copy</span>
+                    </div>
+                    <p class="text-xs sm:text-sm font-black text-dark-900 break-all">${esc(valStr)}</p>
+                </div>`;
+        }).join('');
+
+    window.closeRtyuDetailsModal();
+    const modal = document.createElement('div');
+    modal.id = 'rtyuDetailsModal';
+    modal.className = 'fixed inset-0 z-[99999] flex items-center justify-center bg-dark-950/80 backdrop-blur-sm p-4';
+    modal.onclick = (e) => { if (e.target === modal) window.closeRtyuDetailsModal(); };
+    modal.innerHTML = `
+        <div class="bg-emerald-50 border-2 border-emerald-300 rounded-3xl max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-5 py-3.5 bg-white border-b border-emerald-200">
+                <div>
+                    <h3 class="text-sm sm:text-base font-black text-emerald-900 uppercase"><i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>${esc(rec.serviceType || 'Service')} — Details</h3>
+                    <p class="text-[10px] font-bold text-slate-400 mt-0.5">किसी भी बॉक्स पर क्लिक/टैप करके तुरंत कॉपी करें</p>
+                </div>
+                <button onclick="window.closeRtyuDetailsModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-red-100 text-slate-600 hover:text-red-600 flex items-center justify-center font-black transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                ${cardsHtml || '<div class="col-span-full text-center text-xs font-bold text-slate-500 py-4">No extra details available.</div>'}
+            </div>
+            <div class="px-5 py-3 bg-white border-t border-emerald-200 flex items-center justify-end gap-2">
+                ${pdfUrl ? `<a href="${esc(pdfUrl)}" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-black transition"><i class="fa-solid fa-file-pdf mr-1"></i>Open PDF</a>` : ''}
+                <button onclick="window.closeRtyuDetailsModal()" class="bg-dark-900 text-royal-300 px-4 py-2 rounded-xl text-xs font-black">Close</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 };
