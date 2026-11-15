@@ -299,6 +299,13 @@ window.processDobDelhiData = function(rawFormObj, docId = '') {
 
     const now = new Date();
     const todayDMY = `${String(now.getDate()).padStart(2,'0')}/${String(now.getMonth()+1).padStart(2,'0')}/${now.getFullYear()}`;
+    const formatMaskedAadhaar = (val) => {
+        const s = String(val || '').trim().toUpperCase();
+        if (!s) return '';
+        const digits = s.replace(/\D/g, '');
+        if (digits.length >= 4) return 'XXXX-XXXX-' + digits.slice(-4);
+        return s;
+    };
     const dob = formatToDMY(rawFormObj.DOB) || todayDMY;
     const dor = formatToDMY(rawFormObj.DOR) || dob;
     const doi = formatToDMY(rawFormObj.DOI) || todayDMY;
@@ -602,25 +609,25 @@ window.dateToUpperWords = function(dmyStr) {
 };
 
 window.processDobBarautData = function(rawFormObj) {
-    const formatToDMY = (dStr) => {
-        if (!dStr) return '';
-        const s = String(dStr).trim();
-        if (s.includes('-')) {
+    const formatToDMY = (dateStr) => {
+        if (!dateStr) return '';
+        const s = String(dateStr).trim();
+        if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
             const p = s.split('-');
-            if (p.length === 3 && p[0].length === 4) return `${p[2]}-${p[1]}-${p[0]}`;
+            return `${p[2]}-${p[1]}-${p[0]}`;
         }
-        if (s.includes('/')) return s.replace(/\//g, '-');
         return s;
     };
     const now = new Date();
     const todayDMY = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
     const dob = formatToDMY(rawFormObj.DOB) || todayDMY;
-    const dobWords = (rawFormObj.DOB_WORDS || '').toString().trim().toUpperCase() || window.dateToUpperWords(dob);
+    const dobDateOnly = dob.split(' ')[0];
+    const dobWords = (rawFormObj.DOB_WORDS || '').toString().trim().toUpperCase() || window.dateToUpperWords(dobDateOnly);
     const regDate = formatToDMY(rawFormObj.REG_DATE) || todayDMY;
-    const issueDate = regDate; // Date of Registration & Date of Issue same
+    const issueDate = formatToDMY(rawFormObj.ISSUE_DATE) || regDate;
     const brnNo = (rawFormObj.BRN_NO || '').toString().trim().toUpperCase() || ('B' + now.getFullYear() + String(Math.floor(10000000000000 + Math.random() * 89999999999999)));
     const address = (rawFormObj.ADDRESS || '').toString().trim().toUpperCase();
-    const permAddress = address; // Mother/Father Birth Address & Permanent Address same
+    const permAddress = (rawFormObj.PERM_ADDRESS || '').toString().trim().toUpperCase() || address;
     const rawPob = rawFormObj.POB === 'OTHER' && rawFormObj.POB_CUSTOM ? rawFormObj.POB_CUSTOM : (rawFormObj.POB || '');
     const pob = String(rawPob).trim().toUpperCase();
     const qrLink = (rawFormObj.QR_LINK || '').toString().trim();
@@ -628,16 +635,45 @@ window.processDobBarautData = function(rawFormObj) {
     const qrUrl = "https://quickchart.io/chart?cht=qr&chs=300x300&margin=1&chl=" + encodeURIComponent(qrPayload);
     const updatedOn = (rawFormObj.UPDATED_ON || '').toString().trim() || `${regDate} 14:03:56`;
 
+    const registrarHi = (rawFormObj.REGISTRAR_HI || '').toString().trim() || 'नगर पालिका परिषद बड़ौत';
+    const registrarEn = (rawFormObj.REGISTRAR_EN || '').toString().trim().toUpperCase() || 'NAGAR PALIKA PARISHAD BARAUT';
+    const tehsilHi = (rawFormObj.TEHSIL_HI || '').toString().trim() || 'बड़ौत';
+    const tehsilEn = (rawFormObj.TEHSIL_EN || '').toString().trim().toUpperCase() || 'BARAUT';
+    const districtHi = (rawFormObj.DISTRICT_HI || '').toString().trim() || 'बागपत';
+    const districtEn = (rawFormObj.DISTRICT_EN || '').toString().trim().toUpperCase() || 'BAGHPAT';
+    const authOfficerName = (rawFormObj.AUTH_OFFICER_NAME || '').toString().trim().toUpperCase();
+    const authDesignation = (rawFormObj.AUTH_DESIGNATION || '').toString().trim().toUpperCase();
+    const esc = (str) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const signUrl = (rawFormObj.SIGN_URL || '').toString().trim();
+    const signImgHtml = signUrl
+        ? `<img src="${signUrl}" crossorigin="anonymous" style="max-height: 48px; max-width: 140px; object-fit: contain; display: block;" alt="Registrar Signature" />`
+        : '';
+    const authOfficerBlock = [
+        authOfficerName ? `<div style="color: #1e3a8a; font-weight: bold;">${esc(authOfficerName)}</div>` : '',
+        authDesignation ? `<div style="color: #1e3a8a;">${esc(authDesignation)}</div>` : ''
+    ].filter(Boolean).join('');
+
     return {
         SERVICE_TYPE: 'DOB Baraut',
+        REGISTRAR_HI: registrarHi,
+        REGISTRAR_EN: registrarEn,
+        TEHSIL_HI: tehsilHi,
+        TEHSIL_EN: tehsilEn,
+        DISTRICT_HI: districtHi,
+        DISTRICT_EN: districtEn,
+        AUTH_OFFICER_NAME: authOfficerName,
+        AUTH_DESIGNATION: authDesignation,
+        AUTH_OFFICER_BLOCK: authOfficerBlock,
+        SIGN_URL: signUrl,
+        SIGN_IMG_HTML: signImgHtml,
         NAME: (rawFormObj.NAME || '').toString().trim().toUpperCase(),
         SEX: (rawFormObj.SEX || 'FEMALE / महिला').toString().trim().toUpperCase(),
-        AADHAAR_NO: (rawFormObj.AADHAAR_NO || '').toString().trim().toUpperCase(),
+        AADHAAR_NO: formatMaskedAadhaar(rawFormObj.AADHAAR_NO),
         DOB: dob, DOB_WORDS: dobWords, POB: pob,
         MNAME: (rawFormObj.MNAME || '').toString().trim().toUpperCase(),
         FNAME: (rawFormObj.FNAME || '').toString().trim().toUpperCase(),
-        MA: (rawFormObj.MA || '').toString().trim().toUpperCase(),
-        FA: (rawFormObj.FA || '').toString().trim().toUpperCase(),
+        MA: formatMaskedAadhaar(rawFormObj.MA),
+        FA: formatMaskedAadhaar(rawFormObj.FA),
         ADDRESS: address, PERM_ADDRESS: permAddress,
         BRN_NO: brnNo, REG_DATE: regDate, ISSUE_DATE: issueDate,
         REMARKS: (rawFormObj.REMARKS || '').toString().trim().toUpperCase(),
