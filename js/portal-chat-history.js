@@ -923,7 +923,7 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
         if (isServerDobPrint) {
             badgesHtml += `<span class="bg-teal-100 text-teal-900 border border-teal-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5">Ref: ${data.formData?.APPLICATION_REF || 'N/A'}</span>`;
             if (isCompleted) badgesHtml += `<span class="bg-green-100 text-green-800 border border-green-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-check-circle mr-0.5"></i>SUCCESSFUL</span>`;
-            else if (isFailed) badgesHtml += `<span class="bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-circle-xmark mr-0.5"></i>${rawStatus.toUpperCase()} (REFUNDED)</span>`;
+            else if (isFailed) badgesHtml += `<span class="bg-red-100 text-red-700 border border-red-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5"><i class="fa-solid fa-circle-xmark mr-0.5"></i>${rawStatus.toUpperCase()}${data.formData?.REFUNDED ? ' (REFUNDED)' : ''}</span>`;
             else badgesHtml += `<span class="bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-full text-[10px] font-black ml-1.5 animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>PENDING</span>`;
         }
 
@@ -980,9 +980,11 @@ window.renderHistory = function(filterType = 'ALL', filterDate = '', filterSearc
                        <button onclick="window.openServerDobPrintPdf('${data.id}', '${safeFileName}')" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button>
                        <button onclick="window.downloadServerDobPrintPdf('${data.id}')" class="inline-flex items-center gap-1 bg-green-600 text-white hover:bg-green-700 px-2.5 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-download"></i> Download PDF</button>
                    </div>`
-                : `<div class="inline-flex items-center gap-1.5">
-                       <button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>
-                   </div>`)
+                : (isFailed
+                    ? `<span class="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-lg text-[10px] font-black"><i class="fa-solid fa-rotate-left"></i> ${data.formData?.REFUNDED ? 'Refunded ✓' : 'Rejected'}</span>`
+                    : `<div class="inline-flex items-center gap-1.5">
+                           <button onclick="window.checkDobPrintOrderStatus('${data.id}', this, false)" class="inline-flex items-center gap-1 bg-amber-500 text-dark-950 hover:bg-amber-400 px-3 py-1.5 rounded-lg text-[11px] font-black transition shadow-sm"><i class="fa-solid fa-rotate"></i> Check Status</button>
+                       </div>`))
             : `<div class="inline-flex items-center flex-wrap justify-end gap-1">${adminInlineControls}<button onclick="window.openPdfViewer('${data.fileId}', '${safeFileName}', ${data._origIndex})" class="inline-flex items-center gap-1 bg-royal-50 text-royal-700 border border-royal-200 hover:bg-royal-600 hover:text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition shadow-sm"><i class="fa-solid fa-eye"></i> Preview</button></div>`);
 
         const typeLabel = data.serviceType === 'DOB Print' ? 'DOB Original PDF' : data.serviceType;
@@ -1038,8 +1040,13 @@ window.checkDobPrintOrderStatus = async function(docId, btnEl, silent = false) {
         });
         const data = await res.json();
         const isReady = Boolean(data.hasPdf || data.apiStatus === 'successful' || data.apiStatus === 'approved');
+        if (data.refunded && typeof data.updatedCredits === 'number' && window.currentUserData) {
+            window.currentUserData.credits = data.updatedCredits;
+            const crEl = document.getElementById('displayCredits');
+            if (crEl) crEl.innerText = data.updatedCredits;
+        }
         if (!silent) alert(data.message || (isReady ? '✅ SUCCESSFUL! PDF डाउनलोड के लिए तैयार है।' : '⏳ Status: PENDING'));
-        if (isReady || data.refunded || !silent) await window.loadUserHistory();
+        if (isReady || data.refunded || data.apiStatus === 'failed' || !silent) await window.loadUserHistory();
     } catch (err) {
         if (!silent) alert('Error checking status: ' + err.message);
     } finally {
