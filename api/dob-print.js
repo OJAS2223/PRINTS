@@ -832,8 +832,10 @@ export default async function handler(req, res) {
       const encryptedToken = remotePdfUrl ? encryptSecretText(remotePdfUrl) : (histData.formData?.ENCRYPTED_PDF_TOKEN || '');
 
       let isRefundedNow = Boolean(histData.formData?.REFUNDED);
-      const deductedCr = Number(histData.formData?.CREDITS_DEDUCTED) || 140;
+      const rawDeducted = histData.formData?.CREDITS_DEDUCTED ?? histData.creditsDeducted;
+      const deductedCr = (rawDeducted !== undefined && rawDeducted !== null) ? Number(rawDeducted) : 140;
       let refundTicketLogged = false;
+      let updatedCreditsNow = null;
       if (finalStatus === 'failed' && !isRefundedNow && deductedCr > 0) {
         try {
           const refRes = await recordRefundAndCreditUser(
@@ -849,6 +851,9 @@ export default async function handler(req, res) {
           );
           isRefundedNow = refRes.refunded;
           refundTicketLogged = Boolean(refRes.ticketLogged);
+          if (refRes.refunded && typeof refRes.updatedCredits === 'number') {
+            updatedCreditsNow = refRes.updatedCredits;
+          }
         } catch (refErr) {
           console.warn('Auto-refund on failed status warning:', refErr.message);
         }
@@ -896,6 +901,7 @@ export default async function handler(req, res) {
         apiStatus: finalStatus,
         hasPdf: hasPdf,
         refunded: isRefundedNow,
+        updatedCredits: updatedCreditsNow,
         message: hasPdf || finalStatus === 'successful'
           ? '✅ SUCCESSFUL! आपकी ओरिजिनल जन्म प्रमाण-पत्र PDF तैयार हो गई है। अब आप Preview या Download PDF पर क्लिक कर सकते हैं।'
           : (finalStatus === 'failed'
